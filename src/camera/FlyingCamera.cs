@@ -13,6 +13,11 @@ public class FlyingCamera : Spatial
     private float yaw;
     private float pitch;
 
+    public override void _Ready()
+    {
+        Input.SetMouseMode(Input.MouseMode.Captured);
+        base._Ready();
+    }
     public override void _Input(InputEvent e)
     {
         if (e is InputEventMouseMotion m) {
@@ -20,6 +25,12 @@ public class FlyingCamera : Spatial
             yaw = (yaw - LookSensitivity*d.x) % 360;
             pitch = System.Math.Min(System.Math.Max(pitch-LookSensitivity*d.y,-90),90);
             RotationDegrees = new Vector3(pitch,yaw,0);
+        }
+        if (e is InputEventKey k) {
+            if (k.Scancode == (uint)KeyList.Escape) {
+                if (Input.GetMouseMode() == Input.MouseMode.Captured) Input.SetMouseMode(Input.MouseMode.Visible);
+                else if (Input.GetMouseMode() == Input.MouseMode.Visible) Input.SetMouseMode(Input.MouseMode.Captured);
+            }
         }
         base._Input(e);
     }
@@ -35,7 +46,7 @@ public class FlyingCamera : Spatial
         //Godot.GD.Print($"Verts: {Performance.GetMonitor(Performance.Monitor.RenderVerticesInFrame)}");
 
         TranslateObjectLocal(dir);
-        Translate(globalDir);
+        GlobalTranslate(globalDir);
         base._Process(delta);
     }
 }

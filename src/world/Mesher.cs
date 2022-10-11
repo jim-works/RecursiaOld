@@ -116,6 +116,7 @@ public class Mesher : Node
         tris.Add(faceId * 4 + 3);
         tris.Add(faceId * 4 + 2);
     }
+    //facing the +z direction
     private void addFacePosZ(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 1, 0));
@@ -124,6 +125,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0, 0, 0));
         finishFace(texInfo, new Vector3(0, 0, 1), uvs, normals, tris);
     }
+    //facing the -z direction
     private void addFaceNegZ(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 1));
@@ -132,6 +134,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0, 1, 1));
         finishFace(texInfo, new Vector3(0, 0, -1), uvs, normals, tris);
     }
+    //facing the +x direction
     private void addFacePosX(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 1));
@@ -140,6 +143,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0, 0, 0));
         finishFace(texInfo, new Vector3(1, 0, 0), uvs, normals, tris);
     }
+    //facing the -x direction
     private void addFaceNegX(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(1, 0, 0));
@@ -148,6 +152,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(1, 0, 1));
         finishFace(texInfo, new Vector3(-1, 0, 0), uvs, normals, tris);
     }
+    //facing the +y direction
     private void addFacePosY(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 1, 0));
@@ -157,6 +162,7 @@ public class Mesher : Node
 
         finishFace(texInfo, new Vector3(0, 1, 0), uvs, normals, tris);
     }
+    //facing the -y direction
     private void addFaceNegY(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 0));
