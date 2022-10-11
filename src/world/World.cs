@@ -11,9 +11,11 @@ public class World : Node
     {
         Int3 chunkCoords = Chunk.WorldToChunkPos(coords);
         Int3 blockCoords = Chunk.WorldToLocal(coords);
+        Godot.GD.Print($"{chunkCoords}, {blockCoords}");
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             return c[blockCoords];
         }
+        Godot.GD.Print($"chunk not found");
         return null; //chunk not found
     }
     public void SetBlock(Int3 coords, Block block) {
@@ -25,7 +27,7 @@ public class World : Node
             return;
         }
         //create new chunk
-        c = new Chunk();
+        c = new Chunk(chunkCoords);
         c[blockCoords] = block;
         Chunks[chunkCoords] = c;
     }

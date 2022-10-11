@@ -3,16 +3,27 @@ using System;
 public class Chunk
 {
     public const int CHUNK_SIZE = 16;
+    public Int3 ChunkCoords;
     public Block[,,] Blocks;
 
-    public Chunk()
+    public Chunk(Int3 chunkCoords)
     {
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
+        ChunkCoords = chunkCoords;
     }
 
     public Block this[Int3 index] {
         get {return Blocks[index.x,index.y,index.z];}
         set {Blocks[index.x,index.y,index.z] = value;}
+    }
+    public Block this[int x, int y, int z] {
+        get {return Blocks[x,y,z];}
+        set {Blocks[x,y,z] = value;}
+    }
+
+    public Int3 LocalToWorld(Int3 local) {
+        Int3 coords = CHUNK_SIZE*ChunkCoords;
+        return coords + local;
     }
 
     public static Int3 WorldToLocal(Int3 coord)

@@ -40,6 +40,10 @@ public struct Int3
     {
         return new Int3((int)conv.x, (int)conv.y, (int)conv.z);
     }
+    public static explicit operator Godot.Vector3(Int3 conv)
+    {
+        return new Godot.Vector3(conv.x, conv.y, conv.z);
+    }
     public override string ToString()
     {
         return $"({x}, {y}, {z})";
