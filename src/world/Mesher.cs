@@ -13,24 +13,14 @@ public class Mesher : Node
     {
         BlockLoader.Load();
         world = new World();
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
-                world.SetBlock(new Int3(x, 0, z), BlockTypes.Get("stone"));
-            }
-        }
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
-                world.SetBlock(new Int3(x, 1, z), BlockTypes.Get("dirt"));
-            }
-        }
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
-                world.SetBlock(new Int3(x, 2, z), BlockTypes.Get("grass"));
-            }
-        }
-        var mesh = GenerateMesh(world.Chunks[new Int3(0,0,0)]);
+        WorldGenerator wg = new WorldGenerator();
+        wg.Generate(world);
 
-        GetParent().CallDeferred("add_child", mesh);
+        foreach (var kvp in world.Chunks) {
+            var mesh = GenerateMesh(kvp.Value);
+            GetParent().CallDeferred("add_child", mesh);
+        }
+        
     }
     public MeshInstance GenerateMesh(Chunk chunk)
     {
@@ -48,6 +38,14 @@ public class Mesher : Node
         var normals = new List<Vector3>();
         var uvs = new List<Vector2>();
 
+        Chunk[] neighbors = new Chunk[6]; //we are in 3d
+        neighbors[(int)Direction.PosX] = world.GetChunk(chunk.ChunkCoords + new Int3(1,0,0));
+        neighbors[(int)Direction.PosY] = world.GetChunk(chunk.ChunkCoords + new Int3(0,1,0));
+        neighbors[(int)Direction.PosZ] = world.GetChunk(chunk.ChunkCoords + new Int3(0,0,1));
+        neighbors[(int)Direction.NegX] = world.GetChunk(chunk.ChunkCoords + new Int3(-1,0,0));
+        neighbors[(int)Direction.NegY] = world.GetChunk(chunk.ChunkCoords + new Int3(0,-1,0));
+        neighbors[(int)Direction.NegZ] = world.GetChunk(chunk.ChunkCoords + new Int3(0,0,-1));
+
         //generate the mesh
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
         {
@@ -57,13 +55,8 @@ public class Mesher : Node
                 {
                     if (chunk[x,y,z] == null) continue;
                     BlockTextureInfo tex = chunk[x,y,z].TextureInfo;
-                    Vector3 pos = (Vector3)chunk.LocalToWorld(new Int3(x,y,z));
-                    addFacePosX(pos, tex, vertices, uvs, normals, tris);
-                    addFacePosY(pos, tex, vertices, uvs, normals, tris);
-                    addFacePosZ(pos, tex, vertices, uvs, normals, tris);
-                    addFaceNegX(pos, tex, vertices, uvs, normals, tris);
-                    addFaceNegY(pos, tex, vertices, uvs, normals, tris);
-                    addFaceNegZ(pos, tex, vertices, uvs, normals, tris);
+                    //Vector3 pos = (Vector3)chunk.LocalToWorld(new Int3(x,y,z));
+                    meshBlock(chunk, neighbors, new Int3(x,y,z), tex, vertices, uvs, normals, tris);
                 }
             }
         }
@@ -79,6 +72,31 @@ public class Mesher : Node
         mesh.SetSurfaceMaterial(0, ChunkMaterial);
 
         return mesh;
+    }
+    private void meshBlock(Chunk chunk, Chunk[] neighbors, Int3 localPos, BlockTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    {
+        bool nonOpaque(Chunk c, int x, int y, int z) => c == null || c[x,y,z] == null || c[x,y,z].Transparent;
+        Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);
+
+        //check if there's no block/a transparent block in each direction. only generate face if so.
+        if (localPos.x == 0 && nonOpaque(neighbors[(int)Direction.NegX], Chunk.CHUNK_SIZE-1,localPos.y,localPos.z) || localPos.x != 0 && nonOpaque(chunk,localPos.x-1,localPos.y,localPos.z)) {
+            addFacePosX(pos, tex, verts, uvs, normals, tris);
+        }
+        if (localPos.y == 0 && nonOpaque(neighbors[(int)Direction.NegY], localPos.x, Chunk.CHUNK_SIZE-1,localPos.z) || localPos.y != 0 && nonOpaque(chunk,localPos.x,localPos.y-1,localPos.z)) {
+            addFaceNegY(pos, tex, verts, uvs, normals, tris);
+        }
+        if (localPos.z == 0 && nonOpaque(neighbors[(int)Direction.NegZ], localPos.x,localPos.y,Chunk.CHUNK_SIZE-1) || localPos.z != 0 && nonOpaque(chunk,localPos.x,localPos.y,localPos.z-1)) {
+            addFacePosZ(pos, tex, verts, uvs, normals, tris);
+        }
+        if (localPos.x == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosX], 0,localPos.y,localPos.z) || localPos.x != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.x+1,localPos.y,localPos.z)) {
+            addFaceNegX(pos, tex, verts, uvs, normals, tris);
+        }
+        if (localPos.y == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosY], localPos.x,0,localPos.z) || localPos.y != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.x,localPos.y+1,localPos.z)) {
+            addFacePosY(pos, tex, verts, uvs, normals, tris);
+        }
+        if (localPos.z == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosZ], localPos.x,localPos.y,0) || localPos.z != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.x,localPos.y,localPos.z+1)) {
+            addFaceNegZ(pos, tex, verts, uvs, normals, tris);
+        }
     }
     private void finishFace(BlockTextureInfo info, Vector3 normalDir, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {

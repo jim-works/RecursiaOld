@@ -32,7 +32,7 @@ public class FlyingCamera : Spatial
         Vector3 dir = FlySpeed*delta*new Vector3(x,0,z);
         Vector3 globalDir = FlySpeed*delta*new Vector3(0,y,0);
         
-
+        //Godot.GD.Print($"Verts: {Performance.GetMonitor(Performance.Monitor.RenderVerticesInFrame)}");
 
         TranslateObjectLocal(dir);
         Translate(globalDir);
