@@ -6,27 +6,39 @@ public class Mesher : Node
 {
     [Export]
     public Material ChunkMaterial;
+    public static Mesher Singleton;
 
-    private World world;
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
+        Singleton = this;
         BlockLoader.Load();
-        world = new World();
         WorldGenerator wg = new WorldGenerator();
-        wg.Generate(world);
-
-        foreach (var kvp in world.Chunks) {
-            var mesh = GenerateMesh(kvp.Value);
+        wg.Generate(World.Singleton);
+        MeshAll();
+    }
+    public void MeshAll()
+    {
+        foreach (var kvp in World.Singleton.Chunks) {
+           MeshChunk(kvp.Value); 
+        }
+    }
+    public void MeshChunk(Chunk chunk) {
+        var mesh = GenerateMesh(chunk);
+        if (mesh != null)
+        {
             GetParent().CallDeferred("add_child", mesh);
         }
-        
     }
     public MeshInstance GenerateMesh(Chunk chunk)
     {
         if (chunk == null)
         {
             return null;
+        }
+        if (chunk.Mesh != null) {
+            chunk.Mesh.QueueFree();
+            chunk.Mesh = null;
         }
         var mesh = new MeshInstance();
         var arrMesh = new ArrayMesh();
@@ -39,12 +51,12 @@ public class Mesher : Node
         var uvs = new List<Vector2>();
 
         Chunk[] neighbors = new Chunk[6]; //we are in 3d
-        neighbors[(int)Direction.PosX] = world.GetChunk(chunk.ChunkCoords + new Int3(1,0,0));
-        neighbors[(int)Direction.PosY] = world.GetChunk(chunk.ChunkCoords + new Int3(0,1,0));
-        neighbors[(int)Direction.PosZ] = world.GetChunk(chunk.ChunkCoords + new Int3(0,0,1));
-        neighbors[(int)Direction.NegX] = world.GetChunk(chunk.ChunkCoords + new Int3(-1,0,0));
-        neighbors[(int)Direction.NegY] = world.GetChunk(chunk.ChunkCoords + new Int3(0,-1,0));
-        neighbors[(int)Direction.NegZ] = world.GetChunk(chunk.ChunkCoords + new Int3(0,0,-1));
+        neighbors[(int)Direction.PosX] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(1,0,0));
+        neighbors[(int)Direction.PosY] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,1,0));
+        neighbors[(int)Direction.PosZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,0,1));
+        neighbors[(int)Direction.NegX] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(-1,0,0));
+        neighbors[(int)Direction.NegY] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,-1,0));
+        neighbors[(int)Direction.NegZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,0,-1));
 
         //generate the mesh
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -61,7 +73,7 @@ public class Mesher : Node
             }
         }
 
-
+        if (vertices.Count==0) return null;
         array[(int)ArrayMesh.ArrayType.Vertex] = vertices;
         array[(int)ArrayMesh.ArrayType.Index] = tris;
         array[(int)ArrayMesh.ArrayType.Normal] = normals;
@@ -70,7 +82,7 @@ public class Mesher : Node
 
         mesh.Mesh = arrMesh;
         mesh.SetSurfaceMaterial(0, ChunkMaterial);
-
+        chunk.Mesh = mesh;
         return mesh;
     }
     private void meshBlock(Chunk chunk, Chunk[] neighbors, Int3 localPos, BlockTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)

@@ -1,12 +1,15 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/camera/FlyingCamera.cs" type="Script" id=2]
 [ext_resource path="res://materials/chunkmaterial.tres" type="Material" id=3]
+[ext_resource path="res://textures/crosshair.png" type="Texture" id=4]
+[ext_resource path="res://src/world/World.cs" type="Script" id=5]
 
 [sub_resource type="CubeMesh" id=1]
 
 [node name="World" type="Spatial"]
+script = ExtResource( 5 )
 
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 4.26743 )
@@ -14,6 +17,7 @@ far = 5000.0
 script = ExtResource( 2 )
 FlySpeed = 25.0
 LookSensitivity = 0.3
+PunchDistance = 50.0
 
 [node name="Mesher" type="Node" parent="."]
 script = ExtResource( 1 )
@@ -26,3 +30,16 @@ material/0 = null
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
+shadow_enabled = true
+shadow_bias = 0.0
+
+[node name="TextureRect" type="TextureRect" parent="DirectionalLight"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -16.0
+margin_top = -16.0
+margin_right = 16.0
+margin_bottom = 16.0
+texture = ExtResource( 4 )

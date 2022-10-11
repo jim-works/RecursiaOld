@@ -1,10 +1,13 @@
 using System;
+using Godot;
+
 
 public class Chunk
 {
     public const int CHUNK_SIZE = 16;
     public Int3 ChunkCoords;
     public Block[,,] Blocks;
+    public Node Mesh;
 
     public Chunk(Int3 chunkCoords)
     {

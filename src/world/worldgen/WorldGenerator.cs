@@ -18,7 +18,6 @@ public class WorldGenerator
             sandSet.Add(new Int2((int)(GD.Randi()%(worldSize*Chunk.CHUNK_SIZE)),(int)(GD.Randi()%(worldSize*Chunk.CHUNK_SIZE))));
         }
         sandPillars = sandSet.ToArray();
-        Godot.GD.Print(sandPillars.Distinct().Count());
         for (int x = 0; x < worldSize; x++)
         {
             for (int y = 0; y < 3; y++)
