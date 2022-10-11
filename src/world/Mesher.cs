@@ -6,8 +6,6 @@ public class Mesher : Node
 {
     [Export]
     public Material ChunkMaterial;
-
-    private TextureManager textureManager = new TextureManager();
     
     // Declare member variables here. Examples:
     // private int a = 2;
@@ -16,6 +14,7 @@ public class Mesher : Node
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
+        BlockLoader.Load();
         var mesh = GenerateMesh(new Chunk());
         GetParent().CallDeferred("add_child", mesh);
     }
@@ -35,7 +34,7 @@ public class Mesher : Node
         var uvs = new List<Vector2>();
 
         //generate the mesh
-        TextureInfo tex = textureManager.GetTexture("grass");
+        BlockTextureInfo tex = BlockTypes.Get("stone").TextureInfo;
         addFacePosX(new Vector3(0,0,0), tex, vertices, uvs, normals, tris);
         addFacePosY(new Vector3(0,0,0), tex, vertices, uvs, normals, tris);
         addFacePosZ(new Vector3(0,0,0), tex, vertices, uvs, normals, tris);
@@ -54,12 +53,12 @@ public class Mesher : Node
 
         return mesh;
     }
-    private void finishFace(TextureInfo info, Vector3 normalDir, List<Vector2> uvs, List<Vector3> normals, List<int> tris) {
+    private void finishFace(BlockTextureInfo info, Vector3 normalDir, List<Vector2> uvs, List<Vector3> normals, List<int> tris) {
         int faceId = normals.Count/4;
-        uvs.Add(info.Min);
-        uvs.Add(new Vector2(info.Max.x,info.Min.y));
-        uvs.Add(info.Max);
-        uvs.Add(new Vector2(info.Min.x,info.Max.y));
+        uvs.Add(info.UVMin);
+        uvs.Add(new Vector2(info.UVMax.x,info.UVMin.y));
+        uvs.Add(info.UVMax);
+        uvs.Add(new Vector2(info.UVMin.x,info.UVMax.y));
         normals.Add(normalDir);
         normals.Add(normalDir);
         normals.Add(normalDir);
@@ -71,7 +70,7 @@ public class Mesher : Node
         tris.Add(faceId*4+3);
         tris.Add(faceId*4+2);
     }
-    private void addFacePosZ(Vector3 origin, TextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFacePosZ(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0,1,0));
         verts.Add(origin + new Vector3(1,1,0));
@@ -79,7 +78,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0,0,0));
         finishFace(texInfo, new Vector3(0,0,1), uvs, normals, tris);
     }
-    private void addFaceNegZ(Vector3 origin, TextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFaceNegZ(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0,0,1));
         verts.Add(origin + new Vector3(1,0,1));
@@ -87,7 +86,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0,1,1));
         finishFace(texInfo, new Vector3(0,0,-1), uvs, normals, tris);
     }
-    private void addFacePosX(Vector3 origin, TextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFacePosX(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0,0,1));
         verts.Add(origin + new Vector3(0,1,1));
@@ -95,7 +94,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0,0,0));
         finishFace(texInfo, new Vector3(1,0,0), uvs, normals, tris);
     }
-    private void addFaceNegX(Vector3 origin, TextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFaceNegX(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(1,0,0));
         verts.Add(origin + new Vector3(1,1,0));
@@ -103,7 +102,7 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(1,0,1));
         finishFace(texInfo, new Vector3(-1,0,0), uvs, normals, tris);
     }
-    private void addFacePosY(Vector3 origin, TextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFacePosY(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0,1,0));
         verts.Add(origin + new Vector3(0,1,1));
@@ -112,7 +111,7 @@ public class Mesher : Node
         
         finishFace(texInfo, new Vector3(0,1,0), uvs, normals, tris);
     }
-    private void addFaceNegY(Vector3 origin, TextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFaceNegY(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0,0,0));
         verts.Add(origin + new Vector3(1,0,0));
