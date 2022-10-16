@@ -1,9 +1,0 @@
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/obj/Debug/Swarmed.csproj.AssemblyReference.cache
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/obj/Debug/Swarmed.GeneratedMSBuildEditorConfig.editorconfig
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/obj/Debug/Swarmed.AssemblyInfoInputs.cache
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/obj/Debug/Swarmed.AssemblyInfo.cs
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/obj/Debug/Swarmed.csproj.CoreCompileInputs.cache
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/bin/Debug/Swarmed.dll
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/bin/Debug/Swarmed.pdb
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/obj/Debug/Swarmed.dll
-/home/jim/Documents/GodotProjects/Swarmed/.mono/temp/obj/Debug/Swarmed.pdb
