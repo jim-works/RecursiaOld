@@ -1,13 +1,16 @@
 using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 public class Mesher : Node
 {
     [Export]
     public Material ChunkMaterial;
+    [Export]
+    public float MaxMeshTime = 0.1f;
     public static Mesher Singleton;
-
+    private HashSet<Chunk> toMesh = new HashSet<Chunk>();
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
@@ -17,28 +20,43 @@ public class Mesher : Node
         wg.Generate(World.Singleton);
         MeshAll();
     }
+    public override void _Process(float delta)
+    {
+        //empty mesh queue
+        foreach(var c in toMesh) {
+            if (c == null) continue; //not sure if this is needed
+            Chunk meshing = c; //copy pointer to avoid race condition
+            Task.Run(() => MeshChunk(meshing));
+        }
+        toMesh.Clear();
+        base._Process(delta);
+    }
     public void MeshAll()
     {
         foreach (var kvp in World.Singleton.Chunks) {
-           MeshChunk(kvp.Value); 
+           MeshDeferred(kvp.Value); 
         }
     }
-    public void MeshChunk(Chunk chunk) {
+    public void MeshDeferred(Chunk chunk) {
+        toMesh.Add(chunk);
+    }
+    private void MeshChunk(Chunk chunk) {
         var mesh = GenerateMesh(chunk);
+        if (chunk.Mesh != null) {
+            chunk.Mesh.QueueFree();
+            chunk.Mesh = null;
+        }
+        chunk.Mesh = mesh;
         if (mesh != null)
         {
             GetParent().CallDeferred("add_child", mesh);
         }
     }
-    public MeshInstance GenerateMesh(Chunk chunk)
+    private MeshInstance GenerateMesh(Chunk chunk)
     {
         if (chunk == null)
         {
             return null;
-        }
-        if (chunk.Mesh != null) {
-            chunk.Mesh.QueueFree();
-            chunk.Mesh = null;
         }
         var mesh = new MeshInstance();
         var arrMesh = new ArrayMesh();
@@ -82,7 +100,6 @@ public class Mesher : Node
 
         mesh.Mesh = arrMesh;
         mesh.SetSurfaceMaterial(0, ChunkMaterial);
-        chunk.Mesh = mesh;
         return mesh;
     }
     private void meshBlock(Chunk chunk, Chunk[] neighbors, Int3 localPos, BlockTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)

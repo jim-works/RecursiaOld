@@ -10,7 +10,9 @@ public class FlyingCamera : Spatial
     [Export]
     public float LookSensitivity = 0.3f;
     [Export]
-    public float PunchDistance = 10;
+    public float ControllerLookSensitivity = 5f;
+    [Export]
+    public float PunchDistance = 100;
 
     private float yaw;
     private float pitch;
@@ -43,19 +45,30 @@ public class FlyingCamera : Spatial
         if (Input.IsActionJustPressed("punch")) {
             GD.Print(Transform.basis.z);
             Vector3 dir = -Transform.basis.z*PunchDistance;
-            RaycastHit hit = World.Singleton.Raycast(Transform.origin, dir);
+            BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir);
             if (hit != null) {
                 World.Singleton.SetBlock(hit.BlockPos, null);
-                GD.Print($"Block hit at {hit.BlockPos}");
             }
         }
-        //Godot.GD.Print($"Verts: {Performance.GetMonitor(Performance.Monitor.RenderVerticesInFrame)}");
-
+        if (Input.IsActionJustPressed("use")) {
+            GD.Print(Transform.basis.z);
+            Vector3 dir = -Transform.basis.z*PunchDistance;
+            BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir);
+            if (hit != null) {
+                World.Singleton.CreateExplosion(hit.HitPos, 10);
+            }
+        }
         
         base._Process(delta);
     }
     private void move(float delta)
     {
+        float look_x = Input.GetActionStrength("look_left") - Input.GetActionStrength("look_right");
+        float look_y = Input.GetActionStrength("look_down") - Input.GetActionStrength("look_up");
+        yaw = (yaw + ControllerLookSensitivity*look_x) % 360;
+        pitch = System.Math.Min(System.Math.Max(pitch-ControllerLookSensitivity*look_y,-90),90);
+        RotationDegrees = new Vector3(pitch,yaw,0);
+
         float x = Input.GetActionStrength("move_right")-Input.GetActionStrength("move_left");
         float y = Input.GetActionStrength("fly_up")-Input.GetActionStrength("fly_down");
         float z = Input.GetActionStrength("move_backward")-Input.GetActionStrength("move_forward");

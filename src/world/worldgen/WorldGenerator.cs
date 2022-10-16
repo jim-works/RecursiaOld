@@ -5,13 +5,14 @@ using System.Collections.Generic;
 public class WorldGenerator
 {
     private OpenSimplexNoise noise = new OpenSimplexNoise();
+    private float noiseScale = 5;
 
     public void Generate(World world)
     {
         noise.Octaves = 4;
         noise.Period = 128;
         noise.Persistence = 0.8f;
-        int worldSize = 3;
+        int worldSize = 15;
         Int2[] sandPillars;
         HashSet<Int2> sandSet = new HashSet<Int2>();
         while (sandSet.Count < 6) {
@@ -20,7 +21,7 @@ public class WorldGenerator
         sandPillars = sandSet.ToArray();
         for (int x = 0; x < worldSize; x++)
         {
-            for (int y = 0; y < 3; y++)
+            for (int y = 0; y < 10; y++)
             {
                 for (int z = 0; z < worldSize; z++)
                 {
@@ -42,7 +43,7 @@ public class WorldGenerator
             {
                 Int3 noiseCoords = chunk.LocalToWorld(new Int3(x,0,z));
                 
-                int height = (int)(16*(noise.GetNoise2d(noiseCoords.x,noiseCoords.z)+1));
+                int height = (int)(16*(noiseScale*noise.GetNoise2d(noiseCoords.x,noiseCoords.z)+1));
                 for (int y = 0; y < Chunk.CHUNK_SIZE && y < height; y++)
                 {
                     Int3 worldCoords = chunk.LocalToWorld(new Int3(x,y,z));
