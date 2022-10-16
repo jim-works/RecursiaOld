@@ -43,7 +43,6 @@ public class FlyingCamera : Spatial
         }
 
         if (Input.IsActionJustPressed("punch")) {
-            GD.Print(Transform.basis.z);
             Vector3 dir = -Transform.basis.z*PunchDistance;
             BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir);
             if (hit != null) {
@@ -51,7 +50,6 @@ public class FlyingCamera : Spatial
             }
         }
         if (Input.IsActionJustPressed("use")) {
-            GD.Print(Transform.basis.z);
             Vector3 dir = -Transform.basis.z*PunchDistance;
             BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir);
             if (hit != null) {
