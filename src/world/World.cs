@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class World : Node
 {
     public static World Singleton;
-    public Dictionary<Int3, Chunk> Chunks = new Dictionary<Int3, Chunk>();
+    public Dictionary<BlockCoord, Chunk> Chunks = new Dictionary<BlockCoord, Chunk>();
 
     public override void _EnterTree()
     {
@@ -14,7 +14,7 @@ public class World : Node
         base._EnterTree();
     }
 
-    public Chunk GetOrCreateChunk(Int3 chunkCoords) {
+    public Chunk GetOrCreateChunk(BlockCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             //chunk already exists
             return c;
@@ -24,52 +24,52 @@ public class World : Node
         Chunks[chunkCoords] = c;
         return c;
     }
-    public Chunk GetChunk(Int3 chunkCoords) {
+    public Chunk GetChunk(BlockCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             return c;
         }
         return null; //chunk not found
     }
-    public Block GetBlock(Int3 coords)
+    public Block GetBlock(BlockCoord coords)
     {
-        Int3 chunkCoords = Chunk.WorldToChunkPos(coords);
-        Int3 blockCoords = Chunk.WorldToLocal(coords);
+        BlockCoord chunkCoords = Chunk.WorldToChunkPos(coords);
+        BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetChunk(chunkCoords);
         if (c == null) return null;
         return c[blockCoords];
     }
     public Block GetBlock(Vector3 worldCoords) {
-        return GetBlock((Int3)worldCoords);
+        return GetBlock((BlockCoord)worldCoords);
     }
-    public void SetBlock(Int3 coords, Block block, bool meshChunk=true) {
-        Int3 chunkCoords = Chunk.WorldToChunkPos(coords);
-        Int3 blockCoords = Chunk.WorldToLocal(coords);
+    public void SetBlock(BlockCoord coords, Block block, bool meshChunk=true) {
+        BlockCoord chunkCoords = Chunk.WorldToChunkPos(coords);
+        BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetOrCreateChunk(chunkCoords);
         c[blockCoords] = block;
         if (meshChunk) {
             Mesher.Singleton.MeshDeferred(c);
             //mesh neighbors if needed
-            if (blockCoords.x == 0 && GetChunk(chunkCoords+new Int3(-1,0,0)) is Chunk nx)
+            if (blockCoords.x == 0 && GetChunk(chunkCoords+new BlockCoord(-1,0,0)) is Chunk nx)
             {
                 Mesher.Singleton.MeshDeferred(nx);
             }
-            if (blockCoords.y == 0 && GetChunk(chunkCoords+new Int3(0,-1,0)) is Chunk ny)
+            if (blockCoords.y == 0 && GetChunk(chunkCoords+new BlockCoord(0,-1,0)) is Chunk ny)
             {
                 Mesher.Singleton.MeshDeferred(ny);
             }
-            if (blockCoords.z == 0 && GetChunk(chunkCoords+new Int3(0,0,-1)) is Chunk nz)
+            if (blockCoords.z == 0 && GetChunk(chunkCoords+new BlockCoord(0,0,-1)) is Chunk nz)
             {
                 Mesher.Singleton.MeshDeferred(nz);
             }
-            if (blockCoords.x == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new Int3(1,0,0)) is Chunk px)
+            if (blockCoords.x == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new BlockCoord(1,0,0)) is Chunk px)
             {
                 Mesher.Singleton.MeshDeferred(px);
             }
-            if (blockCoords.y == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new Int3(0,1,0)) is Chunk py)
+            if (blockCoords.y == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new BlockCoord(0,1,0)) is Chunk py)
             {
                 Mesher.Singleton.MeshDeferred(py);
             }
-            if (blockCoords.z == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new Int3(0,0,1)) is Chunk pz)
+            if (blockCoords.z == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new BlockCoord(0,0,1)) is Chunk pz)
             {
                 Mesher.Singleton.MeshDeferred(pz);
             }
@@ -81,7 +81,7 @@ public class World : Node
         float stepSize = 0.05f;
         float lineLength = line.Length();
         Vector3 lineNorm = line/lineLength;
-        Int3 oldCoords = (Int3)origin;
+        BlockCoord oldCoords = (BlockCoord)origin;
         Block b = GetBlock(oldCoords);
         if (b != null) return new BlockcastHit{
             HitPos=origin,
@@ -91,7 +91,7 @@ public class World : Node
         for (float t = 0; t < lineLength; t += stepSize) {
             //only query world when we are in a new block
             Vector3 testPoint = (origin + t*lineNorm);
-            Int3 coords = (Int3)testPoint;
+            BlockCoord coords = (BlockCoord)testPoint;
             if (coords == oldCoords) continue;
             oldCoords=coords;
             b = GetBlock(testPoint);
@@ -110,7 +110,7 @@ public class World : Node
         Vector3 d = dest-origin;
         float lineLength = d.Length();
         Vector3 lineNorm = d/lineLength;
-        Int3 oldCoords = (Int3)origin;
+        BlockCoord oldCoords = (BlockCoord)origin;
         Block b = GetBlock(oldCoords);
         if (b != null) buffer.Add(new BlockcastHit{
             HitPos=origin,
@@ -120,7 +120,7 @@ public class World : Node
         for (float t = 0; t < lineLength; t += stepSize) {
             //only query world when we are in a new block
             Vector3 testPoint = (origin + t*lineNorm);
-            Int3 coords = (Int3)testPoint;
+            BlockCoord coords = (BlockCoord)testPoint;
             if (coords == oldCoords) continue;
             oldCoords=coords;
             b = GetBlock(testPoint);
@@ -135,9 +135,9 @@ public class World : Node
         //TODO: make this better
         //expanding cube at the center of the explosion. keep track of cumulative power using a 3d array
         //r^4 algorithm -> r^3
-        Int3 minBounds = new Int3((int)(origin.x-strength),(int)(origin.y-strength),(int)(origin.z-strength));
-        Int3 maxBounds = new Int3((int)(origin.x + strength), (int)(origin.y + strength), (int)(origin.z + strength));
-        Int3 originInt = (Int3)origin;
+        BlockCoord minBounds = new BlockCoord((int)(origin.x-strength),(int)(origin.y-strength),(int)(origin.z-strength));
+        BlockCoord maxBounds = new BlockCoord((int)(origin.x + strength), (int)(origin.y + strength), (int)(origin.z + strength));
+        BlockCoord originInt = (BlockCoord)origin;
         List<BlockcastHit> buffer = new List<BlockcastHit>();
         for (int x = minBounds.x; x < maxBounds.x; x++)
         {
@@ -145,7 +145,7 @@ public class World : Node
             {
                 for (int z = minBounds.z; z < maxBounds.z; z++)
                 {
-                    Int3 p = new Int3(x,y,z);
+                    BlockCoord p = new BlockCoord(x,y,z);
                     float sqrDist = (p-originInt).sqrMag();
                     if (sqrDist > strength*strength) continue; //outside of blast radius 
                     float power = strength-Mathf.Sqrt(sqrDist);

@@ -69,12 +69,12 @@ public class Mesher : Node
         var uvs = new List<Vector2>();
 
         Chunk[] neighbors = new Chunk[6]; //we are in 3d
-        neighbors[(int)Direction.PosX] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(1,0,0));
-        neighbors[(int)Direction.PosY] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,1,0));
-        neighbors[(int)Direction.PosZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,0,1));
-        neighbors[(int)Direction.NegX] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(-1,0,0));
-        neighbors[(int)Direction.NegY] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,-1,0));
-        neighbors[(int)Direction.NegZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new Int3(0,0,-1));
+        neighbors[(int)Direction.PosX] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(1,0,0));
+        neighbors[(int)Direction.PosY] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,1,0));
+        neighbors[(int)Direction.PosZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,0,1));
+        neighbors[(int)Direction.NegX] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(-1,0,0));
+        neighbors[(int)Direction.NegY] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,-1,0));
+        neighbors[(int)Direction.NegZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,0,-1));
 
         //generate the mesh
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -85,8 +85,7 @@ public class Mesher : Node
                 {
                     if (chunk[x,y,z] == null) continue;
                     BlockTextureInfo tex = chunk[x,y,z].TextureInfo;
-                    //Vector3 pos = (Vector3)chunk.LocalToWorld(new Int3(x,y,z));
-                    meshBlock(chunk, neighbors, new Int3(x,y,z), tex, vertices, uvs, normals, tris);
+                    meshBlock(chunk, neighbors, new BlockCoord(x,y,z), tex, vertices, uvs, normals, tris);
                 }
             }
         }
@@ -102,7 +101,7 @@ public class Mesher : Node
         mesh.SetSurfaceMaterial(0, ChunkMaterial);
         return mesh;
     }
-    private void meshBlock(Chunk chunk, Chunk[] neighbors, Int3 localPos, BlockTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, BlockTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         bool nonOpaque(Chunk c, int x, int y, int z) => c == null || c[x,y,z] == null || c[x,y,z].Transparent;
         Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);

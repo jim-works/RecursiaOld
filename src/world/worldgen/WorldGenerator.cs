@@ -16,22 +16,23 @@ public class WorldGenerator
         noise.Persistence = 0.8f;
         int worldSize = 15;
         var noiseCache = new float[samples+1,samples+1,samples+1];
-        for (int x = 0; x < worldSize; x++)
+        for (int x = -worldSize; x < 0; x++)
         {
             for (int y = 0; y < 10; y++)
             {
-                for (int z = 0; z < worldSize; z++)
+                for (int z = -worldSize; z < 0; z++)
                 {
-                    GenerateChunk(world, world.GetOrCreateChunk(new Int3(x, y, z)), noiseCache);
+                    GenerateChunk(world, world.GetOrCreateChunk(new BlockCoord(x, y, z)), noiseCache);
                 }
             }
         }
+        world.SetBlock(new BlockCoord(-1,0,-1), null);
     }
     public void GenerateChunk(World world, Chunk chunk, float[,,] noiseCache)
     {
         for (int x = 0; x < samples+1; x++) {
             for (int z = 0; z < samples+1; z++) {
-                Int3 noiseCoords = chunk.LocalToWorld(new Int3(x*sampleRatio,0,z*sampleRatio));
+                BlockCoord noiseCoords = chunk.LocalToWorld(new BlockCoord(x*sampleRatio,0,z*sampleRatio));
                 noiseCache[x,0,z] = noiseScale*(noise.GetNoise2d(noiseCoords.x,noiseCoords.z)+1);
             }
         }
@@ -48,7 +49,7 @@ public class WorldGenerator
                 int height = (int)Math.Bilerp(propInSample.x,propInSample.y,noiseCache[sp.x,0,sp.y],noiseCache[sp.x+1,0,sp.y],noiseCache[sp.x,0,sp.y+1],noiseCache[sp.x+1,0,sp.y+1]);
                 for (int y = 0; y < Chunk.CHUNK_SIZE && y < height; y++)
                 {
-                    Int3 worldCoords = chunk.LocalToWorld(new Int3(x,y,z));
+                    BlockCoord worldCoords = chunk.LocalToWorld(new BlockCoord(x,y,z));
                     if (worldCoords.y < height - 5) {
                         chunk[x,y,z] = stone;
                     } else if (worldCoords.y < height) {
