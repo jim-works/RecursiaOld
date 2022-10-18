@@ -22,7 +22,7 @@ public class WorldGenerator
             {
                 for (int z = -worldSize; z < 0; z++)
                 {
-                    GenerateChunk(world, world.GetOrCreateChunk(new BlockCoord(x, y, z)), noiseCache);
+                    GenerateChunk(world, world.GetOrCreateChunk(new ChunkCoord(x, y, z)), noiseCache);
                 }
             }
         }

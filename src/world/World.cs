@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class World : Node
 {
     public static World Singleton;
-    public Dictionary<BlockCoord, Chunk> Chunks = new Dictionary<BlockCoord, Chunk>();
+    public Dictionary<ChunkCoord, Chunk> Chunks = new Dictionary<ChunkCoord, Chunk>();
 
     public override void _EnterTree()
     {
@@ -14,7 +14,7 @@ public class World : Node
         base._EnterTree();
     }
 
-    public Chunk GetOrCreateChunk(BlockCoord chunkCoords) {
+    public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             //chunk already exists
             return c;
@@ -24,7 +24,7 @@ public class World : Node
         Chunks[chunkCoords] = c;
         return c;
     }
-    public Chunk GetChunk(BlockCoord chunkCoords) {
+    public Chunk GetChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             return c;
         }
@@ -32,7 +32,7 @@ public class World : Node
     }
     public Block GetBlock(BlockCoord coords)
     {
-        BlockCoord chunkCoords = Chunk.WorldToChunkPos(coords);
+        ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetChunk(chunkCoords);
         if (c == null) return null;
@@ -42,34 +42,34 @@ public class World : Node
         return GetBlock((BlockCoord)worldCoords);
     }
     public void SetBlock(BlockCoord coords, Block block, bool meshChunk=true) {
-        BlockCoord chunkCoords = Chunk.WorldToChunkPos(coords);
+        ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetOrCreateChunk(chunkCoords);
         c[blockCoords] = block;
         if (meshChunk) {
             Mesher.Singleton.MeshDeferred(c);
             //mesh neighbors if needed
-            if (blockCoords.x == 0 && GetChunk(chunkCoords+new BlockCoord(-1,0,0)) is Chunk nx)
+            if (blockCoords.x == 0 && GetChunk(chunkCoords+new ChunkCoord(-1,0,0)) is Chunk nx)
             {
                 Mesher.Singleton.MeshDeferred(nx);
             }
-            if (blockCoords.y == 0 && GetChunk(chunkCoords+new BlockCoord(0,-1,0)) is Chunk ny)
+            if (blockCoords.y == 0 && GetChunk(chunkCoords+new ChunkCoord(0,-1,0)) is Chunk ny)
             {
                 Mesher.Singleton.MeshDeferred(ny);
             }
-            if (blockCoords.z == 0 && GetChunk(chunkCoords+new BlockCoord(0,0,-1)) is Chunk nz)
+            if (blockCoords.z == 0 && GetChunk(chunkCoords+new ChunkCoord(0,0,-1)) is Chunk nz)
             {
                 Mesher.Singleton.MeshDeferred(nz);
             }
-            if (blockCoords.x == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new BlockCoord(1,0,0)) is Chunk px)
+            if (blockCoords.x == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(1,0,0)) is Chunk px)
             {
                 Mesher.Singleton.MeshDeferred(px);
             }
-            if (blockCoords.y == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new BlockCoord(0,1,0)) is Chunk py)
+            if (blockCoords.y == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,1,0)) is Chunk py)
             {
                 Mesher.Singleton.MeshDeferred(py);
             }
-            if (blockCoords.z == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new BlockCoord(0,0,1)) is Chunk pz)
+            if (blockCoords.z == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,0,1)) is Chunk pz)
             {
                 Mesher.Singleton.MeshDeferred(pz);
             }

@@ -69,12 +69,12 @@ public class Mesher : Node
         var uvs = new List<Vector2>();
 
         Chunk[] neighbors = new Chunk[6]; //we are in 3d
-        neighbors[(int)Direction.PosX] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(1,0,0));
-        neighbors[(int)Direction.PosY] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,1,0));
-        neighbors[(int)Direction.PosZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,0,1));
-        neighbors[(int)Direction.NegX] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(-1,0,0));
-        neighbors[(int)Direction.NegY] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,-1,0));
-        neighbors[(int)Direction.NegZ] = World.Singleton.GetChunk(chunk.ChunkCoords + new BlockCoord(0,0,-1));
+        neighbors[(int)Direction.PosX] = World.Singleton.GetChunk(chunk.Position + new ChunkCoord(1,0,0));
+        neighbors[(int)Direction.PosY] = World.Singleton.GetChunk(chunk.Position + new ChunkCoord(0,1,0));
+        neighbors[(int)Direction.PosZ] = World.Singleton.GetChunk(chunk.Position + new ChunkCoord(0,0,1));
+        neighbors[(int)Direction.NegX] = World.Singleton.GetChunk(chunk.Position + new ChunkCoord(-1,0,0));
+        neighbors[(int)Direction.NegY] = World.Singleton.GetChunk(chunk.Position + new ChunkCoord(0,-1,0));
+        neighbors[(int)Direction.NegZ] = World.Singleton.GetChunk(chunk.Position + new ChunkCoord(0,0,-1));
 
         //generate the mesh
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)

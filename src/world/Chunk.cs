@@ -5,14 +5,14 @@ using Godot;
 public class Chunk
 {
     public const int CHUNK_SIZE = 16;
-    public BlockCoord ChunkCoords;
+    public ChunkCoord Position;
     public Block[,,] Blocks;
     public Node Mesh;
 
-    public Chunk(BlockCoord chunkCoords)
+    public Chunk(ChunkCoord chunkCoords)
     {
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
-        ChunkCoords = chunkCoords;
+        Position = chunkCoords;
     }
 
     public Block this[BlockCoord index] {
@@ -25,16 +25,11 @@ public class Chunk
     }
 
     public BlockCoord LocalToWorld(BlockCoord local) {
-        BlockCoord coords = CHUNK_SIZE*ChunkCoords;
-        return coords + local;
+        return (BlockCoord)Position + local;
     }
 
     public static BlockCoord WorldToLocal(BlockCoord coord)
     {
         return coord % CHUNK_SIZE;
-    }
-    public static BlockCoord WorldToChunkPos(BlockCoord coord)
-    {
-        return coord/CHUNK_SIZE;
     }
 }

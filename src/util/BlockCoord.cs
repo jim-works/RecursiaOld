@@ -51,6 +51,10 @@ public struct BlockCoord
     {
         return new Godot.Vector3(conv.x, conv.y, conv.z);
     }
+    public static explicit operator BlockCoord(ChunkCoord conv)
+    {
+        return new BlockCoord(conv.x*Chunk.CHUNK_SIZE,conv.y*Chunk.CHUNK_SIZE,conv.z*Chunk.CHUNK_SIZE);
+    }
     public override string ToString()
     {
         return $"({x}, {y}, {z})";
