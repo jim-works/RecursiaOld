@@ -11,6 +11,7 @@ public class World : Node
     public WorldGenerator WorldGen;
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
+    [Export]
     private int loadDistance = 10;
 
     public override void _EnterTree()
@@ -24,6 +25,7 @@ public class World : Node
     public override void _Process(float delta)
     {
         doChunkLoading();
+        WorldGen.SendToMesher();
         base._Process(delta);
     }
     private void doChunkLoading()
@@ -33,12 +35,14 @@ public class World : Node
         foreach (Spatial loader in ChunkLoaders)
         {
             ChunkCoord center = (ChunkCoord)loader.GlobalTransform.origin;
+            int missed = 0;
             for (int x = -loadDistance; x <= loadDistance; x++)
             {
                 for (int y = -loadDistance; y <= loadDistance; y++)
                 {
                     for (int z = -loadDistance; z <= loadDistance; z++)
                     {
+                        if (x*x+y*y+z+z > loadDistance*loadDistance) continue; //load in a sphere instead of cube
                         loadedChunks.Add(center + new ChunkCoord(x,y,z));
                     }
                 }
@@ -60,8 +64,7 @@ public class World : Node
     private void loadChunk(ChunkCoord coord) {
         if (Chunks.ContainsKey(coord)) return; //already loaded
         Chunk c = CreateChunk(coord);
-        WorldGen.GenerateChunk(this, c);
-        Mesher.Singleton.MeshDeferred(c);
+        WorldGen.GenerateDeferred(c);
     }
     private void unloadChunk(ChunkCoord coord) {
         if (!Chunks.ContainsKey(coord)) return;//already unloaded
