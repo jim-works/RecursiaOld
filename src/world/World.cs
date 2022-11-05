@@ -7,20 +7,76 @@ public class World : Node
 {
     public static World Singleton;
     public Dictionary<ChunkCoord, Chunk> Chunks = new Dictionary<ChunkCoord, Chunk>();
+    public HashSet<Spatial> ChunkLoaders = new HashSet<Spatial>();
+    public WorldGenerator WorldGen;
+    private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
+    private List<ChunkCoord> toUnload = new List<ChunkCoord>();
+    private int loadDistance = 10;
 
     public override void _EnterTree()
     {
         Singleton = this;
+        BlockLoader.Load();
+        WorldGen = new WorldGenerator();
         base._EnterTree();
     }
 
+    public override void _Process(float delta)
+    {
+        doChunkLoading();
+        base._Process(delta);
+    }
+    private void doChunkLoading()
+    {
+        loadedChunks.Clear();
+        toUnload.Clear();
+        foreach (Spatial loader in ChunkLoaders)
+        {
+            ChunkCoord center = (ChunkCoord)loader.GlobalTransform.origin;
+            for (int x = -loadDistance; x <= loadDistance; x++)
+            {
+                for (int y = -loadDistance; y <= loadDistance; y++)
+                {
+                    for (int z = -loadDistance; z <= loadDistance; z++)
+                    {
+                        loadedChunks.Add(center + new ChunkCoord(x,y,z));
+                    }
+                }
+            }
+        }
+        foreach (var kvp in Chunks) {
+            if (!loadedChunks.Contains(kvp.Key)) {
+                toUnload.Add(kvp.Key);
+            }
+        }
+        foreach (var c in toUnload) {
+            unloadChunk(c);
+        }
+        foreach (var c in loadedChunks) {
+            loadChunk(c);
+        }
+
+    }
+    private void loadChunk(ChunkCoord coord) {
+        if (Chunks.ContainsKey(coord)) return; //already loaded
+        Chunk c = CreateChunk(coord);
+        WorldGen.GenerateChunk(this, c);
+        Mesher.Singleton.MeshDeferred(c);
+    }
+    private void unloadChunk(ChunkCoord coord) {
+        if (!Chunks.ContainsKey(coord)) return;//already unloaded
+        Mesher.Singleton.Unload(Chunks[coord]);
+        Chunks.Remove(coord);
+    }
     public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             //chunk already exists
             return c;
         }
-        //create new chunk
-        c = new Chunk(chunkCoords);
+        return CreateChunk(chunkCoords);
+    }
+    public Chunk CreateChunk(ChunkCoord chunkCoords) {
+        Chunk c = new Chunk(chunkCoords);
         Chunks[chunkCoords] = c;
         return c;
     }

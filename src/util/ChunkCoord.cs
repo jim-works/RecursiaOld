@@ -48,6 +48,11 @@ public struct ChunkCoord
         BlockCoord c = conv/Chunk.CHUNK_SIZE;
         return new ChunkCoord(c.x,c.y,c.z);
     }
+    public static explicit operator ChunkCoord(Godot.Vector3 conv)
+    {
+        BlockCoord c = (BlockCoord)conv/Chunk.CHUNK_SIZE;
+        return new ChunkCoord(c.x,c.y,c.z);
+    }
     public override string ToString()
     {
         return $"({x}, {y}, {z})";

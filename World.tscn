@@ -15,7 +15,7 @@ script = ExtResource( 5 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 4.26743 )
 far = 5000.0
 script = ExtResource( 2 )
-FlySpeed = 25.0
+FlySpeed = 100.0
 LookSensitivity = 0.3
 PunchDistance = 50.0
 

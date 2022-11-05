@@ -2,6 +2,7 @@ using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 public class Mesher : Node
 {
@@ -10,15 +11,13 @@ public class Mesher : Node
     [Export]
     public float MaxMeshTime = 0.1f;
     public static Mesher Singleton;
+    private long meshJobs = 0;
     private HashSet<Chunk> toMesh = new HashSet<Chunk>();
+    private ConcurrentDictionary<ChunkCoord, long> meshing = new ConcurrentDictionary<ChunkCoord, long>(); //value is the order that the meshing job was issued. Higher is newer
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
         Singleton = this;
-        BlockLoader.Load();
-        WorldGenerator wg = new WorldGenerator();
-        wg.Generate(World.Singleton);
-        MeshAll();
     }
     public override void _Process(float delta)
     {
@@ -26,10 +25,21 @@ public class Mesher : Node
         foreach(var c in toMesh) {
             if (c == null) continue; //not sure if this is needed
             Chunk meshing = c; //copy pointer to avoid race condition
-            Task.Run(() => MeshChunk(meshing));
+            long jobNo = meshJobs++;
+            Task.Run(() => MeshChunk(meshing, jobNo));
+            //MeshChunk(meshing, jobNo);
         }
         toMesh.Clear();
         base._Process(delta);
+    }
+    public void Unload(Chunk chunk)
+    {
+        if (chunk == null) return;
+        long jobNo = meshJobs++;
+        meshing[chunk.Position] = jobNo; //prevent old meshing jobs from adding chunk to the scene after we unload it
+        toMesh.Remove(chunk);
+        chunk.Mesh?.QueueFree();
+        chunk.Mesh = null;
     }
     public void MeshAll()
     {
@@ -40,16 +50,34 @@ public class Mesher : Node
     public void MeshDeferred(Chunk chunk) {
         toMesh.Add(chunk);
     }
-    private void MeshChunk(Chunk chunk) {
+    private void MeshChunk(Chunk chunk, long jobNo) {
+        if (!meshing.ContainsKey(chunk.Position))
+        {
+            meshing[chunk.Position] = jobNo;
+        }
+        else if (meshing[chunk.Position] > jobNo)
+        {
+            return; //don't mesh if another job was issued after this one
+        }
         var mesh = GenerateMesh(chunk);
+        if (meshing[chunk.Position] > jobNo)
+        {
+            mesh.QueueFree();
+            return; //don't mesh if another job was issued after this one
+        }
         if (chunk.Mesh != null) {
-            chunk.Mesh.QueueFree();
-            chunk.Mesh = null;
+            chunk.Mesh.QueueFree(); //remove old mesh
         }
         chunk.Mesh = mesh;
-        if (mesh != null)
+        if (mesh == null) return;
+        if (meshing[chunk.Position] <= jobNo)
         {
+            meshing.TryRemove(chunk.Position, out var _);
             GetParent().CallDeferred("add_child", mesh);
+        }
+        else
+        {
+            mesh.QueueFree();
         }
     }
     private MeshInstance GenerateMesh(Chunk chunk)

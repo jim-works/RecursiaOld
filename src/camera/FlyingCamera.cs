@@ -20,6 +20,7 @@ public class FlyingCamera : Spatial
     public override void _Ready()
     {
         Input.SetMouseMode(Input.MouseMode.Captured);
+        World.Singleton.ChunkLoaders.Add(this);
         base._Ready();
     }
     public override void _Input(InputEvent e)
