@@ -7,7 +7,7 @@ public class Chunk
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
     public Block[,,] Blocks;
-    public Node Mesh;
+    public ChunkMesh Mesh;
 
     public Chunk(ChunkCoord chunkCoords)
     {

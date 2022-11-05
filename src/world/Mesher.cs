@@ -11,9 +11,9 @@ public class Mesher : Node
     [Export]
     public float MaxMeshTime = 0.1f;
     public static Mesher Singleton;
-    private long meshJobs = 0;
     private HashSet<Chunk> toMesh = new HashSet<Chunk>();
-    private ConcurrentDictionary<ChunkCoord, long> meshing = new ConcurrentDictionary<ChunkCoord, long>(); //value is the order that the meshing job was issued. Higher is newer
+    private ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new ConcurrentBag<(ChunkMesh, ChunkCoord)>();
+    //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
@@ -21,24 +21,26 @@ public class Mesher : Node
     }
     public override void _Process(float delta)
     {
-        //empty mesh queue
-        foreach(var c in toMesh) {
-            if (c == null) continue; //not sure if this is needed
-            Chunk meshing = c; //copy pointer to avoid race condition
-            long jobNo = meshJobs++;
-            Task.Run(() => MeshChunk(meshing, jobNo));
-            //MeshChunk(meshing, jobNo);
+        //multithread chunk generation
+        foreach (var mesghin in toMesh)
+        {
+            multithreadGenerateChunk(mesghin);
         }
         toMesh.Clear();
+        //spawn all on single thread to avoid a million race conditions
+        while (finishedMeshes.Count > 0)
+        {
+            if (finishedMeshes.TryTake(out (ChunkMesh, ChunkCoord) pair))
+            {
+                spawnChunk(pair.Item1, pair.Item2);
+            }
+        }
         base._Process(delta);
     }
     public void Unload(Chunk chunk)
     {
         if (chunk == null) return;
-        long jobNo = meshJobs++;
-        meshing[chunk.Position] = jobNo; //prevent old meshing jobs from adding chunk to the scene after we unload it
-        toMesh.Remove(chunk);
-        chunk.Mesh?.QueueFree();
+        chunk.Mesh?.ClearData();
         chunk.Mesh = null;
     }
     public void MeshAll()
@@ -50,51 +52,47 @@ public class Mesher : Node
     public void MeshDeferred(Chunk chunk) {
         toMesh.Add(chunk);
     }
-    private void MeshChunk(Chunk chunk, long jobNo) {
-        if (!meshing.ContainsKey(chunk.Position))
-        {
-            meshing[chunk.Position] = jobNo;
-        }
-        else if (meshing[chunk.Position] > jobNo)
-        {
-            return; //don't mesh if another job was issued after this one
-        }
-        var mesh = GenerateMesh(chunk);
-        if (meshing[chunk.Position] > jobNo)
-        {
-            mesh.QueueFree();
-            return; //don't mesh if another job was issued after this one
-        }
-        if (chunk.Mesh != null) {
-            chunk.Mesh.QueueFree(); //remove old mesh
-        }
+    //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
+    private void spawnChunk(ChunkMesh mesh, ChunkCoord coord)
+    {
+        Chunk chunk = World.Singleton.GetChunk(coord);
+        if (chunk == null) return;
+        chunk.Mesh?.ClearData();
         chunk.Mesh = mesh;
-        if (mesh == null) return;
-        if (meshing[chunk.Position] <= jobNo)
+        if (mesh == null)
         {
-            meshing.TryRemove(chunk.Position, out var _);
-            GetParent().CallDeferred("add_child", mesh);
+            //no need to spawn in a new MeshInstance if the chunk is empty
+            return;
         }
-        else
-        {
-            mesh.QueueFree();
-        }
+        MeshInstance meshNode = new MeshInstance();
+        chunk.Mesh.ApplyTo(meshNode, ChunkMaterial);
+        AddChild(chunk.Mesh.Node);
     }
-    private MeshInstance GenerateMesh(Chunk chunk)
+    //places finished chunk in finishedMeshes
+    private void multithreadGenerateChunk(Chunk chunk) {
+        Chunk c = chunk;
+        Task.Run(() => {
+            ChunkMesh mesh = GenerateMesh(c);
+            finishedMeshes.Add((mesh, c.Position));
+        });
+        
+        
+    }
+    private ChunkMesh getMesh()
+    {
+        return new ChunkMesh();
+    }
+    private ChunkMesh GenerateMesh(Chunk chunk)
     {
         if (chunk == null)
         {
             return null;
         }
-        var mesh = new MeshInstance();
-        var arrMesh = new ArrayMesh();
-
-        Array array = new Array();
-        array.Resize((int)ArrayMesh.ArrayType.Max);
-        var vertices = new List<Vector3>();
-        var tris = new List<int>();
-        var normals = new List<Vector3>();
-        var uvs = new List<Vector2>();
+        ChunkMesh chunkMesh = getMesh();
+        var vertices = chunkMesh.Verts;
+        var tris = chunkMesh.Tris;
+        var normals = chunkMesh.Norms;
+        var uvs = chunkMesh.UVs;
 
         Chunk[] neighbors = new Chunk[6]; //we are in 3d
         neighbors[(int)Direction.PosX] = World.Singleton.GetChunk(chunk.Position + new ChunkCoord(1,0,0));
@@ -118,16 +116,11 @@ public class Mesher : Node
             }
         }
 
-        if (vertices.Count==0) return null;
-        array[(int)ArrayMesh.ArrayType.Vertex] = vertices;
-        array[(int)ArrayMesh.ArrayType.Index] = tris;
-        array[(int)ArrayMesh.ArrayType.Normal] = normals;
-        array[(int)ArrayMesh.ArrayType.TexUv] = uvs;
-        arrMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, array);
-
-        mesh.Mesh = arrMesh;
-        mesh.SetSurfaceMaterial(0, ChunkMaterial);
-        return mesh;
+        if (vertices.Count==0) {
+            chunkMesh.ClearData();
+            return null;
+        }
+        return chunkMesh;
     }
     private void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, BlockTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {

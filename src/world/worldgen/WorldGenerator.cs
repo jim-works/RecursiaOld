@@ -28,25 +28,36 @@ public class WorldGenerator
         Block dirt = BlockTypes.Get("dirt");
         Block grass = BlockTypes.Get("grass");
         Block sand = BlockTypes.Get("sand");
+        if (chunk.Position.x % 2 == 0)
+        {
+            return;
+        }
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
         {
             for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            {   
-                Int2 sp = new Int2(x/samples,z/samples);
-                Vector2 propInSample = new Vector2((x - sp.x*samples)/(float)samples,(z- sp.y*samples)/(float)samples);
-                int height = 10;//(int)Math.Bilerp(propInSample.x,propInSample.y,noiseCache[sp.x,0,sp.y],noiseCache[sp.x+1,0,sp.y],noiseCache[sp.x,0,sp.y+1],noiseCache[sp.x+1,0,sp.y+1]);
-                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-                {
-                    BlockCoord worldCoords = chunk.LocalToWorld(new BlockCoord(x,y,z));
-                    if (worldCoords.y < height - 5) {
-                        chunk[x,y,z] = stone;
-                    } else if (worldCoords.y < height) {
-                        chunk[x,y,z] = dirt;
-                    } else if (worldCoords.y == height) {
-                        chunk[x,y,z] = grass;
-                    }
-                }
+            {
+                chunk.Blocks[x,0,z] = stone;
             }
         }
+        // for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+        // {
+        //     for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+        //     {   
+        //         Int2 sp = new Int2(x/samples,z/samples);
+        //         Vector2 propInSample = new Vector2((x - sp.x*samples)/(float)samples,(z- sp.y*samples)/(float)samples);
+        //         int height = 10;//(int)Math.Bilerp(propInSample.x,propInSample.y,noiseCache[sp.x,0,sp.y],noiseCache[sp.x+1,0,sp.y],noiseCache[sp.x,0,sp.y+1],noiseCache[sp.x+1,0,sp.y+1]);
+        //         for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+        //         {
+        //             BlockCoord worldCoords = chunk.LocalToWorld(new BlockCoord(x,y,z));
+        //             if (worldCoords.y < height - 5) {
+        //                 chunk[x,y,z] = stone;
+        //             } else if (worldCoords.y < height) {
+        //                 chunk[x,y,z] = dirt;
+        //             } else if (worldCoords.y == height) {
+        //                 chunk[x,y,z] = grass;
+        //             }
+        //         }
+        //     }
+        // }
     }
 }
