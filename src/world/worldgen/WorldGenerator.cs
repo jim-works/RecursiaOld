@@ -16,7 +16,7 @@ public class WorldGenerator
 
     public WorldGenerator()
     {
-        noise.SetNoiseType(FastNoiseLite.NoiseType.Cellular);
+        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
         //initialize worldgen threads
         Godot.GD.Print($"Starting world generator with {WorldgenThreads} threads!");
         

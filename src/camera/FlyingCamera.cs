@@ -54,7 +54,7 @@ public class FlyingCamera : Spatial
             Vector3 dir = -Transform.basis.z*PunchDistance;
             BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir);
             if (hit != null) {
-                World.Singleton.CreateExplosion(hit.HitPos, 10);
+                SphereShaper.Shape(World.Singleton, hit.HitPos, 25);
             }
         }
         
