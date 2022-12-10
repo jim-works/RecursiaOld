@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
+//Faces of blocks are on integral coordinates
+//Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
 public class Mesher : Node
 {
     [Export]

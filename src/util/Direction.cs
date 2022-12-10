@@ -1,9 +1,18 @@
+using System.Runtime.CompilerServices;
+
 public enum Direction
 {
+    //doing this so we can test direction axis by bit ops: ((4|x)^NegX)==0 tests if its on x-axis
     PosX,
     PosY,
     PosZ,
     NegX,
     NegY,
-    NegZ
+    NegZ,
+}
+
+public static class DirectionUtils
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool MaskHas(int mask, Direction d) => ((1 << (int)d) & mask) == 1;
 }

@@ -2,7 +2,8 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-
+//Faces of blocks are on integral coordinates
+//Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
 public class World : Node
 {
     public static World Singleton;
