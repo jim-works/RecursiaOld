@@ -40,23 +40,26 @@ public class RotatingCamera : Spatial
         float look_y = Input.GetActionStrength("look_down") - Input.GetActionStrength("look_up");
         yaw = (yaw + ControllerLookSensitivity*look_x) % 360;
         pitch = System.Math.Min(System.Math.Max(pitch-ControllerLookSensitivity*look_y,-90),90);
-        if (RotateParentPitch)
+        if (RotateParentPitch && RotateParentYaw)
+        {
+            parent.RotationDegrees = new Vector3(pitch,yaw,parent.RotationDegrees.z);
+            RotationDegrees = new Vector3(0,0,RotationDegrees.z);
+        }
+        else if (RotateParentPitch)
         {
             parent.RotationDegrees = new Vector3(pitch, parent.RotationDegrees.y, parent.RotationDegrees.z);
+            RotationDegrees = new Vector3(0, RotationDegrees.y, RotationDegrees.z);
         }
-        else
-        {
-            RotationDegrees = new Vector3(pitch,RotationDegrees.y,RotationDegrees.z);
-        }
-        if (RotateParentYaw)
+        else if (RotateParentYaw)
         {
             parent.RotationDegrees = new Vector3(parent.RotationDegrees.x, yaw, parent.RotationDegrees.z);
+            RotationDegrees = new Vector3(RotationDegrees.x, 0, RotationDegrees.z); 
         }
         else
         {
-            RotationDegrees = new Vector3(RotationDegrees.x,pitch,RotationDegrees.z);
+            RotationDegrees = new Vector3(pitch,yaw,RotationDegrees.z);
         }
-
+        Godot.GD.Print($"cam: {RotationDegrees.y}");
         if (Input.IsActionJustPressed("punch")) {
             parent.Punch(GlobalTransform.origin, -GlobalTransform.basis.z);
         }

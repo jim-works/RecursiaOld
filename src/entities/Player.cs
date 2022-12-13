@@ -18,7 +18,7 @@ public class Player : PhysicsObject
     public override void _Process(float delta)
     {
         move(delta);        
-
+        Godot.GD.Print($"player: {RotationDegrees.y}");
         if (Input.IsActionJustPressed("pause")) {
             if (Input.GetMouseMode() == Input.MouseMode.Captured) Input.SetMouseMode(Input.MouseMode.Visible);
             else if (Input.GetMouseMode() == Input.MouseMode.Visible) Input.SetMouseMode(Input.MouseMode.Captured);
@@ -49,7 +49,7 @@ public class Player : PhysicsObject
     {
         float x = Input.GetActionStrength("move_right")-Input.GetActionStrength("move_left");
         float z = Input.GetActionStrength("move_backward")-Input.GetActionStrength("move_forward");
-        Vector3 movement =  new Vector3(MoveSpeed*x,0,MoveSpeed*z);
+        Vector3 movement =  LocalDirectionToWorld(new Vector3(MoveSpeed*x,0,MoveSpeed*z));
         Velocity.x = movement.x;
         Velocity.z = movement.z;
         if (Input.IsActionJustPressed("jump"))

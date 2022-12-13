@@ -1,5 +1,7 @@
 # Godot-specific ignores
 .import/
+#godot 4 files
+.godot/
 export.cfg
 export_presets.cfg
 

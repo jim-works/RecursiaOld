@@ -25,6 +25,7 @@ public class PhysicsObject : Spatial
     }
 
     //adds a force for the next physics update, does not persist across updates
+    //world space
     public void AddForce(Vector3 f)
     {
         currentForce += f;
@@ -34,7 +35,7 @@ public class PhysicsObject : Spatial
     //TODO ACTUALLY MAKE THIS WORK ROFLCOPTER
     public Vector3 LocalDirectionToWorld(Vector3 v)
     {
-        return GlobalTransform.basis.z*v.z;
+        return GlobalTransform.basis.Xform(v);
     }
 
     //doesn't acccount for velocity

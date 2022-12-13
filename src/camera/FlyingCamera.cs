@@ -37,7 +37,6 @@ public class FlyingCamera : Spatial
     public override void _Process(float delta)
     {
         move(delta);        
-
         if (Input.IsActionJustPressed("pause")) {
             if (Input.GetMouseMode() == Input.MouseMode.Captured) Input.SetMouseMode(Input.MouseMode.Visible);
             else if (Input.GetMouseMode() == Input.MouseMode.Visible) Input.SetMouseMode(Input.MouseMode.Captured);
