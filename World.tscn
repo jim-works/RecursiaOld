@@ -31,9 +31,10 @@ margin_bottom = 16.0
 texture = ExtResource( 4 )
 
 [node name="Player" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 4.26743 )
 script = ExtResource( 2 )
+JumpHeight = 6.0
 
 [node name="Camera" type="Camera" parent="Player"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0 )
 far = 5000.0
 script = ExtResource( 6 )

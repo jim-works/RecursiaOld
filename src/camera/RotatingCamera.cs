@@ -59,12 +59,11 @@ public class RotatingCamera : Spatial
         {
             RotationDegrees = new Vector3(pitch,yaw,RotationDegrees.z);
         }
-        Godot.GD.Print($"cam: {RotationDegrees.y}");
         if (Input.IsActionJustPressed("punch")) {
-            parent.Punch(GlobalTransform.origin, -GlobalTransform.basis.z);
+            parent.Punch(-GlobalTransform.basis.z);
         }
         if (Input.IsActionJustPressed("use")) {
-            parent.Use(GlobalTransform.origin, -GlobalTransform.basis.z);
+            parent.Use(-GlobalTransform.basis.z);
         }  
         
         base._Process(delta);

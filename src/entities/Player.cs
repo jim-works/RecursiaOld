@@ -8,17 +8,19 @@ public class Player : PhysicsObject
     public float MoveSpeed = 10;
     [Export]
     public float JumpHeight = 10;
+    [Export]
+    public Vector3 CameraOffset = new Vector3(0,0.7f,0);
 
     public override void _Ready()
     {
         World.Singleton.ChunkLoaders.Add(this);
+        Size = new Vector3(0.7f,1.8f,0.7f);
         base._Ready();
     }
 
     public override void _Process(float delta)
     {
-        move(delta);        
-        Godot.GD.Print($"player: {RotationDegrees.y}");
+        move(delta);
         if (Input.IsActionJustPressed("pause")) {
             if (Input.GetMouseMode() == Input.MouseMode.Captured) Input.SetMouseMode(Input.MouseMode.Visible);
             else if (Input.GetMouseMode() == Input.MouseMode.Visible) Input.SetMouseMode(Input.MouseMode.Captured);
@@ -28,18 +30,18 @@ public class Player : PhysicsObject
     }
 
     //called by rotating camera
-    public void Punch(Vector3 origin, Vector3 dir)
+    public void Punch(Vector3 dir)
     {
-        BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir*Reach);
+        BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
         if (hit != null) {
             World.Singleton.SetBlock(hit.BlockPos, null);
         }
     }
 
     //called by rotating camera
-    public void Use(Vector3 origin, Vector3 dir)
+    public void Use(Vector3 dir)
     {
-        BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir*Reach);
+        BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
         if (hit != null) {
             SphereShaper.Shape(World.Singleton, hit.HitPos, 25);
         }
