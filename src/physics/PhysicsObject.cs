@@ -16,6 +16,8 @@ public class PhysicsObject : Spatial
     }
     [Export]
     public Vector3 Gravity = new Vector3(0,-10,0);
+    [Export]
+    public bool PhysicsActive = true;
 
     protected Vector3 currentForce; //zeroed each physics update
     protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
@@ -23,14 +25,27 @@ public class PhysicsObject : Spatial
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box GetBox() => Box.FromCenter(Position, Size);
 
+    public override void _EnterTree()
+    {
+        base._EnterTree();
+        World.Singleton.PhysicsObjects.Add(this);
+    }
+
     public override void _PhysicsProcess(float dt)
     {
+        if (!PhysicsActive) return;
         Velocity += currentForce*dt;
         //GD.Print(Velocity);
         currentForce = Gravity;
-        //handleCollision(World.Singleton); //between Velocity update and position update to guarantee we are never inside a wall
         doCollision(World.Singleton, dt);
+
         Position += Velocity*dt;
+    }
+
+    public override void _ExitTree()
+    {
+        World.Singleton.PhysicsObjects.Remove(this);
+        base._ExitTree();
     }
 
     //adds a force for the next physics update, does not persist across updates
@@ -45,9 +60,10 @@ public class PhysicsObject : Spatial
     {
         return GlobalTransform.basis.Xform(v);
     }
-     protected void doCollision(World world, float dt)
+    protected void doCollision(World world, float dt)
     {
         Vector3 oldV = Velocity;
+        int oldMask = collisionDirections;
         collisionDirections = 0;
         Vector3 frameVelocity = Velocity * dt; //this is the amount the object will move this update
         Vector3 postPosition = Position;
@@ -144,74 +160,5 @@ public class PhysicsObject : Spatial
         }
 
         Position = postPosition;
-    }
-    //doesn't acccount for Velocity
-    private int handleCollision(World world)
-    {
-        collisionDirections = 0;
-        //check each axis independently
-        if (checkNegXCollision(world, out int nx)) {
-            collisionDirections |= 1 << (int)Direction.NegX;
-            Velocity.x = Mathf.Max(0,Velocity.x);
-            Translation = new Vector3(nx, Translation.y, Translation.z);
-        }
-        if (checkPosXCollision(world, out int px)) {
-            collisionDirections |= 1 << (int)Direction.PosX;
-            Velocity.x = Mathf.Min(0,Velocity.x);
-            Translation = new Vector3(px, Translation.y, Translation.z);
-        }
-        if (checkNegYCollision(world, out int ny)) {
-            collisionDirections |= 1 << (int)Direction.NegY;
-            Velocity.y = Mathf.Max(0,Velocity.y);
-            Translation = new Vector3(Translation.x, ny, Translation.z);
-        }
-        if (checkPosYCollision(world, out int py)) {
-            collisionDirections |= 1 << (int)Direction.PosY;
-            Velocity.y = Mathf.Min(0,Velocity.y);
-            Translation = new Vector3(Translation.x, py, Translation.z);
-        }
-        if (checkNegZCollision(world, out int nz)) {
-            collisionDirections |= 1 << (int)Direction.NegZ;
-            Velocity.z = Mathf.Max(0,Velocity.z);
-            Translation = new Vector3(Translation.x, Translation.y, nz);
-        }
-        if (checkPosZCollision(world, out int pz)) {
-            collisionDirections |= 1 << (int)Direction.PosZ;
-            Velocity.z = Mathf.Min(0,Velocity.z);
-            Translation = new Vector3(Translation.x, Translation.y, pz);
-        }
-
-        return collisionDirections;
-    }
-
-    private bool checkNegXCollision(World world, out int coord)
-    {
-        coord = Mathf.CeilToInt(GetBox().Corner.x);
-        return Plane.CollidesWithWorldX(GetBox().Corner, Size.y, Size.z, world);
-    }
-    private bool checkPosXCollision(World world, out int coord)
-    {
-        coord = Mathf.FloorToInt((GetBox().Corner.x+Size.x));
-        return Plane.CollidesWithWorldX(GetBox().Corner+new Vector3(Size.x,0,0), Size.y, Size.z, world);
-    }
-    private bool checkNegYCollision(World world, out int coord)
-    {
-        coord = Mathf.CeilToInt(GetBox().Center().y);
-        return Plane.CollidesWithWorldY(GetBox().Corner, Size.y, Size.z, world);
-    }
-    private bool checkPosYCollision(World world, out int coord)
-    {
-        coord = Mathf.FloorToInt(GetBox().Corner.y+Size.y);
-        return Plane.CollidesWithWorldY(GetBox().Corner+new Vector3(0,Size.y,0), Size.y, Size.z, world);
-    }
-    private bool checkNegZCollision(World world, out int coord)
-    {
-        coord = Mathf.CeilToInt(GetBox().Corner.z);
-        return Plane.CollidesWithWorldZ(GetBox().Corner, Size.y, Size.z, world);
-    }
-    private bool checkPosZCollision(World world, out int coord)
-    {
-        coord = Mathf.FloorToInt(GetBox().Corner.z+Size.z);
-        return Plane.CollidesWithWorldZ(GetBox().Corner+new Vector3(0,0,Size.z), Size.y, Size.z, world);
     }
 }

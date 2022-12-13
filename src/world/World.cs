@@ -8,6 +8,7 @@ public class World : Node
 {
     public static World Singleton;
     public Dictionary<ChunkCoord, Chunk> Chunks = new Dictionary<ChunkCoord, Chunk>();
+    public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public HashSet<Spatial> ChunkLoaders = new HashSet<Spatial>();
     public WorldGenerator WorldGen;
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
