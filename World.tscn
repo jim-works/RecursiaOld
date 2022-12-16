@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -6,7 +6,8 @@
 [ext_resource path="res://textures/crosshair.png" type="Texture" id=4]
 [ext_resource path="res://src/world/World.cs" type="Script" id=5]
 [ext_resource path="res://src/camera/RotatingCamera.cs" type="Script" id=6]
-[ext_resource path="res://Objects/Bullet.tscn" type="PackedScene" id=7]
+[ext_resource path="res://objects/Bullet.tscn" type="PackedScene" id=7]
+[ext_resource path="res://src/settings/settings.gd" type="Script" id=8]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
@@ -33,7 +34,7 @@ texture = ExtResource( 4 )
 
 [node name="Player" type="Spatial" parent="."]
 script = ExtResource( 2 )
-JumpHeight = 6.0
+Gravity = Vector3( 0, -20, 0 )
 ShootSpeed = 50.0
 Projectile = ExtResource( 7 )
 
@@ -41,3 +42,6 @@ Projectile = ExtResource( 7 )
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0 )
 far = 5000.0
 script = ExtResource( 6 )
+
+[node name="Settings" type="Node" parent="."]
+script = ExtResource( 8 )
