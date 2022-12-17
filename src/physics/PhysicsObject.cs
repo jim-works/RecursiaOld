@@ -15,7 +15,7 @@ public class PhysicsObject : Spatial
         set {GlobalTransform = new Transform(GlobalTransform.basis, value);}
     }
     [Export]
-    public Vector3 Gravity = new Vector3(0,-10,0);
+    public Vector3 Gravity = new Vector3(0,-20,0);
     [Export]
     public bool PhysicsActive = true;
 

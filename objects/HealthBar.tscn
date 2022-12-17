@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://src/ui/HealthBar.cs" type="Script" id=1]
+
+[node name="HealthBar" type="Control"]
+margin_right = 200.0
+margin_bottom = 40.0
+script = ExtResource( 1 )
+
+[node name="Background" type="ColorRect" parent="."]
+margin_right = 200.0
+margin_bottom = 40.0
+color = Color( 1, 0, 0, 1 )
+
+[node name="Health" type="ColorRect" parent="."]
+margin_right = 200.0
+margin_bottom = 40.0
+color = Color( 0, 0.854902, 0.454902, 1 )

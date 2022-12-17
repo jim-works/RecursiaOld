@@ -8,13 +8,17 @@ public class Projectile : PhysicsObject
     public float ExplosionSize = 10;
     [Export]
     public float FlingFactor = 1;
+    [Export]
+    public float Damage = 5;
 
     private bool dying = false;
     private bool exploded = false;
     private float dieTime = 2;
+    private Team team;
 
-    public void Launch(Vector3 velocity)
+    public void Launch(Vector3 velocity, Team team)
     {
+        this.team = team;
         Velocity = velocity;
         LookAt(Position + velocity, Vector3.Up);
     }
@@ -51,9 +55,13 @@ public class Projectile : PhysicsObject
         dying = true;
         foreach(PhysicsObject obj in World.Singleton.PhysicsObjects)
         {
-            if (obj == this) return;
+            if (obj == this) continue;
             float mag = (obj.Position-Position).LengthSquared()+1;
             obj.Velocity += ((obj.Position-Position)/mag*ExplosionSize*FlingFactor);
+        }
+        foreach(Combatant obj in World.Singleton.Combatants)
+        {
+            if ((obj.Position-Position).LengthSquared() <= ExplosionSize*ExplosionSize) obj.TakeDamage(new Damage{Team=team,Amount=Damage});
         }
     }
 

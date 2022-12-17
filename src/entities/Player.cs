@@ -1,6 +1,6 @@
 using Godot;
 
-public class Player : PhysicsObject
+public class Player : Combatant
 {
     [Export]
     public float Reach = 100;
@@ -19,8 +19,13 @@ public class Player : PhysicsObject
     public override void _Ready()
     {
         World.Singleton.ChunkLoaders.Add(this);
-        Size = new Vector3(0.7f,1.8f,0.7f);
         base._Ready();
+    }
+
+    public override void _ExitTree()
+    {
+        World.Singleton.ChunkLoaders.Remove(this);
+        base._ExitTree();
     }
 
     public override void _Process(float delta)
@@ -49,7 +54,7 @@ public class Player : PhysicsObject
         Projectile proj = Projectile.Instance<Projectile>();
         World.Singleton.AddChild(proj);
         proj.Position = Position+CameraOffset;
-        proj.Launch(dir*ShootSpeed);
+        proj.Launch(dir*ShootSpeed, Team);
     }
 
     private void move(float delta)
