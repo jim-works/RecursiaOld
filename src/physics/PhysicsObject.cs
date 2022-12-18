@@ -9,6 +9,8 @@ public class PhysicsObject : Spatial
     //reduces collision planes' sizes by this amount in each direction to avoid getting stuck on things.
     //For example, it would stop an x-axis collision to be detected while walking on flat ground.
     public float Epsilon = 0.1f;
+    [Export]
+    public float Mass = 1f;
     public Vector3 Velocity;
     public Vector3 Position {
         get => GlobalTransform.origin;
@@ -16,6 +18,8 @@ public class PhysicsObject : Spatial
     }
     [Export]
     public Vector3 Gravity = new Vector3(0,-20,0);
+    [Export]
+    public float AirResistance = 0.1f;
     [Export]
     public bool PhysicsActive = true;
 
@@ -34,9 +38,10 @@ public class PhysicsObject : Spatial
     public override void _PhysicsProcess(float dt)
     {
         if (!PhysicsActive) return;
-        Velocity += currentForce*dt;
+        AddForce(-AirResistance*Velocity);
+        Velocity += currentForce*dt/Mass;
         //GD.Print(Velocity);
-        currentForce = Gravity;
+        currentForce = Gravity*Mass;
         doCollision(World.Singleton, dt);
 
         Position += Velocity*dt;
@@ -53,6 +58,11 @@ public class PhysicsObject : Spatial
     public void AddForce(Vector3 f)
     {
         currentForce += f;
+    }
+    //adds an impulse. instant velocity change that accounts for mass.
+    public void AddImpulse(Vector3 f)
+    {
+        Velocity += f/Mass;
     }
 
     //rotates v from local to world

@@ -19,11 +19,13 @@ public class Player : Combatant
     public override void _Ready()
     {
         World.Singleton.ChunkLoaders.Add(this);
+        World.Singleton.Players.Add(this);
         base._Ready();
     }
 
     public override void _ExitTree()
     {
+        World.Singleton.Players.Remove(this);
         World.Singleton.ChunkLoaders.Remove(this);
         base._ExitTree();
     }
@@ -47,10 +49,6 @@ public class Player : Combatant
     //called by rotating camera
     public void Use(Vector3 dir)
     {
-        //BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
-        //if (hit != null) {
-        //    SphereShaper.Shape(World.Singleton, hit.HitPos, 25);
-        //}
         Projectile proj = Projectile.Instance<Projectile>();
         World.Singleton.AddChild(proj);
         proj.Position = Position+CameraOffset;

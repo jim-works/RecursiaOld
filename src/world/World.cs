@@ -11,6 +11,7 @@ public class World : Node
     //todo: optimize these
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public List<Combatant> Combatants = new List<Combatant>();
+    public List<Player> Players = new List<Player>();
     public HashSet<Spatial> ChunkLoaders = new HashSet<Spatial>();
     public WorldGenerator WorldGen;
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
@@ -31,6 +32,20 @@ public class World : Node
         doChunkLoading();
         WorldGen.SendToMesher();
         base._Process(delta);
+    }
+    public Player ClosestPlayer(Vector3 pos)
+    {
+        float minSqrDist = float.PositiveInfinity;
+        Player minPlayer = null;
+        foreach(var Player in Players)
+        {
+            float sqrDist = (pos-Player.Position).LengthSquared();
+            if (sqrDist < minSqrDist) {
+                minSqrDist = sqrDist;
+                minPlayer = Player;
+            }
+        }
+        return minPlayer;
     }
     private void doChunkLoading()
     {

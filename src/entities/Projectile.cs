@@ -57,7 +57,7 @@ public class Projectile : PhysicsObject
         {
             if (obj == this) continue;
             float mag = (obj.Position-Position).LengthSquared()+1;
-            obj.Velocity += ((obj.Position-Position)/mag*ExplosionSize*FlingFactor);
+            obj.AddImpulse((obj.Position-Position)/mag*ExplosionSize*FlingFactor);
         }
         foreach(Combatant obj in World.Singleton.Combatants)
         {
