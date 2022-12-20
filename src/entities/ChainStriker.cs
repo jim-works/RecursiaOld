@@ -13,11 +13,11 @@ public class ChainStriker : Combatant
     public float AttackInterval = 3;
 
     private float attackTimer = 0;
-    private List<PhysicsObject> links = new List<PhysicsObject>();
+    private List<Combatant> links = new List<Combatant>();
 
     public override void _Ready()
     {
-        PhysicsObject prev = this;
+        Combatant prev = this;
         links.Add(this);
         for (int i = 0; i < ChainSize; i++)
         {
@@ -35,6 +35,15 @@ public class ChainStriker : Combatant
         }
         base._Process(delta);
     }
+    public override void Die()
+    {
+        foreach (Combatant combatant in links)
+        {
+            if (combatant == this) continue;
+            combatant.Die();
+        }
+        base.Die();
+    }
 
     private void attack()
     {
@@ -50,10 +59,10 @@ public class ChainStriker : Combatant
         AddImpulse((closest.Position-Position).Normalized()*StrikeImpulse);
     }
 
-    private PhysicsObject spawnLink(PhysicsObject prev, float maxSpeed)
+    private Combatant spawnLink(Combatant prev, float maxSpeed)
     {
         ChainLink link = ChainLink.Instance<ChainLink>();
-        link.AttachedTo = prev;
+        link.Parent = prev;
         link.MaxSpeed = maxSpeed;
         links.Add(link);
 

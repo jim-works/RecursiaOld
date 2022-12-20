@@ -13,6 +13,6 @@ margin_bottom = 40.0
 color = Color( 1, 0, 0, 1 )
 
 [node name="Health" type="ColorRect" parent="."]
-margin_right = 200.0
+margin_right = 138.0
 margin_bottom = 40.0
 color = Color( 0, 0.854902, 0.454902, 1 )

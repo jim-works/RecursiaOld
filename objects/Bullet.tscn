@@ -50,8 +50,6 @@ material/0 = null
 script = ExtResource( 1 )
 Size = Vector3( 0.2, 0.2, 0.2 )
 Epsilon = 0.0
-ExplosionSize = 25.0
-FlingFactor = 5.0
 
 [node name="Trail" type="Particles" parent="."]
 amount = 32

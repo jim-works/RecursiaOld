@@ -2,8 +2,8 @@ using Godot;
 
 public class Combatant : PhysicsObject
 {
-    public float Health {get; protected set;}
-    public float MaxHealth {get; protected set;}
+    private float health;
+    private float maxHealth;
     public Team Team {get; protected set;}
     [Export]
     public string InitialTeamName;
@@ -16,8 +16,8 @@ public class Combatant : PhysicsObject
         World.Singleton.Combatants.Add(this);
         if (!string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
         if (InitialHealth > 0) {
-            MaxHealth = InitialHealth;
-            Health = InitialHealth;
+            maxHealth = InitialHealth;
+            health = InitialHealth;
         }
     }
 
@@ -30,9 +30,9 @@ public class Combatant : PhysicsObject
     public virtual void TakeDamage(Damage damage)
     {
         if (damage.Team == Team) return; //no friendly fire
-        Health = Mathf.Max(0,Health-damage.Amount);
-        GD.Print($"{Name} took {damage.Amount} damage. Health={Health}");
-        if (Health <= 0) Die();
+        health = Mathf.Max(0,health-damage.Amount);
+        GD.Print($"{Name} took {damage.Amount} damage. Health={health}");
+        if (health <= 0) Die();
     } 
     public virtual void Die()
     {
@@ -40,6 +40,14 @@ public class Combatant : PhysicsObject
     }
     public virtual void Heal(float amount)
     {
-        Health = Mathf.Min(MaxHealth, Health+amount);
+        health = Mathf.Min(maxHealth, health+amount);
+    }
+    public virtual float GetMaxHealth()
+    {
+        return maxHealth;
+    }
+    public virtual float GetHealth()
+    {
+        return health;
     }
 }

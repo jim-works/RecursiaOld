@@ -14,11 +14,14 @@ public class RotatingCamera : Spatial
     [Export]
     public bool RotateParentPitch = false;
 
+    public static RotatingCamera Singleton;
+
     private float yaw;
     private float pitch;
 
     public override void _Ready()
     {
+        Singleton = this;
         Input.SetMouseMode(Input.MouseMode.Captured);
         base._Ready();
     }

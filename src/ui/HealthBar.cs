@@ -5,8 +5,6 @@ public class HealthBar : Node
 {
     [Export]
     public Combatant Tracking;
-    [Export]
-    public float Stiffness = 1;
 
     private ColorRect healthbar;
     private ColorRect background;
@@ -20,8 +18,8 @@ public class HealthBar : Node
 
     public override void _Process(float delta)
     {
-        float proportion = Tracking.Health/Tracking.MaxHealth;
+        float proportion = Tracking.GetHealth()/Tracking.GetMaxHealth();
 
-        healthbar.MarginRight = Mathf.Lerp(healthbar.MarginRight, proportion*background.MarginRight, Stiffness*delta);
+        healthbar.MarginRight = proportion*background.MarginRight;
     }
 }
