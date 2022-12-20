@@ -69,4 +69,5 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.51015, 0 )
 [node name="Chain" parent="." instance=ExtResource( 11 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -5 )
 Size = Vector3( 1, 1, 1 )
+ChainSize = 10
 StrikeImpulse = 20.0

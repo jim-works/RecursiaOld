@@ -1,5 +1,5 @@
 using Godot;
-using System.Linq;
+using System.Collections.Generic;
 
 public class ChainStriker : Combatant
 {
@@ -13,13 +13,15 @@ public class ChainStriker : Combatant
     public float AttackInterval = 3;
 
     private float attackTimer = 0;
+    private List<PhysicsObject> links = new List<PhysicsObject>();
 
     public override void _Ready()
     {
         PhysicsObject prev = this;
+        links.Add(this);
         for (int i = 0; i < ChainSize; i++)
         {
-            prev = spawnLink(prev);
+            prev = spawnLink(prev, 100+5*i);
         }
         base._Ready();
     }
@@ -38,20 +40,22 @@ public class ChainStriker : Combatant
     {
         attackTimer = 0;
         Player closest = World.Singleton.ClosestPlayer(Position);
-        PhysicsObject curr = this;
-        while (curr != null)
-        {
-            //fling each link toward the player with impulse proportional to how far it is down the chain;
-            if (curr.Position.y < closest.Position.y) curr.AddImpulse(new Vector3(0,10,0)); //little hop
-            curr.AddImpulse((closest.Position-curr.Position).Normalized()*((curr.Position-this.Position).Length()+1)*StrikeImpulse);
-            curr = curr.GetChildOrNull<PhysicsObject>(0);
-        }
+        // for (int i = 0; i < links.Count; i++)
+        // {
+        //     var link = links[i];
+        //     if (link.Position.y < closest.Position.y) link.AddImpulse(new Vector3(0,10,0)); //little hop
+        //     link.AddImpulse((closest.Position-link.Position).Normalized()*StrikeImpulse);
+        // }\
+        if (Position.y < closest.Position.y) AddImpulse(new Vector3(0,10,0)); //little hop
+        AddImpulse((closest.Position-Position).Normalized()*StrikeImpulse);
     }
 
-    private PhysicsObject spawnLink(PhysicsObject prev)
+    private PhysicsObject spawnLink(PhysicsObject prev, float maxSpeed)
     {
         ChainLink link = ChainLink.Instance<ChainLink>();
-        link.Parent = prev;
+        link.AttachedTo = prev;
+        link.MaxSpeed = maxSpeed;
+        links.Add(link);
 
         GetParent().CallDeferred("add_child", link); //on the same level as the link
         return link;

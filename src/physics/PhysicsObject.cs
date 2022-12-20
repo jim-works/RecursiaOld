@@ -21,6 +21,8 @@ public class PhysicsObject : Spatial
     [Export]
     public float AirResistance = 0.1f;
     [Export]
+    public float MaxSpeed = 100f;
+    [Export]
     public bool PhysicsActive = true;
 
     protected Vector3 currentForce; //zeroed each physics update
@@ -40,6 +42,7 @@ public class PhysicsObject : Spatial
         if (!PhysicsActive) return;
         AddForce(-AirResistance*Velocity);
         Velocity += currentForce*dt/Mass;
+        if (Velocity.LengthSquared() > MaxSpeed*MaxSpeed) Velocity=Velocity.Normalized()*MaxSpeed;
         //GD.Print(Velocity);
         currentForce = Gravity*Mass;
         doCollision(World.Singleton, dt);
