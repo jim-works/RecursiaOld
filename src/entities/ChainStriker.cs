@@ -49,12 +49,6 @@ public class ChainStriker : Combatant
     {
         attackTimer = 0;
         Player closest = World.Singleton.ClosestPlayer(Position);
-        // for (int i = 0; i < links.Count; i++)
-        // {
-        //     var link = links[i];
-        //     if (link.Position.y < closest.Position.y) link.AddImpulse(new Vector3(0,10,0)); //little hop
-        //     link.AddImpulse((closest.Position-link.Position).Normalized()*StrikeImpulse);
-        // }\
         if (Position.y < closest.Position.y) AddImpulse(new Vector3(0,10,0)); //little hop
         AddImpulse((closest.Position-Position).Normalized()*StrikeImpulse);
     }

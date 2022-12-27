@@ -9,6 +9,12 @@ public class Combatant : PhysicsObject
     public string InitialTeamName;
     [Export]
     public float InitialHealth;
+    [Export]
+    public float InvincibilitySeconds = 0.1f;
+    [Export]
+    public float ContactDamage = 1;
+
+    private float invicinibilityTimer = 0;
 
     public override void _EnterTree()
     {
@@ -21,15 +27,32 @@ public class Combatant : PhysicsObject
         }
     }
 
+    public override void _Process(float delta)
+    {
+        invicinibilityTimer += delta;
+        if (ContactDamage != 0)  DoContactDamage();
+        base._Process(delta);
+    }
+
     public override void _ExitTree()
     {
         World.Singleton.Combatants.Remove(this);
         base._ExitTree();
     }
 
+    public virtual void DoContactDamage()
+    {
+        foreach (var combatant in World.Singleton.Combatants)
+        {
+            if (combatant == this) continue;
+            if (combatant.GetBox().IntersectsBox(GetBox())) combatant.TakeDamage(new Damage{Team=Team,Amount=ContactDamage});
+        }
+    }
+
     public virtual void TakeDamage(Damage damage)
     {
-        if (damage.Team == Team) return; //no friendly fire
+        if (damage.Team == Team || invicinibilityTimer < InvincibilitySeconds) return; //no friendly fire, do iframes
+        invicinibilityTimer = 0;
         health = Mathf.Max(0,health-damage.Amount);
         GD.Print($"{Name} took {damage.Amount} damage. Health={health}");
         if (health <= 0) Die();

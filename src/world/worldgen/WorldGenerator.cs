@@ -5,8 +5,8 @@ public class WorldGenerator
 {
     private const int POLL_INTERVAL = 10;
     public int WorldgenThreads {get; private set;} = System.Environment.ProcessorCount;
-    private const float noiseFreq = 1f;
-    private const float noiseScale = 50;
+    private const float noiseFreq = 0.25f;
+    private const float noiseScale = 25;
     private FastNoiseLite noise = new FastNoiseLite();
         
 

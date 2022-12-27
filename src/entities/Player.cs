@@ -16,11 +16,11 @@ public class Player : Combatant
     [Export]
     public PackedScene Projectile;
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
         World.Singleton.ChunkLoaders.Add(this);
         World.Singleton.Players.Add(this);
-        base._Ready();
+        base._EnterTree();
     }
 
     public override void _ExitTree()
@@ -49,10 +49,14 @@ public class Player : Combatant
     //called by rotating camera
     public void Use(Vector3 dir)
     {
-        Projectile proj = Projectile.Instance<Projectile>();
-        World.Singleton.AddChild(proj);
-        proj.Position = Position+CameraOffset;
-        proj.Launch(dir*ShootSpeed, Team);
+        // Projectile proj = Projectile.Instance<Projectile>();
+        // World.Singleton.AddChild(proj);
+        // proj.Position = Position+CameraOffset;
+        // proj.Launch(dir*ShootSpeed, Team);
+        BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
+        if (hit != null) {
+            World.Singleton.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, BlockTypes.Get("dirt"));
+        }
     }
 
     private void move(float delta)
