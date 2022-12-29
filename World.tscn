@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=20 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -6,18 +6,27 @@
 [ext_resource path="res://textures/crosshair.png" type="Texture" id=4]
 [ext_resource path="res://src/world/World.cs" type="Script" id=5]
 [ext_resource path="res://src/camera/RotatingCamera.cs" type="Script" id=6]
-[ext_resource path="res://objects/Bullet.tscn" type="PackedScene" id=7]
+[ext_resource path="res://src/world/data_management/ItemLoader.cs" type="Script" id=7]
 [ext_resource path="res://src/settings/settings.gd" type="Script" id=8]
 [ext_resource path="res://src/combat/Combatant.cs" type="Script" id=9]
 [ext_resource path="res://objects/HealthBar3D.tscn" type="PackedScene" id=10]
 [ext_resource path="res://objects/Chain.tscn" type="PackedScene" id=11]
 [ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=12]
 [ext_resource path="res://src/ui/PlayerUIAssignment.cs" type="Script" id=13]
+[ext_resource path="res://textures/gun.png" type="Texture" id=14]
+[ext_resource path="res://objects/InventoryUI.tscn" type="PackedScene" id=15]
+[ext_resource path="res://objects/MouseItemSlot.tscn" type="PackedScene" id=16]
+[ext_resource path="res://src/ui/InventoryUI.cs" type="Script" id=17]
+[ext_resource path="res://src/ui/FollowMouse.gd" type="Script" id=18]
 
 [sub_resource type="CapsuleMesh" id=1]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
+
+[node name="ItemLoader" type="Node" parent="."]
+script = ExtResource( 7 )
+GunTexture = ExtResource( 14 )
 
 [node name="Mesher" type="Node" parent="."]
 script = ExtResource( 1 )
@@ -45,8 +54,6 @@ script = ExtResource( 2 )
 Size = Vector3( 0.7, 1.8, 0.7 )
 InitialTeamName = "player"
 InitialHealth = 10.0
-ShootSpeed = 50.0
-Projectile = ExtResource( 7 )
 
 [node name="Camera" type="Camera" parent="Player"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0 )
@@ -79,8 +86,29 @@ StrikeImpulse = 20.0
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0 )
 
 [node name="PlayerUI" type="Control" parent="."]
-margin_right = 307.0
-margin_bottom = 80.0
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource( 13 )
 
 [node name="HealthBar" parent="PlayerUI" instance=ExtResource( 12 )]
+
+[node name="InventoryUI" parent="PlayerUI" instance=ExtResource( 15 )]
+anchor_right = 1.0
+margin_left = 600.0
+margin_right = 0.0
+margin_bottom = 200.0
+
+[node name="FollowMouse" type="Control" parent="PlayerUI"]
+margin_left = 600.0
+margin_right = 640.0
+margin_bottom = 40.0
+mouse_filter = 2
+script = ExtResource( 18 )
+
+[node name="MouseInventoryUI" type="Control" parent="PlayerUI/FollowMouse"]
+margin_right = 64.0
+margin_bottom = 64.0
+mouse_filter = 2
+script = ExtResource( 17 )
+ItemSlotUI = ExtResource( 16 )
+Padding = 0

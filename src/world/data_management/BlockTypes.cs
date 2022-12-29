@@ -15,7 +15,7 @@ public static class BlockTypes
         return null;
     }
 
-    public static void CreateBlockType(string name, System.Func<Block> factory) {
+    public static void CreateType(string name, System.Func<Block> factory) {
         if (blocks.ContainsKey(name)) {
             Godot.GD.PushWarning($"Block {name} already exists, replacing!");
         }

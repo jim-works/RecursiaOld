@@ -2,7 +2,7 @@ public static class BlockLoader
 {
     public static void Load()
     {
-        BlockTextureAtlas standard = new BlockTextureAtlas {
+        TextureAtlas standard = new TextureAtlas {
             CellSize=8,
             TexWidth=256,
             TexHeight=256
@@ -14,13 +14,13 @@ public static class BlockLoader
         createBasic("sand", standard, 1, 1,100);
     }
 
-    private static void createBasic(string name, BlockTextureAtlas atlas, int x, int y, float explosionResistance=0)
+    private static void createBasic(string name, TextureAtlas atlas, int x, int y, float explosionResistance=0)
     {
         Block b = new Block {
             Name=name,
             TextureInfo=atlas.Sample(x,y),
             ExplosionResistance=explosionResistance
         };
-        BlockTypes.CreateBlockType(name, () => b);
+        BlockTypes.CreateType(name, () => b);
     }
 }

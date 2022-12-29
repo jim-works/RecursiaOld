@@ -10,11 +10,12 @@ public class Player : Combatant
     public float JumpHeight = 10;
     [Export]
     public Vector3 CameraOffset = new Vector3(0,0.7f,0);
-    [Export]
-    public float ShootSpeed = 25;
+    
 
-    [Export]
-    public PackedScene Projectile;
+    public Inventory Inventory = new Inventory(10);
+    public Inventory MouseInventory = new Inventory(1);
+    
+    private int SelectedSlot = 0;
 
     public override void _EnterTree()
     {
@@ -23,11 +24,43 @@ public class Player : Combatant
         base._EnterTree();
     }
 
+    public override void _Ready()
+    {
+        ItemStack stack = new ItemStack {Item=ItemTypes.Get("gun"),Size=1};
+        Inventory.AddItem(ref stack);
+        if (stack.Size != 0)
+        {
+            GD.PrintErr("Error adding item to inventory");
+        }
+        base._Ready();
+    }
+
     public override void _ExitTree()
     {
         World.Singleton.Players.Remove(this);
         World.Singleton.ChunkLoaders.Remove(this);
         base._ExitTree();
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (@event is InputEventKey key && key.Pressed)
+        if ((KeyList)key.Scancode == KeyList.Key1)
+        {
+            SelectedSlot = 0;
+            GD.Print("Selected slot 0!");
+        }
+        else if ((KeyList)key.Scancode == KeyList.Key2)
+        {
+            SelectedSlot = 1;
+            GD.Print("Selected slot 1!");
+        }
+        else if ((KeyList)key.Scancode == KeyList.P)
+        {
+            ItemStack stack = new ItemStack {Item=ItemTypes.Get("gun"),Size=1};
+            Inventory.AddItem(ref stack);
+        }
+        base._Input(@event);
     }
 
     public override void _Process(float delta)
@@ -49,14 +82,11 @@ public class Player : Combatant
     //called by rotating camera
     public void Use(Vector3 dir)
     {
-        // Projectile proj = Projectile.Instance<Projectile>();
-        // World.Singleton.AddChild(proj);
-        // proj.Position = Position+CameraOffset;
-        // proj.Launch(dir*ShootSpeed, Team);
-        BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
-        if (hit != null) {
-            World.Singleton.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, BlockTypes.Get("dirt"));
-        }
+        // BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
+        // if (hit != null) {
+        //     World.Singleton.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, BlockTypes.Get("dirt"));
+        // }
+        Inventory.GetItem(SelectedSlot).Item?.OnUse(this, Position+CameraOffset, dir);
     }
 
     private void move(float delta)

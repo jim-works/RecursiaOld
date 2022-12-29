@@ -112,7 +112,7 @@ public class Mesher : Node
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
                     if (chunk[x,y,z] == null) continue;
-                    BlockTextureInfo tex = chunk[x,y,z].TextureInfo;
+                    AtlasTextureInfo tex = chunk[x,y,z].TextureInfo;
                     meshBlock(chunk, neighbors, new BlockCoord(x,y,z), tex, vertices, uvs, normals, tris);
                 }
             }
@@ -124,7 +124,7 @@ public class Mesher : Node
         }
         return chunkMesh;
     }
-    private void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, BlockTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, AtlasTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         bool nonOpaque(Chunk c, int x, int y, int z) => c == null || c[x,y,z] == null || c[x,y,z].Transparent;
         Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);
@@ -149,7 +149,7 @@ public class Mesher : Node
             addFaceNegZ(pos, tex, verts, uvs, normals, tris);
         }
     }
-    private void finishFace(BlockTextureInfo info, Vector3 normalDir, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void finishFace(AtlasTextureInfo info, Vector3 normalDir, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         int faceId = normals.Count / 4;
         uvs.Add(info.UVMin);
@@ -168,7 +168,7 @@ public class Mesher : Node
         tris.Add(faceId * 4 + 2);
     }
     //facing the +z direction
-    private void addFacePosZ(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFacePosZ(Vector3 origin, AtlasTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 1, 0));
         verts.Add(origin + new Vector3(1, 1, 0));
@@ -177,7 +177,7 @@ public class Mesher : Node
         finishFace(texInfo, new Vector3(0, 0, 1), uvs, normals, tris);
     }
     //facing the -z direction
-    private void addFaceNegZ(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFaceNegZ(Vector3 origin, AtlasTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 1));
         verts.Add(origin + new Vector3(1, 0, 1));
@@ -186,7 +186,7 @@ public class Mesher : Node
         finishFace(texInfo, new Vector3(0, 0, -1), uvs, normals, tris);
     }
     //facing the +x direction
-    private void addFacePosX(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFacePosX(Vector3 origin, AtlasTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 1));
         verts.Add(origin + new Vector3(0, 1, 1));
@@ -195,7 +195,7 @@ public class Mesher : Node
         finishFace(texInfo, new Vector3(1, 0, 0), uvs, normals, tris);
     }
     //facing the -x direction
-    private void addFaceNegX(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFaceNegX(Vector3 origin, AtlasTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(1, 0, 0));
         verts.Add(origin + new Vector3(1, 1, 0));
@@ -204,7 +204,7 @@ public class Mesher : Node
         finishFace(texInfo, new Vector3(-1, 0, 0), uvs, normals, tris);
     }
     //facing the +y direction
-    private void addFacePosY(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFacePosY(Vector3 origin, AtlasTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 1, 0));
         verts.Add(origin + new Vector3(0, 1, 1));
@@ -214,7 +214,7 @@ public class Mesher : Node
         finishFace(texInfo, new Vector3(0, 1, 0), uvs, normals, tris);
     }
     //facing the -y direction
-    private void addFaceNegY(Vector3 origin, BlockTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void addFaceNegY(Vector3 origin, AtlasTextureInfo texInfo, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 0));
         verts.Add(origin + new Vector3(1, 0, 0));
