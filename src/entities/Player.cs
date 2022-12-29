@@ -14,7 +14,7 @@ public class Player : Combatant
 
     public Inventory Inventory = new Inventory(10);
     public Inventory MouseInventory = new Inventory(1);
-    
+
     private int SelectedSlot = 0;
 
     public override void _EnterTree()
@@ -57,7 +57,7 @@ public class Player : Combatant
         }
         else if ((KeyList)key.Scancode == KeyList.P)
         {
-            ItemStack stack = new ItemStack {Item=ItemTypes.Get("gun"),Size=1};
+            ItemStack stack = new ItemStack {Item=ItemTypes.GetBlockItem("dirt"),Size=1};
             Inventory.AddItem(ref stack);
         }
         base._Input(@event);
@@ -82,11 +82,8 @@ public class Player : Combatant
     //called by rotating camera
     public void Use(Vector3 dir)
     {
-        // BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
-        // if (hit != null) {
-        //     World.Singleton.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, BlockTypes.Get("dirt"));
-        // }
-        Inventory.GetItem(SelectedSlot).Item?.OnUse(this, Position+CameraOffset, dir);
+        Inventory.GetItem(SelectedSlot).Item?.OnUse(this, Position+CameraOffset, dir, ref Inventory.Items[SelectedSlot]);
+        Inventory.TriggerUpdate();
     }
 
     private void move(float delta)

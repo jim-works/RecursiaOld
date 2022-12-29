@@ -31,15 +31,15 @@ public class Inventory
                 //add to existing stack
                 int toAdd = Mathf.Min(item.Size, Items[i].Item.MaxStack-Items[i].Size);
                 Items[i].Size += toAdd;
-                item.Size -= toAdd;
+                item.Decrement(toAdd);
+                if (item.Size == 0) break; //stack empty, break out now
             }
         }
         if (firstEmptySlot != -1 && item.Size > 0)
         {
             Items[firstEmptySlot] = item;
-            item.Size = 0;
+            item.Clear();
         }
-        if (item.Size ==0) item.Item = null;
         OnUpdate?.Invoke(this);
     }
 
@@ -93,9 +93,8 @@ public class Inventory
         if (from.Item == null || (Items[slot].Item != null && Items[slot].Item != from.Item)) return false;
         Items[slot].Item = from.Item;
         int toPut = Mathf.Min(Mathf.Min(from.Item.MaxStack-Items[slot].Size,count),from.Size);
-        from.Size -= toPut;
+        from.Decrement(toPut);
         Items[slot].Size += toPut;
-        if (from.Size ==0) from.Item = null;
         OnUpdate?.Invoke(this);
         return true;
     }

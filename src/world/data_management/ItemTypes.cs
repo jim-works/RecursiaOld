@@ -10,6 +10,25 @@ public static class ItemTypes
         return null;
     }
 
+    //looks up <blockName> then creates an item that places that block
+    public static BlockFactoryItem GetBlockItem(string blockName)
+    {
+        Block b = BlockTypes.Get(blockName);
+        if (b == null) return null; //invalid block
+        return new BlockFactoryItem {
+            BlockName = blockName,
+            Name = blockName
+        };
+    }
+
+    //creates an item that will place <block>
+    //should only be used for picking up blocks with data you want to keep
+    //the string overload will automatically create a factory/use the cached block pointer as required
+    public static BlockItem GetBlockItem(Block b) => new BlockItem {
+            Name=b.Name,
+            Placing=b
+        };
+
     public static void CreateType(string name, Item item) {
         if (items.ContainsKey(name)) {
             Godot.GD.PushWarning($"Item {name} already exists, replacing!");

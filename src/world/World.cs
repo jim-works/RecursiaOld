@@ -164,6 +164,7 @@ public class World : Node
             HitPos=origin,
             BlockPos=oldCoords,
             Block = b,
+            Normal = Vector3.Zero,
         };
         for (float t = 0; t < lineLength; t += stepSize) {
             //only query world when we are in a new block
@@ -176,6 +177,8 @@ public class World : Node
                 HitPos=testPoint,
                 BlockPos=oldCoords,
                 Block =b,
+                //normal direction will be the greatest difference from the center
+                Normal = Math.MaxComponent((Vector3)oldCoords+new Vector3(0.5f,0.5f,0.5f)-testPoint).Normalized()
             };
         }
         return null;
@@ -193,6 +196,7 @@ public class World : Node
             HitPos=origin,
             BlockPos=oldCoords,
             Block = b,
+            Normal = Vector3.Zero
         });
         for (float t = 0; t < lineLength; t += stepSize) {
             //only query world when we are in a new block
@@ -205,6 +209,8 @@ public class World : Node
                 HitPos=testPoint,
                 BlockPos=oldCoords,
                 Block =b,
+                //normal direction will be the greatest difference from the center
+                Normal = Math.MaxComponent((Vector3)oldCoords+new Vector3(0.5f,0.5f,0.5f)-testPoint).Normalized()
             });
         }
     }
