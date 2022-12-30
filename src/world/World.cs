@@ -178,7 +178,7 @@ public class World : Node
                 BlockPos=oldCoords,
                 Block =b,
                 //normal direction will be the greatest difference from the center
-                Normal = Math.MaxComponent((Vector3)oldCoords+new Vector3(0.5f,0.5f,0.5f)-testPoint).Normalized()
+                Normal = Math.MaxComponent(testPoint-((Vector3)oldCoords+new Vector3(0.5f,0.5f,0.5f))).Normalized()
             };
         }
         return null;

@@ -8,15 +8,15 @@ public static class Math
         return x0y0 * (1 - dx) * (1 - dy) + x1y0 * dx * (1 - dy) + x0y1 * (1 - dx) * dy + x1y1 * dx * dy;
     }
     
-    //returns the max component of the vector with the other two components zeroed
+    //returns the max magnitude component of the vector with the other two components zeroed
     //if multple components are equal, the first one is set the others are zeroed
     public static Vector3 MaxComponent(Vector3 source)
     {
-        if (source.x>source.y&&source.x>source.z)
+        if (Mathf.Abs(source.x)>Mathf.Abs(source.y)&&Mathf.Abs(source.x)>Mathf.Abs(source.z))
         {
             return new Vector3(source.x,0,0);
         }
-        if (source.y>source.z)
+        if (Mathf.Abs(source.y)>Mathf.Abs(source.z))
         {
             return new Vector3(0,source.y,0);
         }
