@@ -7,6 +7,7 @@ public class PlayerUIAssignment : Node
         GetNode<HealthBar>("HealthBar").Tracking = World.Singleton.Players[0];
         GetNode<InventoryUI>("InventoryUI").TrackInventory(World.Singleton.Players[0].Inventory);
         GetNode<InventoryUI>("FollowMouse/MouseInventoryUI").TrackInventory(World.Singleton.Players[0].MouseInventory);
+        GetNode<RecipeListUI>("RecipeList").DisplayList(RecpieList.Search("gun"));
         base._Ready();
     }
 }

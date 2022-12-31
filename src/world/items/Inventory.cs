@@ -61,6 +61,23 @@ public class Inventory
 
     public ItemStack GetItem(int i) => Items[i];
 
+    //deletes count (or as many as possible) items of type <item> from this inventory.
+    //returns the numger of items deleted
+    public int DeleteItems(Item item, int count)
+    {
+        int remaining = count;
+        for (int i = 0; i < Items.Length; i++)
+        {
+            ref ItemStack stack = ref Items[i];
+            if (stack.Item != item) continue;
+            int removing = Mathf.Min(remaining, stack.Size);
+            stack.Decrement(removing);
+            if (remaining == 0) break;
+        }
+        OnUpdate?.Invoke(this);
+        return count-remaining;
+    }
+
     //returns true if successful, false if invalid operation (cannot take one item type into another)
     //if count is larger then the number of items in the slot, it will take all the items in the slot and return true.
     public bool TakeItems(int slot, int count, ref ItemStack into)
@@ -112,5 +129,15 @@ public class Inventory
             if (stack.Item == item) return true;
         }
         return false;
+    }
+
+    public int Count(Item item)
+    {
+        int count = 0;
+        foreach (var stack in Items)
+        {
+            if (stack.Item == item) count += stack.Size;
+        }
+        return count;
     }
 }

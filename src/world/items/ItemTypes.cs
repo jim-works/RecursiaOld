@@ -33,7 +33,7 @@ public static class ItemTypes
         if (items.ContainsKey(name)) {
             Godot.GD.PushWarning($"Item {name} already exists, replacing!");
         }
-        Godot.GD.Print($"Created item type {name}");
+        Godot.GD.Print($"Created item type {name} with item name {item.Name}");
         items[name] = item;
     }
 }

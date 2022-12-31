@@ -15,7 +15,10 @@ public class ItemLoader : Node
     {
         ItemTypes.CreateType("gun", new GunItem {
             Texture = GunTexture,
-            MaxStack=5
+            MaxStack=5,
+            Name="gun"
         });
+
+        RecipeLoader.Load();
     }
 }

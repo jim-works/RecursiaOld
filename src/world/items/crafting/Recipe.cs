@@ -13,4 +13,28 @@ public class Recipe
         Product = new List<ItemStack>(products);
         Station = station;
     }
+
+    public bool CraftableBy(Inventory inv)
+    {
+        foreach (var ingredient in Ingredients)
+        {
+            if (inv.Count(ingredient.Item) < ingredient.Size) return false;
+        }
+        return true;
+    }
+
+    public bool Craft(Inventory from, Inventory to)
+    {
+        if (!CraftableBy(from)) return false;
+        foreach (var ingredient in Ingredients)
+        {
+            from.DeleteItems(ingredient.Item, ingredient.Size);
+        }
+        foreach (var product in Product)
+        {
+            ItemStack prod = product; //copy
+            to.AddItem(ref prod);
+        }
+        return true;
+    }
 }

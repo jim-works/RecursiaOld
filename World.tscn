@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=2]
+[gd_scene load_steps=22 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -18,6 +18,8 @@
 [ext_resource path="res://objects/MouseItemSlot.tscn" type="PackedScene" id=16]
 [ext_resource path="res://src/ui/InventoryUI.cs" type="Script" id=17]
 [ext_resource path="res://src/ui/FollowMouse.gd" type="Script" id=18]
+[ext_resource path="res://src/ui/RecipeListUI.cs" type="Script" id=19]
+[ext_resource path="res://objects/CraftingRecipeUI.tscn" type="PackedScene" id=20]
 
 [sub_resource type="CapsuleMesh" id=1]
 
@@ -92,7 +94,6 @@ script = ExtResource( 13 )
 [node name="HealthBar" parent="PlayerUI" instance=ExtResource( 12 )]
 
 [node name="InventoryUI" parent="PlayerUI" instance=ExtResource( 15 )]
-visible = false
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -117,5 +118,16 @@ script = ExtResource( 17 )
 ItemSlotUI = ExtResource( 16 )
 Padding = 0
 
+[node name="RecipeList" type="Control" parent="PlayerUI"]
+margin_left = 720.0
+margin_top = 100.0
+margin_right = 720.0
+margin_bottom = 100.0
+script = ExtResource( 19 )
+CraftingRecipeUI = ExtResource( 20 )
+Padding = 2
+
 [connection signal="on_pause" from="Settings" to="PlayerUI/InventoryUI" method="OnPause"]
+[connection signal="on_pause" from="Settings" to="PlayerUI/RecipeList" method="OnPause"]
 [connection signal="on_unpause" from="Settings" to="PlayerUI/InventoryUI" method="OnUnpause"]
+[connection signal="on_unpause" from="Settings" to="PlayerUI/RecipeList" method="OnUnpause"]
