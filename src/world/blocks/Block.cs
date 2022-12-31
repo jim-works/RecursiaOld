@@ -9,6 +9,7 @@ public class Block
     public bool Collidable = true;
     public AtlasTextureInfo TextureInfo;
     public float ExplosionResistance=0;
+    public DropTable DropTable;
 
     //allows subclasses to override .Equals, keeping == and != consistent with that
     public static bool operator ==(Block a, Block b)

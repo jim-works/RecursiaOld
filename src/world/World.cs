@@ -118,6 +118,14 @@ public class World : Node
     public Block GetBlock(Vector3 worldCoords) {
         return GetBlock((BlockCoord)worldCoords);
     }
+    public ItemStack BreakBlock(BlockCoord coords) {
+        DropTable dt = GetBlock(coords).DropTable;
+        if (dt == null) {
+            GD.Print("Null droptable!");
+        }
+        SetBlock(coords, null);
+        return dt?.GetDrop() ?? new ItemStack();
+    }
     public void SetBlock(BlockCoord coords, Block block, bool meshChunk=true) {
         ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);

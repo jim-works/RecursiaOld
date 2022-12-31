@@ -22,5 +22,8 @@ public static class BlockLoader
             ExplosionResistance=explosionResistance
         };
         BlockTypes.CreateType(name, () => b);
+        b.DropTable = new DropTable {
+            drop = new ItemStack{Item=ItemTypes.GetBlockItem(name), Size=1}
+        };
     }
 }

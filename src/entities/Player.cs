@@ -75,7 +75,8 @@ public class Player : Combatant
     {
         BlockcastHit hit = World.Singleton.Blockcast(Position+CameraOffset, dir*Reach);
         if (hit != null) {
-            World.Singleton.SetBlock(hit.BlockPos, null);
+            ItemStack drop = World.Singleton.BreakBlock(hit.BlockPos);
+            Inventory.AddItem(ref drop);
         }
     }
 
