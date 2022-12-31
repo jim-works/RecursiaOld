@@ -22,6 +22,18 @@ public class InventoryUI : Control
         resetItemSlots(inv);
     }
 
+    //signal
+    public void OnPause()
+    {
+        Visible = true;
+    }
+
+    //signal
+    public void OnUnpause()
+    {
+        Visible = false;
+    }
+
     private void resetItemSlots(Inventory inv)
     {
         foreach (var slot in slots)

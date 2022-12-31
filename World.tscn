@@ -6,7 +6,7 @@
 [ext_resource path="res://textures/crosshair.png" type="Texture" id=4]
 [ext_resource path="res://src/world/World.cs" type="Script" id=5]
 [ext_resource path="res://src/camera/RotatingCamera.cs" type="Script" id=6]
-[ext_resource path="res://src/world/data_management/ItemLoader.cs" type="Script" id=7]
+[ext_resource path="res://src/world/items/ItemLoader.cs" type="Script" id=7]
 [ext_resource path="res://src/settings/settings.gd" type="Script" id=8]
 [ext_resource path="res://src/combat/Combatant.cs" type="Script" id=9]
 [ext_resource path="res://objects/HealthBar3D.tscn" type="PackedScene" id=10]
@@ -35,7 +35,6 @@ ChunkMaterial = ExtResource( 3 )
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
 shadow_enabled = true
-shadow_bias = 0.0
 
 [node name="TextureRect" type="TextureRect" parent="DirectionalLight"]
 anchor_left = 0.5
@@ -93,9 +92,14 @@ script = ExtResource( 13 )
 [node name="HealthBar" parent="PlayerUI" instance=ExtResource( 12 )]
 
 [node name="InventoryUI" parent="PlayerUI" instance=ExtResource( 15 )]
-anchor_right = 1.0
-margin_left = 600.0
-margin_right = 0.0
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -200.0
+margin_top = -200.0
+margin_right = 200.0
 margin_bottom = 200.0
 
 [node name="FollowMouse" type="Control" parent="PlayerUI"]
@@ -112,3 +116,6 @@ mouse_filter = 2
 script = ExtResource( 17 )
 ItemSlotUI = ExtResource( 16 )
 Padding = 0
+
+[connection signal="on_pause" from="Settings" to="PlayerUI/InventoryUI" method="OnPause"]
+[connection signal="on_unpause" from="Settings" to="PlayerUI/InventoryUI" method="OnUnpause"]

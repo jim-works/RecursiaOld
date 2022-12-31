@@ -1,5 +1,7 @@
 extends Node
 
+signal on_pause
+signal on_unpause
 
 # Called when the node enters the scene tree for the first time.
 #func _ready():
@@ -13,5 +15,7 @@ func _process(_delta):
 	if (Input.is_action_just_pressed("pause")):
 		if (Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED):
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			emit_signal("on_pause")
 		elif (Input.get_mouse_mode() == Input.MOUSE_MODE_VISIBLE):
 			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+			emit_signal("on_unpause")
