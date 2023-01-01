@@ -17,9 +17,11 @@ public class Mesher : Node
     private ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new ConcurrentBag<(ChunkMesh, ChunkCoord)>();
     //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
     // Called when the node enters the scene tree for the first time.
-    public override void _Ready()
+    public override void _EnterTree()
     {
         Singleton = this;
+        GD.Print("Mesher initialized!");
+        base._EnterTree();
     }
     public override void _Process(float delta)
     {

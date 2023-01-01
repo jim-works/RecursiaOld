@@ -3,7 +3,6 @@ using System.Collections.Generic;
 public static class ItemTypes
 {
     private static Dictionary<string, Item> items = new Dictionary<string, Item>();
-
     public static Item Get(string itemName) {
         if (items.TryGetValue(itemName, out var b)) return b;
         Godot.GD.PushWarning($"Item {itemName} not found");
@@ -17,7 +16,8 @@ public static class ItemTypes
         if (b == null) return null; //invalid block
         return new BlockFactoryItem {
             BlockName = blockName,
-            Name = blockName
+            Name = blockName,
+            Texture = b.ItemTexture
         };
     }
 
@@ -26,7 +26,8 @@ public static class ItemTypes
     //the string overload will automatically create a factory/use the cached block pointer as required
     public static BlockItem GetBlockItem(Block b) => new BlockItem {
             Name=b.Name,
-            Placing=b
+            Placing=b,
+            Texture = b.ItemTexture
         };
 
     public static void CreateType(string name, Item item) {

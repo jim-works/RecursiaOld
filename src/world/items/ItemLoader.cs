@@ -1,5 +1,6 @@
 using Godot;
 
+//TODO: refactor to data loader
 public class ItemLoader : Node
 {
     [Export]
@@ -7,6 +8,7 @@ public class ItemLoader : Node
 
     public override void _EnterTree()
     {
+        BlockLoader.Load();
         Load();
         base._EnterTree();
     }

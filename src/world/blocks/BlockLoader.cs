@@ -1,3 +1,5 @@
+using Godot;
+
 public static class BlockLoader
 {
     public static void Load()
@@ -19,11 +21,28 @@ public static class BlockLoader
         Block b = new Block {
             Name=name,
             TextureInfo=atlas.Sample(x,y),
-            ExplosionResistance=explosionResistance
+            ExplosionResistance=explosionResistance,
         };
         BlockTypes.CreateType(name, () => b);
+        b.ItemTexture = getBlockTexture(b);
         b.DropTable = new DropTable {
             drop = new ItemStack{Item=ItemTypes.GetBlockItem(name), Size=1}
         };
+    }
+
+    private static AtlasTexture getBlockTexture(Block b)
+    {
+        if (Mesher.Singleton == null) {
+            GD.PrintErr("Cannot get block texture yet, mesher is not initialized");
+            return null;
+        }
+        Texture chunkTex = ((SpatialMaterial)Mesher.Singleton.ChunkMaterial).AlbedoTexture;
+        AtlasTexture itemTex = new AtlasTexture();
+        itemTex.Atlas = chunkTex;
+        Vector2 min = new Vector2(b.TextureInfo.UVMin.x*b.TextureInfo.Atlas.TexWidth, b.TextureInfo.UVMin.y*b.TextureInfo.Atlas.TexHeight);
+        Vector2 max = new Vector2(b.TextureInfo.UVMax.x*b.TextureInfo.Atlas.TexWidth, b.TextureInfo.UVMax.y*b.TextureInfo.Atlas.TexHeight);
+        
+        itemTex.Region = new Rect2(min,max-min);
+        return itemTex;
     }
 }

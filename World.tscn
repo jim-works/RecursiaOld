@@ -26,13 +26,13 @@
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
 
-[node name="ItemLoader" type="Node" parent="."]
-script = ExtResource( 7 )
-GunTexture = ExtResource( 14 )
-
 [node name="Mesher" type="Node" parent="."]
 script = ExtResource( 1 )
 ChunkMaterial = ExtResource( 3 )
+
+[node name="ItemLoader" type="Node" parent="."]
+script = ExtResource( 7 )
+GunTexture = ExtResource( 14 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
@@ -94,6 +94,7 @@ script = ExtResource( 13 )
 [node name="HealthBar" parent="PlayerUI" instance=ExtResource( 12 )]
 
 [node name="InventoryUI" parent="PlayerUI" instance=ExtResource( 15 )]
+visible = false
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -119,6 +120,7 @@ ItemSlotUI = ExtResource( 16 )
 Padding = 0
 
 [node name="RecipeList" type="Control" parent="PlayerUI"]
+visible = false
 margin_left = 720.0
 margin_top = 100.0
 margin_right = 720.0

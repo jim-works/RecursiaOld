@@ -22,7 +22,6 @@ public class World : Node
     public override void _EnterTree()
     {
         Singleton = this;
-        BlockLoader.Load();
         WorldGen = new WorldGenerator();
         base._EnterTree();
     }
