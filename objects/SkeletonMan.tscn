@@ -1,0 +1,122 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://models/skeleton.dae" type="PackedScene" id=1]
+[ext_resource path="res://models/Material.material" type="Material" id=2]
+[ext_resource path="res://src/entities/PatrickQuack.cs" type="Script" id=3]
+[ext_resource path="res://src/combat/SegmentedCombatantChild.cs" type="Script" id=4]
+
+[node name="SkeletonMan" instance=ExtResource( 1 )]
+script = ExtResource( 3 )
+
+[node name="LFootIK" type="SkeletonIK" parent="metarig/Skeleton" index="0"]
+process_priority = 1
+root_bone = "thigh.L"
+tip_bone = "foot.L"
+override_tip_basis = false
+min_distance = 1.0
+
+[node name="RFootIK" type="SkeletonIK" parent="metarig/Skeleton" index="1"]
+process_priority = 1
+root_bone = "thigh.R"
+tip_bone = "foot.R"
+override_tip_basis = false
+min_distance = 1.0
+
+[node name="LHandIK" type="SkeletonIK" parent="metarig/Skeleton" index="2"]
+process_priority = 1
+root_bone = "upper_arm.L"
+tip_bone = "hand.L"
+override_tip_basis = false
+min_distance = 1.0
+
+[node name="RHandIK" type="SkeletonIK" parent="metarig/Skeleton" index="3"]
+process_priority = 1
+root_bone = "upper_arm.R"
+tip_bone = "hand.R"
+override_tip_basis = false
+min_distance = 1.0
+
+[node name="Head" parent="metarig/Skeleton" index="4"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="LBicep" parent="metarig/Skeleton" index="5"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="LFoot" parent="metarig/Skeleton" index="6"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="LForearm" parent="metarig/Skeleton" index="7"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="LHand" parent="metarig/Skeleton" index="8"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="LShin" parent="metarig/Skeleton" index="9"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="LThigh" parent="metarig/Skeleton" index="10"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="Neck" parent="metarig/Skeleton" index="11"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="Pelvis" parent="metarig/Skeleton" index="12"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="RBicep" parent="metarig/Skeleton" index="13"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="RFoot" parent="metarig/Skeleton" index="14"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="RForearm" parent="metarig/Skeleton" index="15"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="RHand" parent="metarig/Skeleton" index="16"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="RShin" parent="metarig/Skeleton" index="17"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="RThigh" parent="metarig/Skeleton" index="18"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="shoulder" parent="metarig/Skeleton" index="19"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )
+
+[node name="spine" parent="metarig/Skeleton" index="20"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+material/0 = ExtResource( 2 )
+script = ExtResource( 4 )

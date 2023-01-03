@@ -22,8 +22,16 @@ public class PhysicsObject : Spatial
     public float AirResistance = 0.1f;
     [Export]
     public float MaxSpeed = 100f;
-    [Export]
-    public bool PhysicsActive = true;
+
+    //automatically updates World.Singleton.PhysicsObjects
+    public bool PhysicsActive {get => _physicsActive; protected set {
+        if (value != _physicsActive) {
+            if (value) World.Singleton.PhysicsObjects.Add(this);
+            else World.Singleton.PhysicsObjects.Remove(this);
+        }
+    }}
+    //doesn't update the World PhysicsObjects
+    protected bool _physicsActive = true;
 
     protected Vector3 currentForce; //zeroed each physics update
     protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
@@ -34,7 +42,7 @@ public class PhysicsObject : Spatial
     public override void _EnterTree()
     {
         base._EnterTree();
-        World.Singleton.PhysicsObjects.Add(this);
+        if (PhysicsActive) World.Singleton.PhysicsObjects.Add(this);
     }
 
     public override void _PhysicsProcess(float dt)
@@ -52,7 +60,7 @@ public class PhysicsObject : Spatial
 
     public override void _ExitTree()
     {
-        World.Singleton.PhysicsObjects.Remove(this);
+        if (PhysicsActive) World.Singleton.PhysicsObjects.Remove(this);
         base._ExitTree();
     }
 

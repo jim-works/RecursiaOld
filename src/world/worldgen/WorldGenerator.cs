@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class WorldGenerator
 {
     private const int POLL_INTERVAL = 10;
-    public int WorldgenThreads {get; private set;} = System.Environment.ProcessorCount;
+    public int WorldgenThreads {get; private set;} = Godot.Mathf.Max(1,System.Environment.ProcessorCount-1); //seems reasonable
     private const float noiseFreq = 0.25f;
     private const float noiseScale = 25;
     private FastNoiseLite noise = new FastNoiseLite();

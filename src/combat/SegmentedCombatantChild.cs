@@ -4,6 +4,12 @@ public class SegmentedCombatantChild : Combatant
 {
     public Combatant Parent;
 
+    public override void _EnterTree()
+    {
+        _physicsActive = Parent.PhysicsActive;
+        Team = Parent.Team;
+        base._EnterTree();
+    }
 
     public override void TakeDamage(Damage damage)
     {
