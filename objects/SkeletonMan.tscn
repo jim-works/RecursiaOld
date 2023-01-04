@@ -7,6 +7,14 @@
 
 [node name="SkeletonMan" instance=ExtResource( 1 )]
 script = ExtResource( 3 )
+LHandIKPath = NodePath("metarig/Skeleton/LHandIK")
+RHandIKPath = NodePath("metarig/Skeleton/RHandIK")
+LFootIKPath = NodePath("metarig/Skeleton/LFootIK")
+RFootIKPath = NodePath("metarig/Skeleton/RFootIK")
+LHandDestPath = NodePath("LHandDest")
+RHandDestPath = NodePath("RHandDest")
+LFootDestPath = NodePath("LFootDest")
+RFootDestPath = NodePath("RFootDest")
 
 [node name="LFootIK" type="SkeletonIK" parent="metarig/Skeleton" index="0"]
 process_priority = 1
@@ -37,86 +45,81 @@ override_tip_basis = false
 min_distance = 1.0
 
 [node name="Head" parent="metarig/Skeleton" index="4"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="LBicep" parent="metarig/Skeleton" index="5"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="LFoot" parent="metarig/Skeleton" index="6"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="LForearm" parent="metarig/Skeleton" index="7"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="LHand" parent="metarig/Skeleton" index="8"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="LShin" parent="metarig/Skeleton" index="9"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="LThigh" parent="metarig/Skeleton" index="10"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="Neck" parent="metarig/Skeleton" index="11"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="Pelvis" parent="metarig/Skeleton" index="12"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="RBicep" parent="metarig/Skeleton" index="13"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="RFoot" parent="metarig/Skeleton" index="14"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="RForearm" parent="metarig/Skeleton" index="15"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="RHand" parent="metarig/Skeleton" index="16"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="RShin" parent="metarig/Skeleton" index="17"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="RThigh" parent="metarig/Skeleton" index="18"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="shoulder" parent="metarig/Skeleton" index="19"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="spine" parent="metarig/Skeleton" index="20"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
+
+[node name="LFootDest" type="Spatial" parent="." index="2"]
+transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, 13.7838, 0, 0 )
+
+[node name="RFootDest" type="Spatial" parent="." index="3"]
+transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, -13.7838, 0, 0 )
+
+[node name="RHandDest" type="Spatial" parent="." index="4"]
+transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, 22.0291, 62.0271, 0 )
+
+[node name="LHandDest" type="Spatial" parent="." index="5"]
+transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, -22.0541, 62.0271, 0 )
