@@ -28,10 +28,12 @@ public class PhysicsObject : Spatial
         if (value != _physicsActive) {
             if (value) World.Singleton.PhysicsObjects.Add(this);
             else World.Singleton.PhysicsObjects.Remove(this);
+            _physicsActive = value;
         }
     }}
     //doesn't update the World PhysicsObjects
     protected bool _physicsActive = true;
+    public bool Collides = true;
 
     protected Vector3 currentForce; //zeroed each physics update
     protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
@@ -53,7 +55,7 @@ public class PhysicsObject : Spatial
         if (Velocity.LengthSquared() > MaxSpeed*MaxSpeed) Velocity=Velocity.Normalized()*MaxSpeed;
         //GD.Print(Velocity);
         currentForce = Gravity*Mass;
-        doCollision(World.Singleton, dt);
+        if (Collides) doCollision(World.Singleton, dt);
 
         Position += Velocity*dt;
     }
@@ -81,7 +83,11 @@ public class PhysicsObject : Spatial
     {
         return GlobalTransform.basis.Xform(v);
     }
-    protected void doCollision(World world, float dt)
+    protected void doFriction(float coeff)
+    {
+        Velocity -= Velocity*coeff;
+    }
+    protected virtual void doCollision(World world, float dt)
     {
         Vector3 oldV = Velocity;
         int oldMask = collisionDirections;

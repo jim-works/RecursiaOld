@@ -10,6 +10,7 @@ size = Vector3( 1, 1, 1 )
 mesh = SubResource( 1 )
 material/0 = null
 script = ExtResource( 1 )
+Size = Vector3( 1, 1, 1 )
 InitialTeamName = "enemy"
 InitialHealth = 10.0
 ChainLink = ExtResource( 2 )

@@ -4,7 +4,7 @@ public class Combatant : PhysicsObject
 {
     private float health;
     private float maxHealth;
-    public Team Team {get; protected set;}
+    public Team Team {get; set;}
     [Export]
     public string InitialTeamName;
     [Export]

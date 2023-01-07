@@ -59,8 +59,8 @@ public class ChainStriker : Combatant
         link.Parent = prev;
         link.MaxSpeed = maxSpeed;
         links.Add(link);
-
-        GetParent().CallDeferred("add_child", link); //on the same level as the link
+        GetParent().AddChild(link); //on the same level as the link
+        link.Translation = Translation;
         return link;
     }
 }

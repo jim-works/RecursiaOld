@@ -80,7 +80,6 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.51015, 0 )
 
 [node name="Chain" parent="." instance=ExtResource( 11 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, -30 )
-Size = Vector3( 1, 1, 1 )
 ChainSize = 10
 StrikeImpulse = 20.0
 
@@ -98,6 +97,7 @@ script = ExtResource( 13 )
 [node name="HealthBar" parent="PlayerUI" instance=ExtResource( 12 )]
 
 [node name="InventoryUI" parent="PlayerUI" instance=ExtResource( 15 )]
+visible = false
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -123,6 +123,7 @@ ItemSlotUI = ExtResource( 16 )
 Padding = 0
 
 [node name="RecipeList" type="Control" parent="PlayerUI"]
+visible = false
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5

@@ -2,6 +2,11 @@ using Godot;
 //skeleton man
 public class PatrickQuack : Combatant
 {
+
+    [Export] public float AttackInterval = 3;
+
+    [Export] public PackedScene MinionSpawn;
+
     [Export] public NodePath LHandIKPath = "metarig/skeleton/LHandIK";
     [Export] public NodePath RHandIKPath = "metarig/skeleton/RHandIK";
     [Export] public NodePath LFootIKPath = "metarig/skeleton/LFootIK";
@@ -27,6 +32,14 @@ public class PatrickQuack : Combatant
     private Vector3 lFootBaseOffset;
     private Vector3 rFootBaseOffset;
 
+    private float stepHeight = 25;
+    private float attackTimer = 0;
+    private float strikeImpulse = 25;
+    private float maxFootHeightDiff = 30;
+    private float friction = 10f;
+    private int numMinions = 5;
+    private float minionSpawnDelay = 0.5f;
+
     public override void _EnterTree()
     {
         _physicsActive = false;
@@ -44,35 +57,71 @@ public class PatrickQuack : Combatant
     public override void _Ready()
     {
         setupIK();
-
+        PhysicsActive = true;
         base._Ready();
     }
 
-    public override void _PhysicsProcess(float dt)
+    public override void _PhysicsProcess(float delta)
     {
-        updateTargets();
-        base._PhysicsProcess(dt);
+        attackTimer += delta;
+        if (attackTimer >= AttackInterval)
+        {
+            attack();
+        }
+        base._PhysicsProcess(delta);
     }
 
-    private void updateTargets()
+    private void attack()
+    {
+        attackTimer = 0;
+        Player closest = World.Singleton.ClosestPlayer(Position);
+        Velocity += new Vector3(0,25,0); //little hop
+        Velocity += (closest.Position-Position).Normalized()*strikeImpulse;
+        //LookAt(closest.Position, Vector3.Up);
+        for (int i = 0; i < numMinions; i++)
+        {
+            var minion = MinionSpawn.Instance<Combatant>();
+            GetParent().AddChild(minion);
+            if (i%2==0) minion.Translation = rHandDest.GlobalTransform.origin;
+            else minion.Translation = lHandDest.GlobalTransform.origin;
+            minion.Team = Team;
+        }
+        GD.Print("ATTACK");
+    }
+
+    //return that we are on ground if both feet are, or if one foot is much lower than the other one
+    private bool updateTargets()
     {
         float amp = 50;
         float freq = 1f;
         float sample = Mathf.Sin(OS.GetTicksMsec()/1000.0f*freq)*amp;
-
-        lFootDest.GlobalTransform = new Transform(lFootDest.GlobalTransform.basis, getFootOffset(lFootDest.GlobalTransform, lFootBaseOffset));
-        GD.Print("lfootdest: " + lFootDest.Translation);
-        rFootDest.GlobalTransform = new Transform(rFootDest.GlobalTransform.basis, getFootOffset(rFootDest.GlobalTransform, rFootBaseOffset));
+        (Vector3 lFootPos, bool lFootOnGround) = getFootOffset(lFootDest.GlobalTransform.origin, lFootBaseOffset);
+        (Vector3 rFootPos, bool rFootOnGround) = getFootOffset(rFootDest.GlobalTransform.origin, rFootBaseOffset);
+        lFootDest.GlobalTransform = new Transform(lFootDest.GlobalTransform.basis, lFootPos);
+        rFootDest.GlobalTransform = new Transform(rFootDest.GlobalTransform.basis, rFootPos);
 
         lHandDest.Translation = new Vector3(-sample, 0, 0);
         rHandDest.Translation = new Vector3(sample, 0, 0);
+
+        //return that we are on ground if both feet are, or if one foot is much lower than the other one
+        return (lFootOnGround && rFootOnGround) || ((lFootOnGround||rFootOnGround)&&Mathf.Abs(lFootPos.y-rFootPos.y)>=maxFootHeightDiff);
     }
 
-    private Vector3 getFootOffset(Transform footTarget, Vector3 baseOffset)
+    private (Vector3, bool) getFootOffset(Vector3 footTargetGlobal, Vector3 localBaseOffset)
     {
-        BlockcastHit hit = World.Singleton.Blockcast(GlobalTransform.Xform(new Vector3(footTarget.origin.x,0,footTarget.origin.z)),new Vector3(0,GlobalTransform.Xform(baseOffset).y,0));
-        if (hit == null) return baseOffset;
-        return hit.HitPos;
+        Vector3 start = new Vector3(footTargetGlobal.x,footTargetGlobal.y+stepHeight,footTargetGlobal.z);
+        BlockcastHit hit = World.Singleton.Blockcast(start,new Vector3(0,-stepHeight, 0));
+        if (hit == null) return (GlobalTransform.Xform(localBaseOffset), false);
+        return (hit.HitPos, true);
+    }
+
+    protected override void doCollision(World world, float dt)
+    {
+        bool onGround = updateTargets();
+        if (onGround) {
+            Velocity.y = Mathf.Max(0,Velocity.y);
+            doFriction(friction*dt);
+        }
     }
 
     private void setupIK()
