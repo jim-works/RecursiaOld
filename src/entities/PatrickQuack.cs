@@ -7,6 +7,11 @@ public class PatrickQuack : Combatant
 
     [Export] public PackedScene MinionSpawn;
 
+    [Export] public float MoveSpeed = 5;
+    [Export] public float StepInterval = 2;
+    [Export] public float ControlPointHeight = 10;
+    [Export] public float MinDistanceForStep = 5;
+
     [Export] public NodePath LHandIKPath = "metarig/skeleton/LHandIK";
     [Export] public NodePath RHandIKPath = "metarig/skeleton/RHandIK";
     [Export] public NodePath LFootIKPath = "metarig/skeleton/LFootIK";
@@ -31,6 +36,13 @@ public class PatrickQuack : Combatant
     private Vector3 rHandBaseOffset;
     private Vector3 lFootBaseOffset;
     private Vector3 rFootBaseOffset;
+
+    private Bezier lFootPath;
+    private float tlFoot = 1;
+    private bool lFootOnGround;
+    private Bezier rFootPath;
+    private float trFoot = 1;
+    private bool rFootOnGround;
 
     private float stepHeight = 25;
     private float attackTimer = 0;
@@ -58,53 +70,90 @@ public class PatrickQuack : Combatant
     {
         setupIK();
         PhysicsActive = true;
+        tlFoot = 1;
+        trFoot = 1;
         base._Ready();
     }
 
     public override void _PhysicsProcess(float delta)
     {
-        attackTimer += delta;
-        if (attackTimer >= AttackInterval)
-        {
-            attack();
-        }
+        Player closest = World.Singleton.ClosestPlayer(Position);
+        Vector3 targetV = (closest.Position-Position).Normalized()*MoveSpeed;
+        Velocity.x = targetV.x;
+        Velocity.z = targetV.z;
+
+        updateFootBeziers();
+        updateFootPosition(delta);
+        
         base._PhysicsProcess(delta);
     }
 
     private void attack()
     {
         attackTimer = 0;
-        Player closest = World.Singleton.ClosestPlayer(Position);
-        Velocity += new Vector3(0,25,0); //little hop
-        Velocity += (closest.Position-Position).Normalized()*strikeImpulse;
-        //LookAt(closest.Position, Vector3.Up);
-        for (int i = 0; i < numMinions; i++)
-        {
-            var minion = MinionSpawn.Instance<Combatant>();
-            GetParent().AddChild(minion);
-            if (i%2==0) minion.Translation = rHandDest.GlobalTransform.origin;
-            else minion.Translation = lHandDest.GlobalTransform.origin;
-            minion.Team = Team;
-        }
-        GD.Print("ATTACK");
+        // Player closest = World.Singleton.ClosestPlayer(Position);
+        // Velocity += new Vector3(0,25,0); //little hop
+        // Velocity += (closest.Position-Position).Normalized()*strikeImpulse;
+        // //LookAt(closest.Position, Vector3.Up);
+        // // for (int i = 0; i < numMinions; i++)
+        // // {
+        // //     var minion = MinionSpawn.Instance<Combatant>();
+        // //     GetParent().AddChild(minion);
+        // //     if (i%2==0) minion.Translation = rHandDest.GlobalTransform.origin;
+        // //     else minion.Translation = lHandDest.GlobalTransform.origin;
+        // //     minion.Team = Team;
+        // // }
+        // GD.Print("ATTACK");
     }
-
-    //return that we are on ground if both feet are, or if one foot is much lower than the other one
-    private bool updateTargets()
+    //we are on ground if both feet are, or if one foot is much lower than the other foot, which is on the ground.
+    private bool onGround() => (lFootOnGround && rFootOnGround) || ((lFootOnGround||rFootOnGround)&&Mathf.Abs(lFootDest.GlobalTransform.origin.y-rFootDest.GlobalTransform.origin.y)>=maxFootHeightDiff);
+    private void updateGrounded()
     {
-        float amp = 50;
-        float freq = 1f;
-        float sample = Mathf.Sin(OS.GetTicksMsec()/1000.0f*freq)*amp;
-        (Vector3 lFootPos, bool lFootOnGround) = getFootOffset(lFootDest.GlobalTransform.origin, lFootBaseOffset);
-        (Vector3 rFootPos, bool rFootOnGround) = getFootOffset(rFootDest.GlobalTransform.origin, rFootBaseOffset);
+        lFootOnGround = World.Singleton.Blockcast(lFootDest.GlobalTransform.origin, new Vector3(0,-0.5f,0)) == null;
+        rFootOnGround = World.Singleton.Blockcast(rFootDest.GlobalTransform.origin, new Vector3(0,-0.5f,0)) == null;
+    }
+    private void updateFootPosition(float dt)
+    {
+        tlFoot += dt/StepInterval;
+        Vector3 lFootPos = lFootPath.Sample(tlFoot);
+        trFoot += dt/StepInterval;
+        Vector3 rFootPos = rFootPath.Sample(trFoot);
         lFootDest.GlobalTransform = new Transform(lFootDest.GlobalTransform.basis, lFootPos);
         rFootDest.GlobalTransform = new Transform(rFootDest.GlobalTransform.basis, rFootPos);
+    }
+    //return that we are on ground if both feet are, or if one foot is much lower than the other one
+    private void updateFootBeziers()
+    {
+        if (needToStep(tlFoot, lFootDest.GlobalTransform.origin)) {
+            tlFoot = 0;
+            lFootPath = calcTrajectory(lFootDest.GlobalTransform.origin, lFootBaseOffset);
+        }
+        if (needToStep(trFoot, rFootDest.GlobalTransform.origin)) {
+            trFoot = 0;
+            rFootPath = calcTrajectory(rFootDest.GlobalTransform.origin, rFootBaseOffset);
+        }
+    }
 
-        lHandDest.Translation = new Vector3(-sample, 0, 0);
-        rHandDest.Translation = new Vector3(sample, 0, 0);
+    private bool needToStep(float t, Vector3 footGlobal)
+    {
+        return t>=1 && (footGlobal-Position).Dot(Velocity) < 0; //foot is behind combatant and is finished with its previous bezier
+    }
 
-        //return that we are on ground if both feet are, or if one foot is much lower than the other one
-        return (lFootOnGround && rFootOnGround) || ((lFootOnGround||rFootOnGround)&&Mathf.Abs(lFootPos.y-rFootPos.y)>=maxFootHeightDiff);
+    //returns true if foot is on ground
+    private Bezier calcTrajectory(Vector3 footGlobal, Vector3 localFootOffset)
+    {
+        //use the current position as start of the bezier, so we only need to calculate the destination.
+        Vector3 planarV = new Vector3(Velocity.x,0,Velocity.z);
+        float planarVMag = planarV.Length();
+        //distance in front of current pos to place foot
+        // (m/step) = (sec/step)*(m/s)
+        float dist = StepInterval * planarVMag;
+        //account for terrain
+        (Vector3 dest, _) = getFootOffset(Position+planarV/planarVMag*dist, localFootOffset);
+        //the control point is the mean of the start/end, moved upward some amount
+        Vector3 control = (footGlobal+dest)/2+new Vector3(0,ControlPointHeight,0);
+        GD.Print($"pos: {Position}, start {footGlobal}, control {control}, end {dest}");
+        return new Bezier(footGlobal,control,dest);
     }
 
     private (Vector3, bool) getFootOffset(Vector3 footTargetGlobal, Vector3 localBaseOffset)
@@ -117,8 +166,8 @@ public class PatrickQuack : Combatant
 
     protected override void doCollision(World world, float dt)
     {
-        bool onGround = updateTargets();
-        if (onGround) {
+        updateGrounded();
+        if (onGround()) {
             Velocity.y = Mathf.Max(0,Velocity.y);
             doFriction(friction*dt);
         }

@@ -20,7 +20,7 @@
 [ext_resource path="res://src/ui/FollowMouse.gd" type="Script" id=18]
 [ext_resource path="res://src/ui/RecipeListUI.cs" type="Script" id=19]
 [ext_resource path="res://objects/CraftingRecipeUI.tscn" type="PackedScene" id=20]
-[ext_resource path="res://objects/SkeletonMan.tscn" type="PackedScene" id=21]
+[ext_resource path="res://objects/PatrickQuack.tscn" type="PackedScene" id=21]
 
 [sub_resource type="CapsuleMesh" id=1]
 
@@ -86,8 +86,9 @@ StrikeImpulse = 20.0
 [node name="HealthBar3D" parent="Chain" instance=ExtResource( 10 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0 )
 
-[node name="skeleton" parent="." instance=ExtResource( 21 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, -30 )
+[node name="PatrickQuack" parent="." instance=ExtResource( 21 )]
+Size = Vector3( 1, 1, 1 )
+ContactDamage = 0.0
 
 [node name="PlayerUI" type="Control" parent="."]
 anchor_right = 1.0
