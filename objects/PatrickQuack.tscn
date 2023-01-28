@@ -1,10 +1,43 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://models/skeleton.dae" type="PackedScene" id=1]
 [ext_resource path="res://models/Material.material" type="Material" id=2]
 [ext_resource path="res://src/entities/PatrickQuack.cs" type="Script" id=3]
 [ext_resource path="res://src/combat/SegmentedCombatantChild.cs" type="Script" id=4]
 [ext_resource path="res://objects/Chain.tscn" type="PackedScene" id=5]
+
+[sub_resource type="Animation" id=1]
+resource_name = "Idle"
+tracks/0/type = "bezier"
+tracks/0/path = NodePath("RHandDest:translation:x")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"points": PoolRealArray(  ),
+"times": PoolRealArray(  )
+}
+tracks/1/type = "bezier"
+tracks/1/path = NodePath("RHandDest:translation:y")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"points": PoolRealArray(  ),
+"times": PoolRealArray(  )
+}
+tracks/2/type = "bezier"
+tracks/2/path = NodePath("RHandDest:translation:z")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"points": PoolRealArray(  ),
+"times": PoolRealArray(  )
+}
 
 [node name="PatrickQuack" instance=ExtResource( 1 )]
 script = ExtResource( 3 )
@@ -53,10 +86,12 @@ target_node = NodePath("../../../RHandDest")
 min_distance = 1.0
 
 [node name="Head" parent="metarig/Skeleton" index="4"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
 [node name="LBicep" parent="metarig/Skeleton" index="5"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
 
@@ -119,6 +154,9 @@ script = ExtResource( 4 )
 [node name="spine" parent="metarig/Skeleton" index="20"]
 material/0 = ExtResource( 2 )
 script = ExtResource( 4 )
+
+[node name="AnimationPlayer" parent="." index="1"]
+anims/Idle = SubResource( 1 )
 
 [node name="LFootDest" type="Spatial" parent="." index="2"]
 transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, 14, 0, 0 )

@@ -9,7 +9,13 @@ public class RecipeListUI : Control
     public int Padding;
     
     private List<CraftingRecipeUI> recipeUIs = new List<CraftingRecipeUI>();
+    private Control Parent; //scrollbox
 
+    public override void _Ready()
+    {
+        Parent = GetParentControl();
+        base._Ready();
+    }
     //TODO: pooling
     public void DisplayList(IEnumerable<Recipe> recipes)
     {
@@ -27,18 +33,19 @@ public class RecipeListUI : Control
             ui.RectPosition = new Vector2(0, startHeight);
             startHeight += ui.DisplayRecipe(recipe)+Padding;
         }
+        RectMinSize = new Vector2(RectMinSize.x, startHeight);
     }
 
 
     //signal
     public void OnPause()
     {
-        Visible = true;
+        Parent.Visible = true;
     }
 
     //signal
     public void OnUnpause()
     {
-        Visible = false;
+        Parent.Visible = false;
     }
 }

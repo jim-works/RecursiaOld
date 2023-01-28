@@ -46,6 +46,29 @@ public class World : Node
         }
         return minPlayer;
     }
+    public Combatant ClosestEnemy(Vector3 pos, Team team)
+    {
+        float minSqrDist = float.PositiveInfinity;
+        Combatant minEnemy = null;
+        foreach(var c in Combatants)
+        {
+            float sqrDist = (pos-c.Position).LengthSquared();
+            if (sqrDist < minSqrDist && c.Team != team) {
+                minSqrDist = sqrDist;
+                minEnemy = c;
+            }
+        }
+        return minEnemy;
+    }
+    public Combatant CollidesWithEnemy(Box box, Team team)
+    {
+        foreach (var c in Combatants)
+        {
+            if (c.Team == team) continue;
+            if (c.GetBox().IntersectsBox(box)) return c;
+        }
+        return null;
+    }
     private void doChunkLoading()
     {
         loadedChunks.Clear();

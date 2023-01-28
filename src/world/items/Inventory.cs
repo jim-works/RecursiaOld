@@ -43,6 +43,18 @@ public class Inventory
         OnUpdate?.Invoke(this);
     }
 
+    //selects the first slot containig an itemstack matching the query
+    //returns -1 if no match
+    public int Select(System.Func<ItemStack, bool> query)
+    {
+        for (int i = 0; i < Items.Length; i++)
+        {
+            if (query(Items[i])) return i;
+        }
+        //not found
+        return -1;
+    }
+
     public void SwapItems(int a, int b)
     {
         var tmp = Items[a];
@@ -76,6 +88,17 @@ public class Inventory
         }
         OnUpdate?.Invoke(this);
         return count-remaining;
+    }
+
+    //deletes count (or as many as possible) item from slot.
+    //returns the numger of items deleted
+    public int DeleteFromSlot(int slot, int count)
+    {
+        ref ItemStack stack = ref Items[slot];
+        int removing = Mathf.Min(count, stack.Size);
+        stack.Decrement(removing);
+        OnUpdate?.Invoke(this);
+        return removing;
     }
 
     //returns true if successful, false if invalid operation (cannot take one item type into another)

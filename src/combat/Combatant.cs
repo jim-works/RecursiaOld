@@ -10,9 +10,11 @@ public class Combatant : PhysicsObject
     [Export]
     public float InitialHealth;
     [Export]
-    public float InvincibilitySeconds = 0.1f;
+    public float InvincibilitySeconds = 0.001f; //should be 1 frame
     [Export]
     public float ContactDamage = 1;
+
+    public Inventory Inventory;
 
     private float invicinibilityTimer = 0;
 

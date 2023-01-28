@@ -10,15 +10,16 @@ public class Player : Combatant
     public float JumpHeight = 10;
     [Export]
     public Vector3 CameraOffset = new Vector3(0,0.7f,0);
+    [Export]
+    public int InitialInventorySize = 10;
     
-
-    public Inventory Inventory = new Inventory(10);
     public Inventory MouseInventory = new Inventory(1);
 
     private int SelectedSlot = 0;
 
     public override void _EnterTree()
     {
+        Inventory = new Inventory(InitialInventorySize);
         World.Singleton.ChunkLoaders.Add(this);
         World.Singleton.Players.Add(this);
         base._EnterTree();
@@ -26,12 +27,14 @@ public class Player : Combatant
 
     public override void _Ready()
     {
-        ItemStack stack = new ItemStack {Item=ItemTypes.Get("gun"),Size=1};
-        Inventory.AddItem(ref stack);
-        if (stack.Size != 0)
-        {
-            GD.PrintErr("Error adding item to inventory");
-        }
+        // ItemStack stack = new ItemStack {Item=ItemTypes.Get("gun"),Size=1};
+        // ItemStack stack2 = new ItemStack {Item=ItemTypes.Get("explosive_bullet"),Size=5};
+        // ItemStack stack3 = new ItemStack {Item=ItemTypes.Get("tracking_bullet"),Size=5};
+        // ItemStack stack4 = new ItemStack {Item=ItemTypes.Get("shotgun"),Size=1};
+        // Inventory.AddItem(ref stack);
+        // Inventory.AddItem(ref stack2);
+        // Inventory.AddItem(ref stack3);
+        // Inventory.AddItem(ref stack4);
         base._Ready();
     }
 

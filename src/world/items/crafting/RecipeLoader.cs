@@ -12,8 +12,20 @@ public static class RecipeLoader
         ));
 
         RecpieList.AddRecipe(new Recipe(
-            new List<ItemStack> {new ItemStack {Size=6,Item=ItemTypes.GetBlockItem("dirt")}},
-            new List<ItemStack> {new ItemStack {Size=2,Item=ItemTypes.Get("gun")}},
+            new List<ItemStack> {new ItemStack {Size=10,Item=ItemTypes.GetBlockItem("stone")}},
+            new List<ItemStack> {new ItemStack {Size=10,Item=ItemTypes.Get("explosive_bullet")}},
+            "hand"
+        ));
+
+        RecpieList.AddRecipe(new Recipe(
+            new List<ItemStack> {new ItemStack {Size=10,Item=ItemTypes.GetBlockItem("dirt")}},
+            new List<ItemStack> {new ItemStack {Size=1,Item=ItemTypes.Get("shotgun")}},
+            "hand"
+        ));
+
+        RecpieList.AddRecipe(new Recipe(
+            new List<ItemStack> {new ItemStack {Size=10,Item=ItemTypes.GetBlockItem("dirt")},new ItemStack {Size=10,Item=ItemTypes.GetBlockItem("stone")}},
+            new List<ItemStack> {new ItemStack {Size=20,Item=ItemTypes.Get("tracking_bullet")}},
             "hand"
         ));
     }
