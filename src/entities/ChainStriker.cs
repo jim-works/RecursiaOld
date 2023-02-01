@@ -42,6 +42,7 @@ public class ChainStriker : Combatant
             if (combatant == this) continue;
             combatant.Die();
         }
+        SphereShaper.Shape(World.Singleton, Position, 6.2f);
         base.Die();
     }
 

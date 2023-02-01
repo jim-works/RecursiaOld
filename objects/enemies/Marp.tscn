@@ -1,7 +1,6 @@
-[gd_scene load_steps=32 format=2]
+[gd_scene load_steps=31 format=2]
 
-[ext_resource path="res://src/entities/PatrickQuack.cs" type="Script" id=2]
-[ext_resource path="res://objects/Chain.tscn" type="PackedScene" id=3]
+[ext_resource path="res://src/entities/Marp.cs" type="Script" id=1]
 
 [sub_resource type="SpatialMaterial" id=21]
 resource_name = "Material"
@@ -715,28 +714,32 @@ switch_mode = 2
 xfade_time = 0.4
 
 [sub_resource type="AnimationNodeStateMachine" id=28]
-states/summon/node = SubResource( 22 )
-states/summon/position = Vector2( 464, 98 )
+states/smack/node = SubResource( 22 )
+states/smack/position = Vector2( 464, 98 )
 states/walk-blend/node = SubResource( 25 )
-states/walk-blend/position = Vector2( 112, 141 )
-transitions = [ "walk-blend", "summon", SubResource( 26 ), "summon", "walk-blend", SubResource( 27 ) ]
+states/walk-blend/position = Vector2( 109, 117 )
+transitions = [ "walk-blend", "smack", SubResource( 26 ), "smack", "walk-blend", SubResource( 27 ) ]
 start_node = "walk-blend"
 
 [sub_resource type="AnimationNodeStateMachinePlayback" id=29]
 
-[node name="PatrickQuack" type="Spatial"]
-script = ExtResource( 2 )
+[node name="Marp" type="Spatial"]
+script = ExtResource( 1 )
+Size = Vector3( 5, 5, 5 )
 InitialTeamName = "enemy"
 InitialHealth = 100.0
+InvincibilitySeconds = 0.1
 ContactDamage = 0.0
 AnimationTreePath = NodePath("AnimationTree")
+StrideLength = 5.0
 LFootBottom = NodePath("metarig/Skeleton/LFootBottom")
 RFootBottom = NodePath("metarig/Skeleton/RFootBottom")
-EnemyToSummon = ExtResource( 3 )
-SummonPoint = NodePath("metarig/Skeleton/RHandEnd")
+WalkSpeed = 20.0
+Baby = null
+Smackitude = 50.0
 
 [node name="metarig" type="Spatial" parent="."]
-transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, 0, 0, 0 )
+transform = Transform( 5, 0, 0, 0, 0.7, 0, 0, 0, 5, 0, 0, 0 )
 
 [node name="Skeleton" type="Skeleton" parent="metarig"]
 bones/0/name = "spine"
@@ -848,12 +851,12 @@ bones/21/name = "foot.L.ik"
 bones/21/parent = -1
 bones/21/rest = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.267113 )
 bones/21/enabled = true
-bones/21/bound_children = [  ]
+bones/21/bound_children = [ NodePath("LFootBottom") ]
 bones/22/name = "foot.r.ik"
 bones/22/parent = -1
 bones/22/rest = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.019868, -0.262572 )
 bones/22/enabled = true
-bones/22/bound_children = [  ]
+bones/22/bound_children = [ NodePath("RFootBottom") ]
 bones/23/name = "hand.L.ik"
 bones/23/parent = -1
 bones/23/rest = Transform( -0.993154, 0, -0.116812, -0.116812, 0, 0.993154, 0, 1, 0, 0.316259, 0.898685, -0.00411885 )
@@ -951,16 +954,12 @@ skin = SubResource( 2 )
 material/0 = null
 
 [node name="RFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.0720921, 0.139296 )
+transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.00766613, 0.185853 )
 bone_name = "foot.r.ik"
 
 [node name="LFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, -0.197651 )
+transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, 0.00919784, -0.264428 )
 bone_name = "foot.L.ik"
-
-[node name="RHandEnd" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.993154, 0, 0.11681, 0.11681, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.223569 )
-bone_name = "hand.R.ik"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/summon = SubResource( 19 )

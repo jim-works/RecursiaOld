@@ -89,15 +89,21 @@ public class WorldGenerator
         Block dirt = BlockTypes.Get("dirt");
         Block grass = BlockTypes.Get("grass");
         Block sand = BlockTypes.Get("sand");
+        Block lava = BlockTypes.Get("lava");
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
         {
             for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
             {   
                 BlockCoord worldCoords = chunk.LocalToWorld(new BlockCoord(x,0,z));
                 int height = (int)(noiseScale*noise.GetNoise(worldCoords.x*noiseFreq,worldCoords.z*noiseFreq));
+                bool sandPillar = false;//50000*noise.GetNoise(worldCoords.x*noiseFreq*1237.2f,worldCoords.z*noiseFreq*1828.3f) > 47500;
                 for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                 {
                     worldCoords = chunk.LocalToWorld(new BlockCoord(x,y,z));
+                    if (sandPillar) {
+                        chunk[x,y,z] = lava;
+                        continue;
+                    }
                     if (worldCoords.y < height - 5) {
                         chunk[x,y,z] = stone;
                     } else if (worldCoords.y < height) {

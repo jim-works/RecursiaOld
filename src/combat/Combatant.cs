@@ -33,6 +33,22 @@ public class Combatant : PhysicsObject
     {
         invicinibilityTimer += delta;
         if (ContactDamage != 0)  DoContactDamage();
+        for (int x = -1; x <= 1; x++)
+        {
+            for (int y = -1; y <= 1; y++)
+            {
+                for (int z = -1; z <= 1; z++)
+                {
+                    Block b = World.Singleton.GetBlock((BlockCoord)Position+new BlockCoord(x,y,z));
+                    if (b != null && b.Name == "lava")
+                    {
+                        TakeDamage(new Damage{
+                            Amount=1
+                        });
+                    }
+                }
+            }
+        }
         base._Process(delta);
     }
 

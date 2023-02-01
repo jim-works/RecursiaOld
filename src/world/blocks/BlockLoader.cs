@@ -14,6 +14,7 @@ public static class BlockLoader
         createBasic("grass", standard, 1, 0);
         createBasic("stone", standard, 0, 1,2);
         createBasic("sand", standard, 1, 1,100);
+        createBasic("lava", standard, 2, 0,100);
     }
 
     private static void createBasic(string name, TextureAtlas atlas, int x, int y, float explosionResistance=0)
