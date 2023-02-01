@@ -2,12 +2,12 @@
 
 importer="scene"
 type="PackedScene"
-path="res://.import/skeleton.dae-133ea92d04f2ac001b6fe98e6ebaab31.scn"
+path="res://.import/skeleton.gltf-386123642249e2ef040ea81dc2c8adb2.scn"
 
 [deps]
 
-source_file="res://models/skeleton.dae"
-dest_files=[ "res://.import/skeleton.dae-133ea92d04f2ac001b6fe98e6ebaab31.scn" ]
+source_file="res://blender/skeleton.gltf"
+dest_files=[ "res://.import/skeleton.gltf-386123642249e2ef040ea81dc2c8adb2.scn" ]
 
 [params]
 

@@ -244,4 +244,11 @@ public class World : Node
             });
         }
     }
+
+    public T SpawnChild<T>(PackedScene s) where T : Node
+    {
+        T c = s.Instance<T>();
+        CallDeferred("add_child", c);
+        return c;
+    }
 }

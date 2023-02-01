@@ -25,19 +25,6 @@ public class Player : Combatant
         base._EnterTree();
     }
 
-    public override void _Ready()
-    {
-        // ItemStack stack = new ItemStack {Item=ItemTypes.Get("gun"),Size=1};
-        // ItemStack stack2 = new ItemStack {Item=ItemTypes.Get("explosive_bullet"),Size=5};
-        // ItemStack stack3 = new ItemStack {Item=ItemTypes.Get("tracking_bullet"),Size=5};
-        // ItemStack stack4 = new ItemStack {Item=ItemTypes.Get("shotgun"),Size=1};
-        // Inventory.AddItem(ref stack);
-        // Inventory.AddItem(ref stack2);
-        // Inventory.AddItem(ref stack3);
-        // Inventory.AddItem(ref stack4);
-        base._Ready();
-    }
-
     public override void _ExitTree()
     {
         World.Singleton.Players.Remove(this);

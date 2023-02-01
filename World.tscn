@@ -10,7 +10,6 @@
 [ext_resource path="res://src/settings/Settings.cs" type="Script" id=8]
 [ext_resource path="res://src/combat/Combatant.cs" type="Script" id=9]
 [ext_resource path="res://objects/HealthBar3D.tscn" type="PackedScene" id=10]
-[ext_resource path="res://objects/Chain.tscn" type="PackedScene" id=11]
 [ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=12]
 [ext_resource path="res://src/ui/PlayerUIAssignment.cs" type="Script" id=13]
 [ext_resource path="res://textures/gun.png" type="Texture" id=14]
@@ -23,6 +22,7 @@
 [ext_resource path="res://textures/tracking_bullet.png" type="Texture" id=21]
 [ext_resource path="res://textures/explosive_bullet.png" type="Texture" id=22]
 [ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
+[ext_resource path="res://objects/enemies/PatrickQuack.tscn" type="PackedScene" id=24]
 
 [sub_resource type="CapsuleMesh" id=1]
 
@@ -85,14 +85,8 @@ InvincibilitySeconds = 0.0
 [node name="HealthBar3D" parent="DummyEnemy" instance=ExtResource( 10 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.51015, 0 )
 
-[node name="Chain" parent="." instance=ExtResource( 11 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, -30 )
-InvincibilitySeconds = 0.0
-ChainSize = 10
-StrikeImpulse = 20.0
-
-[node name="HealthBar3D" parent="Chain" instance=ExtResource( 10 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0 )
+[node name="skeleton" parent="." instance=ExtResource( 24 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.5555, -106.506 )
 
 [node name="PlayerUI" type="Control" parent="."]
 anchor_right = 1.0
