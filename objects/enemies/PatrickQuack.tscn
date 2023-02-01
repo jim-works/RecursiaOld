@@ -848,12 +848,12 @@ bones/21/name = "foot.L.ik"
 bones/21/parent = -1
 bones/21/rest = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.267113 )
 bones/21/enabled = true
-bones/21/bound_children = [ NodePath("LFootBottom") ]
+bones/21/bound_children = [  ]
 bones/22/name = "foot.r.ik"
 bones/22/parent = -1
 bones/22/rest = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.019868, -0.262572 )
 bones/22/enabled = true
-bones/22/bound_children = [ NodePath("RFootBottom") ]
+bones/22/bound_children = [  ]
 bones/23/name = "hand.L.ik"
 bones/23/parent = -1
 bones/23/rest = Transform( -0.993154, 0, -0.116812, -0.116812, 0, 0.993154, 0, 1, 0, 0.316259, 0.898685, -0.00411885 )
@@ -863,10 +863,9 @@ bones/24/name = "hand.R.ik"
 bones/24/parent = -1
 bones/24/rest = Transform( -0.993154, 0, 0.116812, 0.116812, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.00411885 )
 bones/24/enabled = true
-bones/24/bound_children = [ NodePath("RHandEnd") ]
+bones/24/bound_children = [  ]
 
 [node name="Head" type="MeshInstance" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 mesh = SubResource( 1 )
 skin = SubResource( 2 )
 material/0 = null
@@ -952,15 +951,15 @@ skin = SubResource( 2 )
 material/0 = null
 
 [node name="RFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, -3.23728e-06, -0.246682 )
+transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.019868, -0.262572 )
 bone_name = "foot.r.ik"
 
 [node name="LFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, 0.0172651, 0.241709 )
+transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.267113 )
 bone_name = "foot.L.ik"
 
 [node name="RHandEnd" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.993154, 0, 0.11681, 0.11681, 0, 0.993154, 0, 1, 0, -0.316259, 0.898684, 0.252871 )
+transform = Transform( -0.993154, 0, 0.116812, 0.116812, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.00411885 )
 bone_name = "hand.R.ik"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
