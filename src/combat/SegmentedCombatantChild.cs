@@ -1,14 +1,16 @@
-using System.Collections.Generic;
+using Godot;
 
 public class SegmentedCombatantChild : Combatant
 {
+    [Export] public NodePath ParentPath;
     public Combatant Parent;
 
-    public override void _EnterTree()
+    public override void _Ready()
     {
+        if (ParentPath != null) Parent = GetNode<Combatant>(ParentPath);
         _physicsActive = Parent.PhysicsActive;
         Team = Parent.Team;
-        base._EnterTree();
+        base._Ready();
     }
 
     public override void TakeDamage(Damage damage)

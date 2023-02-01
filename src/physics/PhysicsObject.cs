@@ -5,6 +5,7 @@ public class PhysicsObject : Spatial
 {
     [Export]
     public Vector3 Size;
+    [Export] public Vector3 ColliderOffset;
     [Export]
     //reduces collision planes' sizes by this amount in each direction to avoid getting stuck on things.
     //For example, it would stop an x-axis collision to be detected while walking on flat ground.
@@ -22,6 +23,7 @@ public class PhysicsObject : Spatial
     public float AirResistance = 0.1f;
     [Export]
     public float MaxSpeed = 100f;
+    [Export] public bool InitPhysicsActive = true;
 
     //automatically updates World.Singleton.PhysicsObjects
     public bool PhysicsActive {get => _physicsActive; protected set {
@@ -39,7 +41,13 @@ public class PhysicsObject : Spatial
     protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Box GetBox() => Box.FromCenter(Position, Size);
+    public Box GetBox() => Box.FromCenter(Position+LocalDirectionToWorld(ColliderOffset), Size);
+
+    public override void _EnterTree()
+    {
+        _physicsActive = InitPhysicsActive;
+        base._EnterTree();
+    }
 
     public override void _Ready()
     {

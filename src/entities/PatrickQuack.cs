@@ -8,17 +8,26 @@ public class PatrickQuack : BipedalCombatant
     [Export] public float StateSwitchInterval = 5;
     [Export] public float SummonInterval = 2;
     [Export] public string SummonState = "summon";
-    [Export] public PackedScene EnemyToSummon;
+    [Export] public PackedScene[] EnemiesToSummon;
     [Export] public NodePath SummonPoint;
+    [Export] public NodePath Skeleton;
 
     private AnimationNodeStateMachinePlayback stateMachine;
     private float stateSwitchTimer = 0;
     private float summonTimer = 0;
     private Spatial summonPoint;
+    private int spawnIdx = 0;
 
     public override void _Ready()
     {
         base._Ready();
+        // Node skeleton = GetNode(Skeleton);
+        // foreach (var item in skeleton.GetChildren())
+        // {
+        //     if (item is SegmentedCombatantChild scc) {
+        //         DebugDraw.Singleton.Tracking.Add(scc);
+        //     }
+        // }
         stateMachine = (AnimationNodeStateMachinePlayback)animationTree.Get("parameters/playback");
         summonPoint = GetNode<Spatial>(SummonPoint);
     }
@@ -61,7 +70,9 @@ public class PatrickQuack : BipedalCombatant
         Velocity = new Vector3(0,Velocity.y,0);
         if (summonTimer >= SummonInterval)
         {
-            Combatant c = EnemyToSummon.Instance<Combatant>();
+            Combatant c = EnemiesToSummon[spawnIdx].Instance<Combatant>();
+            if (c is Marp m) m.CarryTarget = this;
+            spawnIdx = (spawnIdx+1)%EnemiesToSummon.Length;
             c.Team = Team;
             c.Position = summonPoint.GlobalTransform.origin;
             World.Singleton.AddChild(c);

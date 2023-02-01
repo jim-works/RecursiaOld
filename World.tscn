@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=2]
+[gd_scene load_steps=25 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -9,6 +9,8 @@
 [ext_resource path="res://src/world/items/ItemLoader.cs" type="Script" id=7]
 [ext_resource path="res://src/settings/Settings.cs" type="Script" id=8]
 [ext_resource path="res://objects/enemies/Marp.tscn" type="PackedScene" id=9]
+[ext_resource path="res://objects/Chain.tscn" type="PackedScene" id=10]
+[ext_resource path="res://src/ui/debug/DebugDraw.cs" type="Script" id=11]
 [ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=12]
 [ext_resource path="res://src/ui/PlayerUIAssignment.cs" type="Script" id=13]
 [ext_resource path="res://textures/gun.png" type="Texture" id=14]
@@ -29,6 +31,10 @@ script = ExtResource( 5 )
 [node name="Mesher" type="Node" parent="."]
 script = ExtResource( 1 )
 ChunkMaterial = ExtResource( 3 )
+
+[node name="DebugDrawer" type="Node" parent="."]
+script = ExtResource( 11 )
+Color = Color( 1, 0, 0, 1 )
 
 [node name="ItemLoader" type="Node" parent="."]
 script = ExtResource( 7 )
@@ -52,16 +58,9 @@ margin_right = 16.0
 margin_bottom = 16.0
 texture = ExtResource( 4 )
 
-[node name="Marpette" parent="." instance=ExtResource( 9 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -15.9361 )
-InitialTeamName = "Marpette"
-
-[node name="Marp" parent="." instance=ExtResource( 9 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -35.8168, 0, 0 )
-InitialTeamName = "marp"
-
 [node name="PatrickQuack" parent="." instance=ExtResource( 24 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0464211, 0.148155, -12.8986 )
+EnemiesToSummon = [ ExtResource( 10 ), ExtResource( 9 ) ]
 
 [node name="Player" type="Spatial" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, -10 )

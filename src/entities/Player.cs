@@ -20,6 +20,10 @@ public class Player : Combatant
     public override void _Ready()
     {
         Inventory = new Inventory(InitialInventorySize);
+        ItemStack gun = new ItemStack{Item = ItemTypes.Get("shotgun"),Size=1};
+        ItemStack ammo = new ItemStack{Item=ItemTypes.Get("explosive_bullet"),Size=100};
+        Inventory.AddItem(ref gun);
+        Inventory.AddItem(ref ammo);
         World.Singleton.ChunkLoaders.Add(this);
         World.Singleton.Players.Add(this);
         base._Ready();

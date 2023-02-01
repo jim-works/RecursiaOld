@@ -1,7 +1,9 @@
-[gd_scene load_steps=32 format=2]
+[gd_scene load_steps=34 format=2]
 
+[ext_resource path="res://src/combat/SegmentedCombatantChild.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/PatrickQuack.cs" type="Script" id=2]
 [ext_resource path="res://objects/Chain.tscn" type="PackedScene" id=3]
+[ext_resource path="res://objects/enemies/Marp.tscn" type="PackedScene" id=4]
 
 [sub_resource type="SpatialMaterial" id=21]
 resource_name = "Material"
@@ -732,8 +734,9 @@ ContactDamage = 0.0
 AnimationTreePath = NodePath("AnimationTree")
 LFootBottom = NodePath("metarig/Skeleton/LFootBottom")
 RFootBottom = NodePath("metarig/Skeleton/RFootBottom")
-EnemyToSummon = ExtResource( 3 )
-SummonPoint = NodePath("metarig/Skeleton/RHandEnd")
+EnemiesToSummon = [ ExtResource( 4 ), ExtResource( 3 ) ]
+SummonPoint = NodePath("metarig/Skeleton/RHandHitbox")
+Skeleton = NodePath("metarig/Skeleton")
 
 [node name="metarig" type="Spatial" parent="."]
 transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, 0, 0, 0 )
@@ -743,7 +746,7 @@ bones/0/name = "spine"
 bones/0/parent = -1
 bones/0/rest = Transform( 1, 0, 0, 0, 0.999678, 0.025389, 0, -0.025389, 0.999678, 0, 1.0099, 2.8618e-05 )
 bones/0/enabled = true
-bones/0/bound_children = [  ]
+bones/0/bound_children = [ NodePath("TorsoHitbox") ]
 bones/1/name = "spine.004"
 bones/1/parent = 0
 bones/1/rest = Transform( 1, 0, 2.38419e-07, 1.29592e-08, 0.998522, -0.0543548, -2.38066e-07, 0.0543548, 0.998522, 0, 0.667581, 0.00563036 )
@@ -763,12 +766,12 @@ bones/4/name = "upper_arm.L"
 bones/4/parent = 3
 bones/4/rest = Transform( 0.276199, 0.185439, 0.943041, -0.961056, 0.0627435, 0.269137, -0.00926119, -0.980651, 0.195547, -0.00269495, 0.28843, 0.0035972 )
 bones/4/enabled = true
-bones/4/bound_children = [  ]
+bones/4/bound_children = [ NodePath("LShoulderHitbox") ]
 bones/5/name = "forearm.L"
 bones/5/parent = 4
 bones/5/rest = Transform( 0.921576, 0.0829301, 0.379236, -0.0734133, 0.996519, -0.0395147, -0.381193, 0.00857477, 0.924456, -5.12227e-09, 0.274868, -1.92085e-09 )
 bones/5/enabled = true
-bones/5/bound_children = [  ]
+bones/5/bound_children = [ NodePath("LElbowHitbox") ]
 bones/6/name = "hand.L"
 bones/6/parent = 5
 bones/6/rest = Transform( 0.998445, -0.0316166, -0.0459147, 0.0323467, 0.999361, 0.0152467, 0.0454033, -0.0167082, 0.998829, 2.06055e-08, 0.311688, -2.79397e-09 )
@@ -788,7 +791,7 @@ bones/9/name = "forearm.R"
 bones/9/parent = 8
 bones/9/rest = Transform( 0.921372, -0.0579617, -0.384337, 0.0891669, 0.993968, 0.0638601, 0.378317, -0.0931091, 0.920981, 5.12227e-09, 0.274868, -1.92085e-09 )
 bones/9/enabled = true
-bones/9/bound_children = [  ]
+bones/9/bound_children = [ NodePath("RElbowHitbox") ]
 bones/10/name = "hand.R"
 bones/10/parent = 9
 bones/10/rest = Transform( 0.998832, 0.0099068, 0.0472928, -0.0171923, 0.987571, 0.15623, -0.0451572, -0.156861, 0.986588, -2.06055e-08, 0.311688, -2.79397e-09 )
@@ -823,7 +826,7 @@ bones/16/name = "shin.L"
 bones/16/parent = 15
 bones/16/rest = Transform( 0.999943, 0.0105778, 0.00144595, -0.0102002, 0.986546, -0.163165, -0.00315243, 0.163141, 0.986598, -2.82964e-08, 0.318006, -5.54792e-11 )
 bones/16/enabled = true
-bones/16/bound_children = [  ]
+bones/16/bound_children = [ NodePath("LKneeHitbox") ]
 bones/17/name = "foot.L"
 bones/17/parent = 16
 bones/17/rest = Transform( 0.999814, -0.0189749, 0.00350526, 0.0192959, 0.98316, -0.181726, 1.99582e-06, 0.181759, 0.983343, 1.02885e-08, 0.311751, 4.18368e-11 )
@@ -838,7 +841,7 @@ bones/19/name = "shin.R"
 bones/19/parent = 18
 bones/19/rest = Transform( 0.999945, -0.0104649, -5.16418e-05, 0.0104645, 0.999932, -0.0051585, 0.000105622, 0.00515768, 0.999987, 2.82964e-08, 0.318006, -5.54792e-11 )
 bones/19/enabled = true
-bones/19/bound_children = [  ]
+bones/19/bound_children = [ NodePath("RKneeHitbox") ]
 bones/20/name = "foot.R"
 bones/20/parent = 19
 bones/20/rest = Transform( 0.999814, 0.0192848, 0.000363386, -0.0192882, 0.999637, 0.0188108, -4.91855e-07, -0.0188143, 0.999823, -1.02885e-08, 0.311751, 4.18368e-11 )
@@ -848,17 +851,17 @@ bones/21/name = "foot.L.ik"
 bones/21/parent = -1
 bones/21/rest = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.267113 )
 bones/21/enabled = true
-bones/21/bound_children = [  ]
+bones/21/bound_children = [ NodePath("LFootBottom") ]
 bones/22/name = "foot.r.ik"
 bones/22/parent = -1
 bones/22/rest = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.019868, -0.262572 )
 bones/22/enabled = true
-bones/22/bound_children = [  ]
+bones/22/bound_children = [ NodePath("RFootBottom") ]
 bones/23/name = "hand.L.ik"
 bones/23/parent = -1
 bones/23/rest = Transform( -0.993154, 0, -0.116812, -0.116812, 0, 0.993154, 0, 1, 0, 0.316259, 0.898685, -0.00411885 )
 bones/23/enabled = true
-bones/23/bound_children = [  ]
+bones/23/bound_children = [ NodePath("LHandHitbox") ]
 bones/24/name = "hand.R.ik"
 bones/24/parent = -1
 bones/24/rest = Transform( -0.993154, 0, 0.116812, 0.116812, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.00411885 )
@@ -866,6 +869,7 @@ bones/24/enabled = true
 bones/24/bound_children = [  ]
 
 [node name="Head" type="MeshInstance" parent="metarig/Skeleton"]
+transform = Transform( 0.999999, 0, 0, 0, 1, 0, 0, 0, 0.999999, 0, 0, 0 )
 mesh = SubResource( 1 )
 skin = SubResource( 2 )
 material/0 = null
@@ -951,16 +955,178 @@ skin = SubResource( 2 )
 material/0 = null
 
 [node name="RFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.0720921, 0.139296 )
+transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.135231, -0.27793 )
 bone_name = "foot.r.ik"
+script = ExtResource( 1 )
+Size = Vector3( 10, 10, 10 )
+ColliderOffset = Vector3( 0, 0.1, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
 
 [node name="LFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, -0.197651 )
+transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.0326631 )
 bone_name = "foot.L.ik"
+script = ExtResource( 1 )
+Size = Vector3( 10, 10, 10 )
+ColliderOffset = Vector3( 0, 0.1, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
 
-[node name="RHandEnd" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.993154, 0, 0.11681, 0.11681, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.223569 )
+[node name="RHandHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( -0.993154, 0, 0.11681, 0.11681, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.0558306 )
 bone_name = "hand.R.ik"
+script = ExtResource( 1 )
+Size = Vector3( 10, 10, 10 )
+ColliderOffset = Vector3( 0, 0.1, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="LHandHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( -0.993154, 0, -0.11681, -0.11681, 0, 0.993154, 0, 1, 0, 0.316259, 0.898685, -0.151828 )
+bone_name = "hand.L.ik"
+script = ExtResource( 1 )
+Size = Vector3( 10, 10, 10 )
+ColliderOffset = Vector3( 0, 0.1, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="LElbowHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( -0.995607, 0.0108663, -0.0929958, 0.00545006, -0.984834, -0.173421, -0.0934697, -0.173166, 0.980447, 0.310698, 1.33676, -0.0722654 )
+bone_name = "forearm.L"
+script = ExtResource( 1 )
+Size = Vector3( 15, 45, 15 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="RElbowHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( -0.960611, -0.0139969, 0.277543, 0.0551534, -0.988467, 0.141043, 0.272367, 0.150795, 0.950302, -0.308922, 1.33555, 0.0714575 )
+bone_name = "forearm.R"
+script = ExtResource( 1 )
+Size = Vector3( 15, 45, 15 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="LThighHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( 1.00003, 0.00228344, 0.00541847, 0.00357307, -0.967768, -0.251607, 0.00466875, 0.251593, -0.96816, 0.199823, 0.764659, -0.00252655 )
+bone_name = "thigh.L"
+script = ExtResource( 1 )
+Size = Vector3( 15, 20, 15 )
+ColliderOffset = Vector3( 0, -0.1, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="RThighHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( 0.99998, -0.01104, 0.00306174, -0.0109965, -0.999808, -0.0141804, 0.00321693, 0.0140975, -1.00021, -0.199823, 0.764659, -0.00252658 )
+bone_name = "thigh.R"
+script = ExtResource( 1 )
+Size = Vector3( 15, 20, 15 )
+ColliderOffset = Vector3( 0, -0.1, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="LKneeHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( 0.999865, 0.0189682, -0.0010504, 0.0189467, -0.999659, -0.0177804, -0.00138744, 0.0177597, -1.00014, 0.202433, 0.441214, 0.0295188 )
+bone_name = "shin.L"
+script = ExtResource( 1 )
+Size = Vector3( 15, 45, 15 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="RKneeHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( 0.99963, -0.0281882, 0.00525531, -0.0260029, -0.81379, 0.580552, -0.0120916, -0.580581, -0.814564, -0.202041, 0.440435, 0.020474 )
+bone_name = "shin.R"
+script = ExtResource( 1 )
+Size = Vector3( 15, 45, 15 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="RShoulderHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( -0.993751, -0.0197112, -0.109861, 0.0323268, -0.992924, -0.114264, -0.106831, -0.117101, 0.987357, -0.303266, 1.61439, 0.030665 )
+bone_name = "upper_arm.R"
+script = ExtResource( 1 )
+Size = Vector3( 10, 10, 10 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="LShoulderHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( -0.955022, 0.0150358, 0.296155, -0.0661241, -0.984366, -0.163257, 0.289071, -0.175497, 0.941084, 0.306565, 1.60733, -0.024027 )
+bone_name = "upper_arm.L"
+script = ExtResource( 1 )
+Size = Vector3( 10, 10, 10 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="HeadHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( 1, -1.77636e-15, 0, 4.44089e-16, 1, -7.33882e-07, 6.53699e-13, 3.91155e-07, 1, -3.33067e-15, 1.82222, -0.0075187 )
+bone_name = "spine.006"
+script = ExtResource( 1 )
+Size = Vector3( 20, 30, 20 )
+ColliderOffset = Vector3( 0, 0.1, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="ShoulderHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( 1, 0, 2.38419e-07, 6.91077e-09, 0.999581, -0.0289858, -2.38318e-07, 0.0289858, 0.999581, -1.77636e-15, 1.68325, -0.0115485 )
+bone_name = "spine.004"
+script = ExtResource( 1 )
+Size = Vector3( 30, 15, 15 )
+ColliderOffset = Vector3( 0, -0.05, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
+
+[node name="TorsoHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
+transform = Transform( 1, 0, 0, 0, 0.999678, 0.025389, 0, -0.025389, 0.999678, 0, 1.00869, -7.9316e-05 )
+bone_name = "spine"
+script = ExtResource( 1 )
+Size = Vector3( 15, 60, 15 )
+ColliderOffset = Vector3( 0, 0.25, 0 )
+Gravity = Vector3( 0, 0, 0 )
+InitPhysicsActive = false
+InitialTeamName = "enemy"
+ContactDamage = 0.0
+ParentPath = NodePath("../../..")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 anims/summon = SubResource( 19 )

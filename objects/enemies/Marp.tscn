@@ -1,6 +1,7 @@
-[gd_scene load_steps=31 format=2]
+[gd_scene load_steps=32 format=2]
 
 [ext_resource path="res://src/entities/Marp.cs" type="Script" id=1]
+[ext_resource path="res://objects/HealthBar3D.tscn" type="PackedScene" id=2]
 
 [sub_resource type="SpatialMaterial" id=21]
 resource_name = "Material"
@@ -727,7 +728,7 @@ start_node = "walk-blend"
 script = ExtResource( 1 )
 Size = Vector3( 5, 5, 5 )
 InitialTeamName = "enemy"
-InitialHealth = 100.0
+InitialHealth = 20.0
 InvincibilitySeconds = 0.1
 ContactDamage = 0.0
 AnimationTreePath = NodePath("AnimationTree")
@@ -735,8 +736,7 @@ StrideLength = 5.0
 LFootBottom = NodePath("metarig/Skeleton/LFootBottom")
 RFootBottom = NodePath("metarig/Skeleton/RFootBottom")
 WalkSpeed = 20.0
-Baby = null
-Smackitude = 50.0
+Smackitude = 30.0
 
 [node name="metarig" type="Spatial" parent="."]
 transform = Transform( 5, 0, 0, 0, 0.7, 0, 0, 0, 5, 0, 0, 0 )
@@ -954,11 +954,11 @@ skin = SubResource( 2 )
 material/0 = null
 
 [node name="RFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.00766613, 0.185853 )
+transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.0796835, 0.132125 )
 bone_name = "foot.r.ik"
 
 [node name="LFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, 0.00919784, -0.264428 )
+transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, -0.191049 )
 bone_name = "foot.L.ik"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
@@ -971,3 +971,6 @@ anim_player = NodePath("../AnimationPlayer")
 active = true
 parameters/playback = SubResource( 29 )
 parameters/walk-blend/TimeScale/scale = 1.0
+
+[node name="HealthBar3D" parent="." instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.01275, 0 )

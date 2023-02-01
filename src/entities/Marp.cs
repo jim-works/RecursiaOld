@@ -3,15 +3,16 @@ using Godot;
 public class Marp : BipedalCombatant
 {
     [Export] public float WalkSpeed = 10;
-    [Export] public PackedScene Baby;
+    [Export] public float CarryTime = 2;
 
     [Export] public float StateSwitchInterval = 1;
     [Export] public string SmackState = "smack";
     [Export] public float Smackitude = 100;
     [Export] public float SmackHeight = 10;
 
-    public Combatant carrying = null;
+    [Export] public Spatial CarryTarget;
 
+    private Combatant carrying = null;
     private AnimationNodeStateMachinePlayback stateMachine;
     private float stateSwitchTimer = 0;
 
@@ -28,8 +29,8 @@ public class Marp : BipedalCombatant
             if (stateMachine.GetCurrentNode() == SmackState)
             {
                 stateMachine.Travel(WalkBlendNode);
+                stateSwitchTimer = 0;
             }
-            stateSwitchTimer = 0;
         }
         stateSwitchTimer += dt;
         
@@ -43,41 +44,33 @@ public class Marp : BipedalCombatant
     {
         if (carrying != null)
         {
-            Velocity.z = WalkSpeed;
-            Velocity.x = 0;
+            Vector3 carryDest = (CarryTarget.GlobalTransform.origin-Position).Normalized()*WalkSpeed;
+            Velocity = new Vector3(carryDest.x, Velocity.y, carryDest.z);
             carrying.Position = Position+new Vector3(0,2,0);
             carrying.Velocity = Vector3.Zero;
+            if (CarryTime <= stateSwitchTimer) carrying = null;
             return;
         }
         Combatant closest = World.Singleton.ClosestEnemy(Position, Team);
         Vector3 dv = (closest.Position-Position).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.x, Velocity.y, dv.z);
         Vector3 dp = (closest.Position-Position);
-        if (new Vector3(dp.x,0,dp.z).LengthSquared() < 2)
+        if (new Vector3(dp.x,0,dp.z).LengthSquared() < 2 && dp.y < 4)
         {
-            // if (closest.Position.y-Position.y > 1)
-            // {
-            //     carrying = closest;
-            //     return;
-            // }
+            if (dp.y > 3)
+            {
+                carrying = closest;
+                stateSwitchTimer = 0;
+                return;
+            }
             smack(closest);
         }
     }
 
     private void smack(Combatant c)
     {
-        // if (c == null) return;
-        // if (c is Marp)
-        // {
-        //     if (Baby == null) return;
-        //     Marp child = Baby.Instance<Marp>();
-        //     child.Position = Position + new Vector3(10*GD.Randf(),10,10*GD.Randf());
-        //     child.Scale = Scale/2;
-        //     World.Singleton.AddChild(child);
-        //     //return;
-        // }
         stateMachine.Travel(SmackState);
         stateSwitchTimer = 0;
-        c.Velocity += (c.Position-Position).Normalized()*Smackitude+new Vector3(0,SmackHeight,0);
+        c.Velocity = (c.Position-Position).Normalized()*Smackitude+new Vector3(0,SmackHeight,0);
     }
 }
