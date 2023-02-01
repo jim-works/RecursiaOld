@@ -41,9 +41,9 @@ public class PhysicsObject : Spatial
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box GetBox() => Box.FromCenter(Position, Size);
 
-    public override void _EnterTree()
+    public override void _Ready()
     {
-        base._EnterTree();
+        base._Ready();
         if (PhysicsActive) World.Singleton.PhysicsObjects.Add(this);
     }
 

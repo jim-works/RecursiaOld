@@ -3,9 +3,9 @@ using System;
 
 public class HealthBar3D : Spatial
 {
-    public override void _EnterTree()
+    public override void _Ready()
     {
-        base._EnterTree();
+        base._Ready();
         GetNode<HealthBar>("Viewport/HealthBar").Tracking = GetParent<Combatant>();
     }
 }

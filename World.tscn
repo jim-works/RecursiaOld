@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=2]
+[gd_scene load_steps=22 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -8,8 +8,6 @@
 [ext_resource path="res://src/camera/RotatingCamera.cs" type="Script" id=6]
 [ext_resource path="res://src/world/items/ItemLoader.cs" type="Script" id=7]
 [ext_resource path="res://src/settings/Settings.cs" type="Script" id=8]
-[ext_resource path="res://src/combat/Combatant.cs" type="Script" id=9]
-[ext_resource path="res://objects/HealthBar3D.tscn" type="PackedScene" id=10]
 [ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=12]
 [ext_resource path="res://src/ui/PlayerUIAssignment.cs" type="Script" id=13]
 [ext_resource path="res://textures/gun.png" type="Texture" id=14]
@@ -23,8 +21,6 @@
 [ext_resource path="res://textures/explosive_bullet.png" type="Texture" id=22]
 [ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
 [ext_resource path="res://objects/enemies/PatrickQuack.tscn" type="PackedScene" id=24]
-
-[sub_resource type="CapsuleMesh" id=1]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
@@ -72,20 +68,7 @@ script = ExtResource( 6 )
 [node name="Settings" type="Node" parent="."]
 script = ExtResource( 8 )
 
-[node name="DummyEnemy" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 20, -10 )
-mesh = SubResource( 1 )
-material/0 = null
-script = ExtResource( 9 )
-Size = Vector3( 1, 1, 2 )
-InitialTeamName = "enemy"
-InitialHealth = 10.0
-InvincibilitySeconds = 0.0
-
-[node name="HealthBar3D" parent="DummyEnemy" instance=ExtResource( 10 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.51015, 0 )
-
-[node name="skeleton" parent="." instance=ExtResource( 24 )]
+[node name="PatrickQuack" parent="." instance=ExtResource( 24 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.5555, -106.506 )
 
 [node name="PlayerUI" type="Control" parent="."]

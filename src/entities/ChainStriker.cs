@@ -55,8 +55,9 @@ public class ChainStriker : Combatant
 
     private Combatant spawnLink(Combatant prev, float maxSpeed)
     {
-        ChainLink link = World.Singleton.SpawnChild<ChainLink>(ChainLink);
+        ChainLink link = ChainLink.Instance<ChainLink>();
         link.Parent = prev;
+        World.Singleton.AddChild(link); //on the same level as the link
         link.MaxSpeed = maxSpeed;
         links.Add(link);
         link.Translation = Translation;

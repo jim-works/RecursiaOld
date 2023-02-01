@@ -19,4 +19,3 @@ StrikeImpulse = 40.0
 AttackInterval = 2.0
 
 [node name="HealthBar3D" parent="." instance=ExtResource( 3 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.937384, 0 )

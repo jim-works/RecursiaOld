@@ -17,12 +17,12 @@ public class Player : Combatant
 
     private int SelectedSlot = 0;
 
-    public override void _EnterTree()
+    public override void _Ready()
     {
         Inventory = new Inventory(InitialInventorySize);
         World.Singleton.ChunkLoaders.Add(this);
         World.Singleton.Players.Add(this);
-        base._EnterTree();
+        base._Ready();
     }
 
     public override void _ExitTree()

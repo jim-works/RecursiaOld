@@ -18,9 +18,9 @@ public class Combatant : PhysicsObject
 
     private float invicinibilityTimer = 0;
 
-    public override void _EnterTree()
+    public override void _Ready()
     {
-        base._EnterTree();
+        base._Ready();
         World.Singleton.Combatants.Add(this);
         if (!string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
         if (InitialHealth > 0) {

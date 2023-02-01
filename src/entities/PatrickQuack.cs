@@ -61,9 +61,10 @@ public class PatrickQuack : BipedalCombatant
         Velocity = new Vector3(0,Velocity.y,0);
         if (summonTimer >= SummonInterval)
         {
-            Combatant c = World.Singleton.SpawnChild<Combatant>(EnemyToSummon);
+            Combatant c = EnemyToSummon.Instance<Combatant>();
             c.Team = Team;
             c.Position = summonPoint.GlobalTransform.origin;
+            World.Singleton.AddChild(c);
             summonTimer = 0;
         }
         summonTimer += dt;
