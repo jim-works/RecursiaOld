@@ -12,6 +12,13 @@ public class Inventory
     }
     public void TriggerUpdate()
     {
+        for (int i = 0; i < Items.Length; i++)
+        {
+            //make sure all items with stack size 0 are cleaned up.
+            if (Items[i].Size == 0) {
+                Items[i].Item = null;
+            }
+        }
         OnUpdate?.Invoke(this);
     }
     //auto stacks into existing items in inventory, then first free slot
@@ -41,6 +48,10 @@ public class Inventory
             item.Clear();
         }
         OnUpdate?.Invoke(this);
+    }
+    public void CopyItem(ItemStack item)
+    {
+        AddItem(ref item);
     }
 
     //selects the first slot containig an itemstack matching the query

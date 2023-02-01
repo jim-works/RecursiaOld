@@ -46,19 +46,19 @@ public class World : Node
         }
         return minPlayer;
     }
-    public Combatant ClosestEnemy(Vector3 pos, Team team)
+    public bool ClosestEnemy(Vector3 pos, Team team, out Combatant enemy)
     {
         float minSqrDist = float.PositiveInfinity;
-        Combatant minEnemy = null;
+        enemy = null;
         foreach(var c in Combatants)
         {
             float sqrDist = (pos-c.Position).LengthSquared();
             if (sqrDist < minSqrDist && c.Team != team) {
                 minSqrDist = sqrDist;
-                minEnemy = c;
+                enemy = c;
             }
         }
-        return minEnemy;
+        return enemy != null;
     }
     public Combatant CollidesWithEnemy(Box box, Team team)
     {

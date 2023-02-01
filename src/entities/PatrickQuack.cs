@@ -2,32 +2,30 @@ using Godot;
 
 public class PatrickQuack : BipedalCombatant
 {
-    [Export] public float MaxDistFromPlayer = 50;
+    [Export] public float MaxDistFromTarget = 50;
     [Export] public float WalkSpeed = 5;
+    [Export] public int MinDrops = 5;
+    [Export] public int RandomDrops = 3;
 
     [Export] public float StateSwitchInterval = 5;
     [Export] public float SummonInterval = 2;
+    [Export] public float ShootInterval = 1;
+    [Export] public float ProjectileVelocity = 50;
     [Export] public string SummonState = "summon";
     [Export] public PackedScene[] EnemiesToSummon;
+    [Export] public PackedScene Projectile;
     [Export] public NodePath SummonPoint;
-    [Export] public NodePath Skeleton;
 
     private AnimationNodeStateMachinePlayback stateMachine;
     private float stateSwitchTimer = 0;
     private float summonTimer = 0;
+    private float shootTimer = 0;
     private Spatial summonPoint;
     private int spawnIdx = 0;
 
     public override void _Ready()
     {
         base._Ready();
-        // Node skeleton = GetNode(Skeleton);
-        // foreach (var item in skeleton.GetChildren())
-        // {
-        //     if (item is SegmentedCombatantChild scc) {
-        //         DebugDraw.Singleton.Tracking.Add(scc);
-        //     }
-        // }
         stateMachine = (AnimationNodeStateMachinePlayback)animationTree.Get("parameters/playback");
         summonPoint = GetNode<Spatial>(SummonPoint);
     }
@@ -58,12 +56,30 @@ public class PatrickQuack : BipedalCombatant
         }
         base._PhysicsProcess(dt);
     }
+
+    public override void Die()
+    {
+        LootBlock b = (LootBlock)BlockTypes.Get("loot");
+        b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=MinDrops+(Mathf.RoundToInt(GD.Randf()*RandomDrops))}};
+        World.Singleton.SetBlock((BlockCoord)Position, b);
+        base.Die();
+    }
     private void doWalk(float dt)
     {
-        Player closest = World.Singleton.ClosestPlayer(Position);
-        if ((closest.Position-Position).LengthSquared() < MaxDistFromPlayer*MaxDistFromPlayer) return; // close enough, skip walking
+        if (!World.Singleton.ClosestEnemy(Position, Team, out Combatant closest)) return;
+        if ((closest.Position-Position).LengthSquared() < MaxDistFromTarget*MaxDistFromTarget) return; // close enough to target, skip walking
         Vector3 dv = (closest.Position-Position).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.x, Velocity.y, dv.z);
+        if (shootTimer >= ShootInterval)
+        {
+            Projectile proj = Projectile.Instance<Projectile>();
+            World.Singleton.AddChild(proj);
+            Vector3 origin = summonPoint.GlobalTransform.origin;
+            proj.Position = origin;
+            proj.Launch((closest.Position-origin).Normalized()*ProjectileVelocity, Team);
+            shootTimer = 0;
+        }
+        shootTimer += dt;
     }
     private void doSummon(float dt)
     {

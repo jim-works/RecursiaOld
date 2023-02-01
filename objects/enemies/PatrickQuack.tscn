@@ -1,9 +1,10 @@
-[gd_scene load_steps=34 format=2]
+[gd_scene load_steps=35 format=2]
 
 [ext_resource path="res://src/combat/SegmentedCombatantChild.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/PatrickQuack.cs" type="Script" id=2]
 [ext_resource path="res://objects/Chain.tscn" type="PackedScene" id=3]
 [ext_resource path="res://objects/enemies/Marp.tscn" type="PackedScene" id=4]
+[ext_resource path="res://objects/PatrickProjectile.tscn" type="PackedScene" id=5]
 
 [sub_resource type="SpatialMaterial" id=21]
 resource_name = "Material"
@@ -730,13 +731,14 @@ start_node = "walk-blend"
 script = ExtResource( 2 )
 InitialTeamName = "enemy"
 InitialHealth = 100.0
+InvincibilitySeconds = 0.0
 ContactDamage = 0.0
 AnimationTreePath = NodePath("AnimationTree")
 LFootBottom = NodePath("metarig/Skeleton/LFootBottom")
 RFootBottom = NodePath("metarig/Skeleton/RFootBottom")
 EnemiesToSummon = [ ExtResource( 4 ), ExtResource( 3 ) ]
+Projectile = ExtResource( 5 )
 SummonPoint = NodePath("metarig/Skeleton/RHandHitbox")
-Skeleton = NodePath("metarig/Skeleton")
 
 [node name="metarig" type="Spatial" parent="."]
 transform = Transform( 68.919, 0, 0, 0, 68.919, 0, 0, 0, 68.919, 0, 0, 0 )
@@ -751,12 +753,12 @@ bones/1/name = "spine.004"
 bones/1/parent = 0
 bones/1/rest = Transform( 1, 0, 2.38419e-07, 1.29592e-08, 0.998522, -0.0543548, -2.38066e-07, 0.0543548, 0.998522, 0, 0.667581, 0.00563036 )
 bones/1/enabled = true
-bones/1/bound_children = [  ]
+bones/1/bound_children = [ NodePath("ShoulderHitbox") ]
 bones/2/name = "spine.006"
 bones/2/parent = 1
 bones/2/rest = Transform( -1, -6.21799e-08, 2.30168e-07, -3.55271e-15, 0.965392, 0.260801, -2.38419e-07, 0.260801, -0.965393, -4.44089e-16, 0.139026, -4.65661e-09 )
 bones/2/enabled = true
-bones/2/bound_children = [  ]
+bones/2/bound_children = [ NodePath("HeadHitbox") ]
 bones/3/name = "shoulder.L"
 bones/3/parent = 0
 bones/3/rest = Transform( 0.0259582, 0.999663, 0.000531882, -0.0251586, 0.000121295, 0.999684, 0.999346, -0.0259635, 0.0251532, 0.0183, 0.595358, 0.0013503 )
@@ -786,7 +788,7 @@ bones/8/name = "upper_arm.R"
 bones/8/parent = 7
 bones/8/rest = Transform( 0.256268, 0.185032, -0.94873, 0.961691, 0.0500424, 0.269529, 0.0973482, -0.981457, -0.165119, 0.00269499, 0.28843, 0.0035972 )
 bones/8/enabled = true
-bones/8/bound_children = [  ]
+bones/8/bound_children = [ NodePath("RShoulderHitbox") ]
 bones/9/name = "forearm.R"
 bones/9/parent = 8
 bones/9/rest = Transform( 0.921372, -0.0579617, -0.384337, 0.0891669, 0.993968, 0.0638601, 0.378317, -0.0931091, 0.920981, 5.12227e-09, 0.274868, -1.92085e-09 )
@@ -821,7 +823,7 @@ bones/15/name = "thigh.L"
 bones/15/parent = 0
 bones/15/rest = Transform( 0.999974, 0.00906009, -4.23393e-05, 0.00863084, -0.951142, 0.308687, 0.00275623, -0.308649, -0.951259, 0.199823, -0.250946, -0.00867284 )
 bones/15/enabled = true
-bones/15/bound_children = [  ]
+bones/15/bound_children = [ NodePath("LThighHitbox") ]
 bones/16/name = "shin.L"
 bones/16/parent = 15
 bones/16/rest = Transform( 0.999943, 0.0105778, 0.00144595, -0.0102002, 0.986546, -0.163165, -0.00315243, 0.163141, 0.986598, -2.82964e-08, 0.318006, -5.54792e-11 )
@@ -836,7 +838,7 @@ bones/18/name = "thigh.R"
 bones/18/parent = 0
 bones/18/rest = Transform( 0.999979, -0.00852483, 4.72751e-05, -0.00824969, -0.969056, -0.246751, 0.00214914, 0.24672, -0.969175, -0.199823, -0.250946, -0.0086728 )
 bones/18/enabled = true
-bones/18/bound_children = [  ]
+bones/18/bound_children = [ NodePath("RThighHitbox") ]
 bones/19/name = "shin.R"
 bones/19/parent = 18
 bones/19/rest = Transform( 0.999945, -0.0104649, -5.16418e-05, 0.0104645, 0.999932, -0.0051585, 0.000105622, 0.00515768, 0.999987, 2.82964e-08, 0.318006, -5.54792e-11 )
@@ -866,7 +868,7 @@ bones/24/name = "hand.R.ik"
 bones/24/parent = -1
 bones/24/rest = Transform( -0.993154, 0, 0.116812, 0.116812, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.00411885 )
 bones/24/enabled = true
-bones/24/bound_children = [  ]
+bones/24/bound_children = [ NodePath("RHandHitbox") ]
 
 [node name="Head" type="MeshInstance" parent="metarig/Skeleton"]
 transform = Transform( 0.999999, 0, 0, 0, 1, 0, 0, 0, 0.999999, 0, 0, 0 )
@@ -955,7 +957,7 @@ skin = SubResource( 2 )
 material/0 = null
 
 [node name="RFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.135231, -0.27793 )
+transform = Transform( 1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.0210863, -0.270787 )
 bone_name = "foot.r.ik"
 script = ExtResource( 1 )
 Size = Vector3( 10, 10, 10 )
@@ -967,7 +969,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="LFootBottom" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.0326631 )
+transform = Transform( 1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.231709 )
 bone_name = "foot.L.ik"
 script = ExtResource( 1 )
 Size = Vector3( 10, 10, 10 )
@@ -979,7 +981,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="RHandHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.993154, 0, 0.11681, 0.11681, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, -0.0558306 )
+transform = Transform( -0.993154, 0, 0.11681, 0.11681, 0, 0.993154, 0, 1, 0, -0.316259, 0.898685, 0.253257 )
 bone_name = "hand.R.ik"
 script = ExtResource( 1 )
 Size = Vector3( 10, 10, 10 )
@@ -991,7 +993,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="LHandHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.993154, 0, -0.11681, -0.11681, 0, 0.993154, 0, 1, 0, 0.316259, 0.898685, -0.151828 )
+transform = Transform( -0.993154, 0, -0.11681, -0.11681, 0, 0.993154, 0, 1, 0, 0.316259, 0.898685, -0.269792 )
 bone_name = "hand.L.ik"
 script = ExtResource( 1 )
 Size = Vector3( 10, 10, 10 )
@@ -1003,7 +1005,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="LElbowHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.995607, 0.0108663, -0.0929958, 0.00545006, -0.984834, -0.173421, -0.0934697, -0.173166, 0.980447, 0.310698, 1.33676, -0.0722654 )
+transform = Transform( -0.995441, 0.0106874, -0.0947826, 0.0208131, -0.945422, -0.325188, -0.0930846, -0.325677, 0.940888, 0.310483, 1.34798, -0.113998 )
 bone_name = "forearm.L"
 script = ExtResource( 1 )
 Size = Vector3( 15, 45, 15 )
@@ -1014,7 +1016,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="RElbowHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.960611, -0.0139969, 0.277543, 0.0551534, -0.988467, 0.141043, 0.272367, 0.150795, 0.950302, -0.308922, 1.33555, 0.0714575 )
+transform = Transform( -0.961345, -0.012765, 0.27505, 0.094685, -0.953332, 0.286696, 0.258553, 0.301657, 0.917688, -0.308886, 1.34526, 0.112405 )
 bone_name = "forearm.R"
 script = ExtResource( 1 )
 Size = Vector3( 15, 45, 15 )
@@ -1025,7 +1027,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="LThighHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1.00003, 0.00228344, 0.00541847, 0.00357307, -0.967768, -0.251607, 0.00466875, 0.251593, -0.96816, 0.199823, 0.764659, -0.00252655 )
+transform = Transform( 0.999995, 0.00995229, 0.000235636, 0.00958242, -0.955774, -0.294014, -0.00270097, 0.293997, -0.956094, 0.199823, 0.757949, -0.00237809 )
 bone_name = "thigh.L"
 script = ExtResource( 1 )
 Size = Vector3( 15, 20, 15 )
@@ -1037,7 +1039,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="RThighHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 0.99998, -0.01104, 0.00306174, -0.0109965, -0.999808, -0.0141804, 0.00321693, 0.0140975, -1.00021, -0.199823, 0.764659, -0.00252658 )
+transform = Transform( 0.999991, -0.0104076, 9.39383e-05, -0.00997753, -0.955925, 0.293515, -0.00296509, -0.2935, -0.956245, -0.199823, 0.75795, -0.00237806 )
 bone_name = "thigh.R"
 script = ExtResource( 1 )
 Size = Vector3( 15, 20, 15 )
@@ -1049,7 +1051,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="LKneeHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 0.999865, 0.0189682, -0.0010504, 0.0189467, -0.999659, -0.0177804, -0.00138744, 0.0177597, -1.00014, 0.202433, 0.441214, 0.0295188 )
+transform = Transform( 0.99996, 0.0130046, 0.000326006, 0.0125323, -0.956236, -0.292397, -0.00349079, 0.292372, -0.95659, 0.202988, 0.454008, 0.0911148 )
 bone_name = "shin.L"
 script = ExtResource( 1 )
 Size = Vector3( 15, 45, 15 )
@@ -1060,7 +1062,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="RKneeHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 0.99963, -0.0281882, 0.00525531, -0.0260029, -0.81379, 0.580552, -0.0120916, -0.580581, -0.814564, -0.202041, 0.440435, 0.020474 )
+transform = Transform( 0.99994, -0.0144167, -0.00112445, -0.0130554, -0.933381, 0.358646, -0.00622077, -0.358607, -0.933754, -0.203133, 0.45396, -0.0957128 )
 bone_name = "shin.R"
 script = ExtResource( 1 )
 Size = Vector3( 15, 45, 15 )
@@ -1071,7 +1073,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="RShoulderHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.993751, -0.0197112, -0.109861, 0.0323268, -0.992924, -0.114264, -0.106831, -0.117101, 0.987357, -0.303266, 1.61439, 0.030665 )
+transform = Transform( -0.993691, -0.0204446, -0.110266, -0.0133413, -0.954709, 0.297242, -0.11135, 0.296837, 0.948413, -0.303266, 1.60768, 0.0308135 )
 bone_name = "upper_arm.R"
 script = ExtResource( 1 )
 Size = Vector3( 10, 10, 10 )
@@ -1082,7 +1084,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="LShoulderHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( -0.955022, 0.0150358, 0.296155, -0.0661241, -0.984366, -0.163257, 0.289071, -0.175497, 0.941084, 0.306565, 1.60733, -0.024027 )
+transform = Transform( -0.955026, 0.0142539, 0.296178, -0.10983, -0.944806, -0.308678, 0.275431, -0.327324, 0.903879, 0.306565, 1.60768, -0.024027 )
 bone_name = "upper_arm.L"
 script = ExtResource( 1 )
 Size = Vector3( 10, 10, 10 )
@@ -1093,7 +1095,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="HeadHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, -1.77636e-15, 0, 4.44089e-16, 1, -7.33882e-07, 6.53699e-13, 3.91155e-07, 1, -3.33067e-15, 1.82222, -0.0075187 )
+transform = Transform( 1, -1.77636e-15, 0, 4.44089e-16, 1, -7.33882e-07, 6.53699e-13, 3.91155e-07, 1, -3.33067e-15, 1.81551, -0.00737021 )
 bone_name = "spine.006"
 script = ExtResource( 1 )
 Size = Vector3( 20, 30, 20 )
@@ -1105,7 +1107,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="ShoulderHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 2.38419e-07, 6.91077e-09, 0.999581, -0.0289858, -2.38318e-07, 0.0289858, 0.999581, -1.77636e-15, 1.68325, -0.0115485 )
+transform = Transform( 1, 0, 2.38419e-07, 6.91077e-09, 0.999581, -0.0289858, -2.38318e-07, 0.0289858, 0.999581, -1.77636e-15, 1.67654, -0.0114 )
 bone_name = "spine.004"
 script = ExtResource( 1 )
 Size = Vector3( 30, 15, 15 )
@@ -1117,7 +1119,7 @@ ContactDamage = 0.0
 ParentPath = NodePath("../../..")
 
 [node name="TorsoHitbox" type="BoneAttachment" parent="metarig/Skeleton"]
-transform = Transform( 1, 0, 0, 0, 0.999678, 0.025389, 0, -0.025389, 0.999678, 0, 1.00869, -7.9316e-05 )
+transform = Transform( 1, 0, 0, 0, 0.999678, 0.025389, 0, -0.025389, 0.999678, 0, 1.00903, -7.93152e-05 )
 bone_name = "spine"
 script = ExtResource( 1 )
 Size = Vector3( 15, 60, 15 )

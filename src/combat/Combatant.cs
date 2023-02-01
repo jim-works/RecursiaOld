@@ -4,7 +4,7 @@ public class Combatant : PhysicsObject
 {
     private float health;
     private float maxHealth;
-    public Team Team {get; set;}
+    public Team Team = null;
     [Export]
     public string InitialTeamName;
     [Export]
@@ -22,11 +22,13 @@ public class Combatant : PhysicsObject
     {
         base._Ready();
         World.Singleton.Combatants.Add(this);
-        if (!string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
+        
+        if (Team == null && !string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
         if (InitialHealth > 0) {
             maxHealth = InitialHealth;
             health = InitialHealth;
         }
+        GD.Print($"Added combatant {Name} on team {Team}");
     }
 
     public override void _Process(float delta)

@@ -11,7 +11,7 @@ public class TrackingProjectile : Projectile
         TrackingDelay -= delta;
         if (target == null && TrackingDelay <= 0)
         {
-            target = World.Singleton.ClosestEnemy(Position, team);
+            World.Singleton.ClosestEnemy(Position, team, out target);
         }
         if (target != null)
         {

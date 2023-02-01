@@ -9,6 +9,7 @@ public class Marp : BipedalCombatant
     [Export] public string SmackState = "smack";
     [Export] public float Smackitude = 100;
     [Export] public float SmackHeight = 10;
+    [Export] public float SmackDamage = 1;
 
     [Export] public Spatial CarryTarget;
 
@@ -44,14 +45,17 @@ public class Marp : BipedalCombatant
     {
         if (carrying != null)
         {
-            Vector3 carryDest = (CarryTarget.GlobalTransform.origin-Position).Normalized()*WalkSpeed;
+            Vector3 carryDest = new Vector3(0,0,WalkSpeed);
+            if (CarryTarget != null) carryDest = (CarryTarget.GlobalTransform.origin-Position).Normalized()*WalkSpeed;
             Velocity = new Vector3(carryDest.x, Velocity.y, carryDest.z);
             carrying.Position = Position+new Vector3(0,2,0);
             carrying.Velocity = Vector3.Zero;
             if (CarryTime <= stateSwitchTimer) carrying = null;
             return;
         }
-        Combatant closest = World.Singleton.ClosestEnemy(Position, Team);
+        
+        if (!World.Singleton.ClosestEnemy(Position, Team, out Combatant closest)) return;
+        if (closest == null) return;
         Vector3 dv = (closest.Position-Position).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.x, Velocity.y, dv.z);
         Vector3 dp = (closest.Position-Position);
@@ -72,5 +76,6 @@ public class Marp : BipedalCombatant
         stateMachine.Travel(SmackState);
         stateSwitchTimer = 0;
         c.Velocity = (c.Position-Position).Normalized()*Smackitude+new Vector3(0,SmackHeight,0);
+        c.TakeDamage(new Damage{Amount=SmackDamage,Team=Team});
     }
 }

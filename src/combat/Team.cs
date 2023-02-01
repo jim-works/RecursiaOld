@@ -1,10 +1,20 @@
-public struct Team
+public class Team
 {
     public string TeamName;
 
+    public Team()
+    {
+    }
+
+    public Team(Team copy)
+    {
+        TeamName = copy.TeamName;
+    }
+
     public static bool operator ==(Team a, Team b)
     {
-        return (a==null&&b==null)||a!=null&&b!=null&&a.TeamName == b.TeamName;
+        
+        return (object.ReferenceEquals(a,null)&&object.ReferenceEquals(b,null))||!object.ReferenceEquals(a,null)&&!object.ReferenceEquals(b,null)&&a.TeamName == b.TeamName;
     }
     public static bool operator !=(Team a, Team b)
     {
@@ -17,5 +27,9 @@ public struct Team
     public override bool Equals(object obj)
     {
         return (obj != null) && (obj is Team) && (Team)obj == this;
+    }
+    public override string ToString()
+    {
+        return TeamName;
     }
 }

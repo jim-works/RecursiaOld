@@ -25,7 +25,9 @@ public class ExplosiveProjectile : Projectile
     }
     protected override void onHit(Combatant c)
     {
-        if (!exploded) Explode();
+        if (exploded) return;
+        Explode();
+        if (c!= null) c.TakeDamage(new Damage{Amount=Damage,Team=team});
     }
     public void Explode()
     {

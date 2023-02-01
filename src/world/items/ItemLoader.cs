@@ -7,6 +7,7 @@ public class ItemLoader : Node
     [Export] public Texture ShotgunTexture;
     [Export] public Texture ExplosiveBulletTexture;
     [Export] public Texture TrackingBulletTexture;
+    [Export] public Texture MarpRodTexture;
 
     public override void _EnterTree()
     {
@@ -41,7 +42,12 @@ public class ItemLoader : Node
             Damage=1,
             ProjectileScene = GD.Load<PackedScene>("res://objects/TrackingBullet.tscn")
         });
-
+        ItemTypes.CreateType("marp_rod", new MarpRodItem {
+            Texture=MarpRodTexture,
+            Name="marp rod",
+            MarpScene = GD.Load<PackedScene>("res://objects/enemies/Marp.tscn"),
+            MaxStack = 5
+        });
 
         RecipeLoader.Load();
     }
