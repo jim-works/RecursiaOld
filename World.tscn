@@ -9,6 +9,7 @@
 [ext_resource path="res://src/world/items/ItemLoader.cs" type="Script" id=7]
 [ext_resource path="res://src/settings/Settings.cs" type="Script" id=8]
 [ext_resource path="res://textures/marp_rod.png" type="Texture" id=9]
+[ext_resource path="res://textures/cursed_idol.png" type="Texture" id=10]
 [ext_resource path="res://src/ui/debug/DebugDraw.cs" type="Script" id=11]
 [ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=12]
 [ext_resource path="res://src/ui/PlayerUIAssignment.cs" type="Script" id=13]
@@ -22,7 +23,6 @@
 [ext_resource path="res://textures/tracking_bullet.png" type="Texture" id=21]
 [ext_resource path="res://textures/explosive_bullet.png" type="Texture" id=22]
 [ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
-[ext_resource path="res://objects/enemies/PatrickQuack.tscn" type="PackedScene" id=24]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
@@ -42,6 +42,7 @@ ShotgunTexture = ExtResource( 23 )
 ExplosiveBulletTexture = ExtResource( 22 )
 TrackingBulletTexture = ExtResource( 21 )
 MarpRodTexture = ExtResource( 9 )
+CursedIdolTexture = ExtResource( 10 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
@@ -75,9 +76,6 @@ script = ExtResource( 6 )
 
 [node name="Settings" type="Node" parent="."]
 script = ExtResource( 8 )
-
-[node name="PatrickQuack" parent="." instance=ExtResource( 24 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -55.3894 )
 
 [node name="PlayerUI" type="Control" parent="."]
 anchor_right = 1.0

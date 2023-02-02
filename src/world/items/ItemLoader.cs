@@ -8,6 +8,7 @@ public class ItemLoader : Node
     [Export] public Texture ExplosiveBulletTexture;
     [Export] public Texture TrackingBulletTexture;
     [Export] public Texture MarpRodTexture;
+    [Export] public Texture CursedIdolTexture;
 
     public override void _EnterTree()
     {
@@ -42,11 +43,19 @@ public class ItemLoader : Node
             Damage=1,
             ProjectileScene = GD.Load<PackedScene>("res://objects/TrackingBullet.tscn")
         });
-        ItemTypes.CreateType("marp_rod", new MarpRodItem {
+        ItemTypes.CreateType("marp_rod", new SummoningItem {
             Texture=MarpRodTexture,
             Name="marp rod",
-            MarpScene = GD.Load<PackedScene>("res://objects/enemies/Marp.tscn"),
-            MaxStack = 5
+            ToSummon = GD.Load<PackedScene>("res://objects/enemies/Marp.tscn"),
+            SetToUserTeam = true,
+            Distance = 5,
+        });
+        ItemTypes.CreateType("cursed_idol", new SummoningItem {
+            Texture=CursedIdolTexture,
+            Name="cursed idol",
+            ToSummon = GD.Load<PackedScene>("res://objects/enemies/PatrickQuack.tscn"),
+            SetToUserTeam = false,
+            Distance = 75,
         });
 
         RecipeLoader.Load();
