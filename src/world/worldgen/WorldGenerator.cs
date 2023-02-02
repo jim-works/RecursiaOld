@@ -5,21 +5,19 @@ public class WorldGenerator
 {
     private const int POLL_INTERVAL = 10;
     public int WorldgenThreads {get; private set;} = Godot.Mathf.Max(1,System.Environment.ProcessorCount-1); //seems reasonable
-    private const float noiseFreq = 0.25f;
-    private const float noiseScale = 25;
-    private FastNoiseLite noise = new FastNoiseLite();
         
-
     private volatile HashSet<Chunk>[] toGenerate;
     private volatile List<Chunk> generated = new List<Chunk>();
     private Thread[] generationThreads;
 
+    private List<IChunkGenLayer> chunkGenLayers = new List<IChunkGenLayer>();
+    private List<StructureProvider> structureProviders = new List<StructureProvider>();
+
     public WorldGenerator()
     {
-        noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
         //initialize worldgen threads
         Godot.GD.Print($"Starting world generator with {WorldgenThreads} threads!");
-        
+        chunkGenLayers.Add(new HeightmapLayer());
         toGenerate = new HashSet<Chunk>[WorldgenThreads];
         generationThreads = new Thread[WorldgenThreads];
         for (int i = 0; i < WorldgenThreads; i++)
@@ -85,31 +83,9 @@ public class WorldGenerator
         
     }
     public void GenerateChunk(World world, Chunk chunk) {
-        Block stone = BlockTypes.Get("stone");
-        Block dirt = BlockTypes.Get("dirt");
-        Block grass = BlockTypes.Get("grass");
-        Block copper = BlockTypes.Get("copper_ore");
-
-        BlockCoord cornerWorldCoords = chunk.LocalToWorld(new BlockCoord(0,0,0));
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+        foreach (var genLayer in chunkGenLayers)
         {
-            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
-            {   
-                BlockCoord worldCoords = cornerWorldCoords + new BlockCoord(x,0,z);
-                int height = (int)(noiseScale*noise.GetNoise(worldCoords.x*noiseFreq,worldCoords.z*noiseFreq));
-                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
-                {
-                    int worldY = worldCoords.y+y;
-                    if (worldY < height - 5) {
-                        if (x%6-z%6-y%6<-4) chunk[x,y,z] = copper;
-                        else chunk[x,y,z] = stone;
-                    } else if (worldY < height) {
-                        chunk[x,y,z] = dirt;
-                    } else if (worldY == height) {
-                        chunk[x,y,z] = grass;
-                    }
-                }
-            }
+            genLayer.GenerateChunk(world,chunk);
         }
     }
 }

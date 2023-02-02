@@ -132,13 +132,13 @@ public class Mesher : Node
         Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);
 
         //check if there's no block/a transparent block in each direction. only generate face if so.
-        if (localPos.x == 0 && nonOpaque(neighbors[(int)Direction.NegX], Chunk.CHUNK_SIZE-1,localPos.y,localPos.z) || localPos.x != 0 && nonOpaque(chunk,localPos.x-1,localPos.y,localPos.z)) {
+        if (localPos.x == 0 && nonOpaque(neighbors[(int)Direction.NegX], (int)Chunk.CHUNK_SIZE-1,localPos.y,localPos.z) || localPos.x != 0 && nonOpaque(chunk,localPos.x-1,localPos.y,localPos.z)) {
             addFacePosX(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.y == 0 && nonOpaque(neighbors[(int)Direction.NegY], localPos.x, Chunk.CHUNK_SIZE-1,localPos.z) || localPos.y != 0 && nonOpaque(chunk,localPos.x,localPos.y-1,localPos.z)) {
+        if (localPos.y == 0 && nonOpaque(neighbors[(int)Direction.NegY], localPos.x, (int)Chunk.CHUNK_SIZE-1,localPos.z) || localPos.y != 0 && nonOpaque(chunk,localPos.x,localPos.y-1,localPos.z)) {
             addFaceNegY(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.z == 0 && nonOpaque(neighbors[(int)Direction.NegZ], localPos.x,localPos.y,Chunk.CHUNK_SIZE-1) || localPos.z != 0 && nonOpaque(chunk,localPos.x,localPos.y,localPos.z-1)) {
+        if (localPos.z == 0 && nonOpaque(neighbors[(int)Direction.NegZ], localPos.x,localPos.y,(int)Chunk.CHUNK_SIZE-1) || localPos.z != 0 && nonOpaque(chunk,localPos.x,localPos.y,localPos.z-1)) {
             addFacePosZ(pos, tex, verts, uvs, normals, tris);
         }
         if (localPos.x == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosX], 0,localPos.y,localPos.z) || localPos.x != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.x+1,localPos.y,localPos.z)) {

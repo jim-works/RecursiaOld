@@ -22,4 +22,18 @@ public static class Math
         }
         return new Vector3(0,0,source.z);
     }
+
+    //fast exponent - only for positive pow
+    public static int Pow(int x, int pow)
+    {
+        int ret = 1;
+        while (pow != 0)
+        {
+            if ((pow & 1) == 1)
+                ret *= x;
+            x *= x;
+            pow >>= 1;
+        }
+        return ret;
+    }
 }

@@ -8,6 +8,7 @@ public class World : Node
 {
     public static World Singleton;
     public Dictionary<ChunkCoord, Chunk> Chunks = new Dictionary<ChunkCoord, Chunk>();
+    public RegionOctree Octree = new RegionOctree(1,new BlockCoord(0,0,0));
     //todo: optimize these
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public List<Combatant> Combatants = new List<Combatant>();
@@ -22,8 +23,13 @@ public class World : Node
     public override void _EnterTree()
     {
         Singleton = this;
-        WorldGen = new WorldGenerator();
         base._EnterTree();
+    }
+
+    public override void _Ready()
+    {
+        WorldGen = new WorldGenerator();
+        base._Ready();
     }
 
     public override void _Process(float delta)
@@ -121,6 +127,7 @@ public class World : Node
     public Chunk CreateChunk(ChunkCoord chunkCoords) {
         Chunk c = new Chunk(chunkCoords);
         Chunks[chunkCoords] = c;
+        Octree.AddRegion(c);
         return c;
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
