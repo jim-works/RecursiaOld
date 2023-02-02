@@ -28,6 +28,7 @@ public class PatrickQuack : BipedalCombatant
         base._Ready();
         stateMachine = (AnimationNodeStateMachinePlayback)animationTree.Get("parameters/playback");
         summonPoint = GetNode<Spatial>(SummonPoint);
+        BossUI.Singleton.Track(this, "Patrick Quack");
     }
 
     public override void _PhysicsProcess(float dt)

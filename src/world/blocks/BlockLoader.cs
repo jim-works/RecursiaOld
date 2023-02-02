@@ -15,6 +15,8 @@ public static class BlockLoader
         createBasic("stone", standard, 0, 1,2);
         createBasic("sand", standard, 1, 1,100);
         createBasic("lava", standard, 2, 0,100);
+        createBasic("copper_ore", standard, 3, 0,100);
+        createBasic("silicon_ore", standard, 3, 1,100);
         createFactory<LootBlock>("loot", standard, 2, 1, usable: true);
     }
 

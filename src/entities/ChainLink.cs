@@ -9,7 +9,7 @@ public class ChainLink : SegmentedCombatantChild
 
     public override void _PhysicsProcess(float dt)
     {
-        if (Parent == null || Parent.IsQueuedForDeletion()) {
+        if (Parent == null || !IsInstanceValid(Parent)) {
             QueueFree();
             return;
         }

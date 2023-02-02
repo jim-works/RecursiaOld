@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=2]
+[gd_scene load_steps=25 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -23,6 +23,7 @@
 [ext_resource path="res://textures/tracking_bullet.png" type="Texture" id=21]
 [ext_resource path="res://textures/explosive_bullet.png" type="Texture" id=22]
 [ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
+[ext_resource path="res://BossUI.cs" type="Script" id=24]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
@@ -77,7 +78,7 @@ script = ExtResource( 6 )
 [node name="Settings" type="Node" parent="."]
 script = ExtResource( 8 )
 
-[node name="PlayerUI" type="Control" parent="."]
+[node name="UI" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource( 13 )
@@ -86,9 +87,9 @@ Inventory = NodePath("InventoryUI")
 MouseInventory = NodePath("FollowMouse/MouseInventoryUI")
 RecipeList = NodePath("ScrollContainer/RecipeList")
 
-[node name="HealthBar" parent="PlayerUI" instance=ExtResource( 12 )]
+[node name="HealthBar" parent="UI" instance=ExtResource( 12 )]
 
-[node name="InventoryUI" parent="PlayerUI" instance=ExtResource( 15 )]
+[node name="InventoryUI" parent="UI" instance=ExtResource( 15 )]
 visible = false
 anchor_left = 0.5
 anchor_top = 0.5
@@ -99,14 +100,14 @@ margin_top = -200.0
 margin_right = 200.0
 margin_bottom = 200.0
 
-[node name="FollowMouse" type="Control" parent="PlayerUI"]
+[node name="FollowMouse" type="Control" parent="UI"]
 margin_left = 600.0
 margin_right = 640.0
 margin_bottom = 40.0
 mouse_filter = 2
 script = ExtResource( 18 )
 
-[node name="MouseInventoryUI" type="Control" parent="PlayerUI/FollowMouse"]
+[node name="MouseInventoryUI" type="Control" parent="UI/FollowMouse"]
 margin_right = 64.0
 margin_bottom = 64.0
 mouse_filter = 2
@@ -114,7 +115,7 @@ script = ExtResource( 17 )
 ItemSlotUI = ExtResource( 16 )
 Padding = 0
 
-[node name="ScrollContainer" type="ScrollContainer" parent="PlayerUI"]
+[node name="ScrollContainer" type="ScrollContainer" parent="UI"]
 visible = false
 anchor_left = 0.5
 anchor_top = 0.5
@@ -126,12 +127,35 @@ margin_right = 478.0
 margin_bottom = 200.0
 scroll_horizontal_enabled = false
 
-[node name="RecipeList" type="Control" parent="PlayerUI/ScrollContainer"]
+[node name="RecipeList" type="Control" parent="UI/ScrollContainer"]
 script = ExtResource( 19 )
 CraftingRecipeUI = ExtResource( 20 )
 Padding = 2
 
-[connection signal="on_pause" from="Settings" to="PlayerUI/InventoryUI" method="OnPause"]
-[connection signal="on_pause" from="Settings" to="PlayerUI/ScrollContainer/RecipeList" method="OnPause"]
-[connection signal="on_unpause" from="Settings" to="PlayerUI/InventoryUI" method="OnUnpause"]
-[connection signal="on_unpause" from="Settings" to="PlayerUI/ScrollContainer/RecipeList" method="OnUnpause"]
+[node name="BossHPPanel" type="Panel" parent="UI"]
+visible = false
+anchor_left = 0.4
+anchor_right = 0.6
+anchor_bottom = 0.05
+script = ExtResource( 24 )
+HealthBarPath = NodePath("HealthBar")
+NameLabelPath = NodePath("Label")
+
+[node name="HealthBar" parent="UI/BossHPPanel" instance=ExtResource( 12 )]
+anchor_right = 1.0
+anchor_bottom = 0.75
+margin_right = 0.0
+margin_bottom = 0.0
+
+[node name="Label" type="Label" parent="UI/BossHPPanel"]
+anchor_top = 0.75
+anchor_right = 1.0
+anchor_bottom = 1.0
+text = "Patrick Quack"
+align = 1
+valign = 1
+
+[connection signal="on_pause" from="Settings" to="UI/InventoryUI" method="OnPause"]
+[connection signal="on_pause" from="Settings" to="UI/ScrollContainer/RecipeList" method="OnPause"]
+[connection signal="on_unpause" from="Settings" to="UI/InventoryUI" method="OnUnpause"]
+[connection signal="on_unpause" from="Settings" to="UI/ScrollContainer/RecipeList" method="OnUnpause"]

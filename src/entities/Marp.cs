@@ -43,7 +43,7 @@ public class Marp : BipedalCombatant
     }
     private void doWalk(float dt)
     {
-        if (carrying != null && !carrying.IsQueuedForDeletion())
+        if (carrying != null && IsInstanceValid(carrying))
         {
             Vector3 carryDest = new Vector3(0,0,WalkSpeed);
             if (CarryTarget != null) carryDest = (CarryTarget.GlobalTransform.origin-Position).Normalized()*WalkSpeed;
