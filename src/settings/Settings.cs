@@ -10,6 +10,7 @@ public class Settings : Node
     public override void _Process(float delta)
     {
         if (Input.IsActionJustPressed("toggle_fullscreen")) OS.WindowFullscreen = !OS.WindowFullscreen;
+        if (Input.IsActionJustPressed("toggle_debug")) DebugDraw.Singleton.Draw = !DebugDraw.Singleton.Draw;
 
         if (Input.IsActionJustPressed("pause"))
         {

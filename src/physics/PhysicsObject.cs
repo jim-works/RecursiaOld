@@ -24,6 +24,7 @@ public class PhysicsObject : Spatial
     [Export]
     public float MaxSpeed = 100f;
     [Export] public bool InitPhysicsActive = true;
+    public Vector3 InitialPosition;
 
     //automatically updates World.Singleton.PhysicsObjects
     public bool PhysicsActive {get => _physicsActive; protected set {
@@ -46,6 +47,7 @@ public class PhysicsObject : Spatial
     public override void _EnterTree()
     {
         _physicsActive = InitPhysicsActive;
+        Position = InitialPosition;
         base._EnterTree();
     }
 

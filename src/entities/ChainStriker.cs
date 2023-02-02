@@ -60,10 +60,10 @@ public class ChainStriker : Combatant
     {
         ChainLink link = ChainLink.Instance<ChainLink>();
         link.Parent = prev;
-        World.Singleton.AddChild(link); //on the same level as the link
+        link.InitialPosition = Position;
         link.MaxSpeed = maxSpeed;
+        World.Singleton.AddChild(link);
         links.Add(link);
-        link.Translation = Translation;
         return link;
     }
 }

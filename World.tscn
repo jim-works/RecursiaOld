@@ -88,6 +88,10 @@ MouseInventory = NodePath("FollowMouse/MouseInventoryUI")
 RecipeList = NodePath("ScrollContainer/RecipeList")
 
 [node name="HealthBar" parent="UI" instance=ExtResource( 12 )]
+anchor_right = 0.2
+anchor_bottom = 0.05
+margin_right = 0.0
+margin_bottom = 0.0
 
 [node name="InventoryUI" parent="UI" instance=ExtResource( 15 )]
 visible = false
