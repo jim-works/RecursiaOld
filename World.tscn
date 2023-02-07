@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=2]
+[gd_scene load_steps=26 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -24,6 +24,7 @@
 [ext_resource path="res://textures/explosive_bullet.png" type="Texture" id=22]
 [ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
 [ext_resource path="res://BossUI.cs" type="Script" id=24]
+[ext_resource path="res://src/ui/CoordinateTextUI.cs" type="Script" id=25]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
@@ -61,8 +62,10 @@ margin_bottom = 16.0
 texture = ExtResource( 4 )
 
 [node name="Player" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0 )
 script = ExtResource( 2 )
 Size = Vector3( 0.7, 1.8, 0.7 )
+InitialPosition = Vector3( 0, 50, 0 )
 InitialTeamName = "player"
 InitialHealth = 10.0
 InvincibilitySeconds = 0.1
@@ -85,6 +88,7 @@ HealthBar = NodePath("HealthBar")
 Inventory = NodePath("InventoryUI")
 MouseInventory = NodePath("FollowMouse/MouseInventoryUI")
 RecipeList = NodePath("ScrollContainer/RecipeList")
+CoordinateText = NodePath("DebugArea/CoordinateLabel")
 
 [node name="HealthBar" parent="UI" instance=ExtResource( 12 )]
 anchor_right = 0.2
@@ -157,6 +161,18 @@ anchor_bottom = 1.0
 text = "Patrick Quack"
 align = 1
 valign = 1
+
+[node name="DebugArea" type="Control" parent="UI"]
+anchor_left = 0.9
+anchor_right = 1.0
+anchor_bottom = 0.25
+
+[node name="CoordinateLabel" type="Label" parent="UI/DebugArea"]
+anchor_right = 1.0
+anchor_bottom = 0.5
+text = "(-12, 12, 12)"
+autowrap = true
+script = ExtResource( 25 )
 
 [connection signal="on_pause" from="Settings" to="UI/InventoryUI" method="OnPause"]
 [connection signal="on_pause" from="Settings" to="UI/ScrollContainer/RecipeList" method="OnPause"]

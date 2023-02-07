@@ -30,7 +30,7 @@ public class WorldGenerator
     private List<IChunkGenLayer> chunkGenLayers = new List<IChunkGenLayer>();
     private List<StructureProvider> structureProviders = new List<StructureProvider>();
 
-    private float currSeed=1234.875f;
+    private float currSeed=1000.875f;
 
     public WorldGenerator()
     {
@@ -112,7 +112,6 @@ public class WorldGenerator
                 ShapeChunk(World.Singleton, c);
                 c.GenerationState = ChunkGenerationState.SHAPED;
                 if (!expanded.TryAdd(c.Position, c)) Godot.GD.PrintErr($"cannot add chunk {c} to expanded");
-                Godot.GD.Print("expanded");
             }
             lock (placingStructures) foreach (var c in myQueue) placingStructures.Enqueue(c);
             myQueue.Clear();
@@ -153,12 +152,10 @@ public class WorldGenerator
                     int tid = getThreadIndex(coord);
 
                     Chunk chunk = world.CreateChunk(coord);
-                    Godot.GD.Print($"waiting for {coord}");
                     lock (expanding)
                     {
                         expanding[tid][coord] = chunk;
                         waitingForExpansion.Add(coord);
-                        Godot.GD.Print($"added to q");
                     }
                 }
             }
@@ -175,7 +172,6 @@ public class WorldGenerator
                 return false;
             });
         }
-        Godot.GD.Print("Finished requesting area!");
         return result;
     }
     //empties finishedGenerations and sends all those chunks that are still valid to the mesher
@@ -199,19 +195,20 @@ public class WorldGenerator
     {
         foreach (var provider in structureProviders)
         {
-            
             //TODO: use regions for restrictions
-            //also make a buffer for multi chunk structures
-            int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
-            int dy = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
-            int dz = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
-            BlockCoord origin = chunk.LocalToWorld(new BlockCoord(dx,dy,dz));
-            if (!provider.SuitableLocation(world, origin)) continue;
-            ChunkCollection area = await requestArea(world, chunk.Position, provider.MaxArea);
-            Structure result = await provider.PlaceStructure(world.Chunks, origin); 
-            if (result != null && provider.Record)
+            for (int i = 0; i < 25; i++)
             {
-                chunk.AddStructure(result);
+                int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
+                int dy = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
+                int dz = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
+                BlockCoord origin = chunk.LocalToWorld(new BlockCoord(dx, dy, dz));
+                if (!provider.SuitableLocation(world, origin)) continue;
+                ChunkCollection area = await requestArea(world, chunk.Position, provider.MaxArea);
+                Structure result = await provider.PlaceStructure(world.Chunks, origin);
+                if (result != null && provider.Record)
+                {
+                    chunk.AddStructure(result);
+                }
             }
         }
         lock (done)

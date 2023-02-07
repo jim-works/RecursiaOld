@@ -34,7 +34,6 @@ public class Marp : BipedalCombatant
             }
         }
         stateSwitchTimer += dt;
-        
         if (stateMachine.GetCurrentNode() == WalkBlendNode)
         {
             doWalk(dt);
@@ -43,10 +42,10 @@ public class Marp : BipedalCombatant
     }
     private void doWalk(float dt)
     {
-        if (carrying != null && IsInstanceValid(carrying))
+        if (IsInstanceValid(carrying))
         {
             Vector3 carryDest = new Vector3(0,0,WalkSpeed);
-            if (CarryTarget != null) carryDest = (CarryTarget.GlobalTransform.origin-Position).Normalized()*WalkSpeed;
+            if (IsInstanceValid(CarryTarget)) carryDest = (CarryTarget.GlobalTransform.origin-Position).Normalized()*WalkSpeed;
             Velocity = new Vector3(carryDest.x, Velocity.y, carryDest.z);
             carrying.Position = Position+new Vector3(0,2,0);
             carrying.Velocity = Vector3.Zero;

@@ -2,10 +2,10 @@ using Godot;
 
 public static class Math
 {
-    //bilinear interpolation over [0,1]x[0,1] at sample point (dx,dy).
-    //xAyB is the corner at (A,B), so x0y0 is the origin (0,0)
-    public static float Bilerp(float dx, float dy, float x0y0, float x1y0, float x0y1, float x1y1) {
-        return x0y0 * (1 - dx) * (1 - dy) + x1y0 * dx * (1 - dy) + x0y1 * (1 - dx) * dy + x1y1 * dx * dy;
+    //interpolates pos in the unit square where the corners have the values provided by the arguments
+    public static float Bilerp(Vector2 pos, float botLeft, float topLeft, float topRight, float botRight)
+    {
+        return botLeft * (1 - pos.x) * (1 - pos.y) + botRight * pos.x * (1 - pos.y) + topLeft * (1 - pos.x) * pos.y + topRight * pos.x * pos.y;
     }
     
     //returns the max magnitude component of the vector with the other two components zeroed

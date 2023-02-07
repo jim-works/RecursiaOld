@@ -16,6 +16,19 @@ public class ChunkCollection
         return false;
     }
 
+    //returns true if successful (block placed), false if destination chunk isn't present in the collection or the dest block isn't null
+    //doesn't trigger any events like meshing
+    public bool SetIfNull(BlockCoord coord, Block to)
+    {
+        if (TryGetValue((ChunkCoord)coord, out Chunk c))
+        {
+            BlockCoord pos = Chunk.WorldToLocal(coord);
+            if (c[pos] == null) c[pos] = to; else return false;
+            return true;
+        }
+        return false;
+    }
+
     public Block GetBlock(BlockCoord coord)
     {
         if (TryGetValue((ChunkCoord)coord, out Chunk c))
