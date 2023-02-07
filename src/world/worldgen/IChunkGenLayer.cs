@@ -2,5 +2,6 @@
 //Stuff that doesn't need to interact with neighboring chunks, like heightmap generation
 public interface IChunkGenLayer
 {
+    void InitRandom(float seed);
     void GenerateChunk(World world, Chunk chunk);
 }

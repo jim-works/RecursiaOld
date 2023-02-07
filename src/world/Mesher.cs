@@ -55,6 +55,7 @@ public class Mesher : Node
     }
     public void MeshDeferred(Chunk chunk) {
         toMesh.Add(chunk);
+        chunk.GenerationState = ChunkGenerationState.MESHED;
     }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
     private void spawnChunk(ChunkMesh mesh, ChunkCoord coord)

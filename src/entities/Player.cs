@@ -52,14 +52,6 @@ public class Player : Combatant
                 b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=1}};
                 World.Singleton.SetBlock((BlockCoord)Position, b);
             }
-            else if ((KeyList)key.Scancode == KeyList.O)
-            {
-                Chunk curr = World.Singleton.GetChunk((ChunkCoord)Position);
-                if (curr == null) return;
-                World.Singleton.Octree.AddRegion(curr);
-                GD.Print("Added region");
-                GD.Print(World.Singleton.Octree.Root.Print());
-            }
         base._Input(@event);
     }
 

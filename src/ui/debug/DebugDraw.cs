@@ -7,7 +7,7 @@ public class DebugDraw : Node
 
     [Export] public Color Color;
 
-    public bool Draw = true;
+    public bool Draw = false;
     private ImmediateGeometry geometry;
     private List<Box> drawing = new List<Box>();
 

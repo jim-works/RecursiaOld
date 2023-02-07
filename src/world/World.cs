@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class World : Node
 {
     public static World Singleton;
-    public Dictionary<ChunkCoord, Chunk> Chunks = new Dictionary<ChunkCoord, Chunk>();
+    public ChunkCollection Chunks = new ChunkCollection();
     public RegionOctree Octree = new RegionOctree(1,new BlockCoord(0,0,0));
     //todo: optimize these
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
@@ -15,6 +15,7 @@ public class World : Node
     public List<Player> Players = new List<Player>();
     public HashSet<Spatial> ChunkLoaders = new HashSet<Spatial>();
     public WorldGenerator WorldGen;
+    private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
     [Export]
@@ -34,8 +35,13 @@ public class World : Node
 
     public override void _Process(float delta)
     {
+        WorldGen.GetFinishedChunks(fromWorldGen);
+        foreach (var item in fromWorldGen)
+        {
+            Mesher.Singleton.MeshDeferred(item);
+        }
+        fromWorldGen.Clear();
         doChunkLoading();
-        WorldGen.SendToMesher();
         base._Process(delta);
     }
     public Player ClosestPlayer(Vector3 pos)
@@ -108,14 +114,20 @@ public class World : Node
 
     }
     private void loadChunk(ChunkCoord coord) {
-        if (Chunks.ContainsKey(coord)) return; //already loaded
+        if (Chunks.Contains(coord)) return; //already loaded
         Chunk c = CreateChunk(coord);
+        c.Loaded = true;
         WorldGen.GenerateDeferred(c);
     }
     private void unloadChunk(ChunkCoord coord) {
-        if (!Chunks.ContainsKey(coord)) return;//already unloaded
-        Mesher.Singleton.Unload(Chunks[coord]);
-        Chunks.Remove(coord);
+        if (!Chunks.Contains(coord)) return;//already unloaded
+        Chunk c = Chunks[coord];
+        //allow us to keep some unloaded chunks in memory
+        if (c.Loaded) {
+            Chunks.Remove(coord);
+        } 
+        c.Loaded = false;
+        Mesher.Singleton.Unload(c);
     }
     public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -128,6 +140,7 @@ public class World : Node
         Chunk c = new Chunk(chunkCoords);
         Chunks[chunkCoords] = c;
         Octree.AddRegion(c);
+        c.Loaded = false;
         return c;
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
@@ -160,7 +173,7 @@ public class World : Node
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetOrCreateChunk(chunkCoords);
         c[blockCoords] = block;
-        if (meshChunk) {
+        if (meshChunk && c.Loaded) {
             Mesher.Singleton.MeshDeferred(c);
             //mesh neighbors if needed
             if (blockCoords.x == 0 && GetChunk(chunkCoords+new ChunkCoord(-1,0,0)) is Chunk nx)

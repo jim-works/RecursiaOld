@@ -67,6 +67,16 @@ public class Region
         return Origin+delta;
     }
 
+    public void AddStructure(Structure s)
+    {
+        Region curr = this;
+        while (curr != null)
+        {
+            curr.Structures.Add(s);
+            curr = curr.Parent;
+        }
+    }
+
     //returns true if added child, false if couldn't
     //child must have level <= this.level-1, and be within this region
     //child must be in the region, and we must not already have a child in the place it will go

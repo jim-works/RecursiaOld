@@ -8,6 +8,8 @@ public class Chunk : Region
     public ChunkCoord Position;
     public Block[,,] Blocks;
     public ChunkMesh Mesh;
+    public bool Loaded = false;
+    public ChunkGenerationState GenerationState;
 
     public Chunk(ChunkCoord chunkCoords) : base(0,(BlockCoord)chunkCoords)
     {

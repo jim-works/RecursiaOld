@@ -5,13 +5,19 @@ public class HeightmapLayer : IChunkGenLayer
     private const float noiseScale = 25;
     private FastNoiseLite noise = new FastNoiseLite();
 
+    private float seed;
+
     public HeightmapLayer()
     {
         stone = BlockTypes.Get("stone");
         dirt = BlockTypes.Get("dirt");
         grass = BlockTypes.Get("grass");
-        copper = BlockTypes.Get("copper_ore");
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+    }
+
+    public void InitRandom(float seed)
+    {
+        this.seed = seed;
     }
 
     public void GenerateChunk(World world, Chunk chunk)
@@ -22,13 +28,12 @@ public class HeightmapLayer : IChunkGenLayer
             for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
             {   
                 BlockCoord worldCoords = cornerWorldCoords + new BlockCoord(x,0,z);
-                int height = (int)(noiseScale*noise.GetNoise(worldCoords.x*noiseFreq,worldCoords.z*noiseFreq));
+                int height = (int)(noiseScale*noise.GetNoise(seed+worldCoords.x*noiseFreq,seed+worldCoords.z*noiseFreq));
                 for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                 {
                     int worldY = worldCoords.y+y;
                     if (worldY < height - 5) {
-                        if (x%6-z%6-y%6<-4) chunk[x,y,z] = copper;
-                        else chunk[x,y,z] = stone;
+                        chunk[x,y,z] = stone;
                     } else if (worldY < height) {
                         chunk[x,y,z] = dirt;
                     } else if (worldY == height) {
