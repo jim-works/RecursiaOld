@@ -1,5 +1,4 @@
-using System;
-using Godot;
+using System.Collections.Generic;
 
 //leaf node of region octree structure
 public class Chunk : Region
@@ -16,6 +15,11 @@ public class Chunk : Region
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
         Structures.Add(new Structure());
         Position = chunkCoords;
+    }
+    
+    public void ChunkTick(float dt)
+    {
+
     }
 
     public Block this[BlockCoord index] {

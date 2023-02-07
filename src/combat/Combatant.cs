@@ -15,6 +15,7 @@ public class Combatant : PhysicsObject
     public float ContactDamage = 1;
 
     public Inventory Inventory;
+    public float ItemCooldown;
 
     private float invicinibilityTimer = 0;
 
@@ -34,6 +35,7 @@ public class Combatant : PhysicsObject
     public override void _Process(float delta)
     {
         invicinibilityTimer += delta;
+        ItemCooldown -= delta;
         if (ContactDamage != 0)  DoContactDamage();
         for (int x = -1; x <= 1; x++)
         {
@@ -58,6 +60,13 @@ public class Combatant : PhysicsObject
     {
         World.Singleton.Combatants.Remove(this);
         base._ExitTree();
+    }
+
+    public void UseItem(int slot, Vector3 offset, Vector3 direction)
+    {
+        if (ItemCooldown > 0) return;
+        Inventory.Items[slot].Item?.OnUse(this, offset, direction, ref Inventory.Items[slot]);
+        Inventory.TriggerUpdate();
     }
 
     public virtual void DoContactDamage()

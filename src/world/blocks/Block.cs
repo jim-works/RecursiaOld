@@ -8,12 +8,15 @@ public class Block
     public bool Transparent = false;
     public bool Collidable = true;
     public bool Usable = false; //set to true if player should use block instead of using whatever item they have equipped 
+    public bool HasOnLoad = false;
     public AtlasTextureInfo TextureInfo;
     public float ExplosionResistance=0;
     public DropTable DropTable;
     public Texture ItemTexture;
 
     public virtual void OnUse(Combatant c, BlockCoord pos) {}
+    public virtual void OnLoad(BlockCoord pos, Chunk c) {}
+    public virtual void OnUnload(BlockCoord pos, Chunk c) {}
 
     //allows subclasses to override .Equals, keeping == and != consistent with that
     public static bool operator ==(Block a, Block b)

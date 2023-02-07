@@ -24,12 +24,14 @@ public class ItemLoader : Node
             MaxStack=1,
             Name="gun",
             Damage=0,
+            Cooldown=0.3f,
         });
         ItemTypes.CreateType("shotgun", new ShotgunItem {
             Texture = ShotgunTexture,
             MaxStack=1,
             Name="shotgun",
             Damage=0,
+            Cooldown=1,
         });
         ItemTypes.CreateType("explosive_bullet", new BulletItem {
             Texture=ExplosiveBulletTexture,

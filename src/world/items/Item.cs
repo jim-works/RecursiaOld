@@ -5,11 +5,12 @@ public class Item
 {
     public string Name;
     public int MaxStack = 999;
+    public float Cooldown = 0;
     public Texture Texture;
     
     public virtual void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
-        
+        user.ItemCooldown = Cooldown;
     }
 
     //allows subclasses to override .Equals, keeping == and != consistent with that

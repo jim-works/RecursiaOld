@@ -98,8 +98,7 @@ public class Player : Combatant
         }
         else
         {
-            Inventory.GetItem(SelectedSlot).Item?.OnUse(this, Position + CameraOffset, dir, ref Inventory.Items[SelectedSlot]);
-            Inventory.TriggerUpdate();
+            UseItem(SelectedSlot, Position + CameraOffset, dir);
         }
     }
 
