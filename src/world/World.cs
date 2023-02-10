@@ -42,7 +42,7 @@ public class World : Node
             Mesher.Singleton.MeshDeferred(item);
         }
         fromWorldGen.Clear();
-        doChunkLoading();
+        if (GlobalConfig.UseInfiniteWorlds) doChunkLoading();
         base._Process(delta);
     }
     public Player ClosestPlayer(Vector3 pos)
