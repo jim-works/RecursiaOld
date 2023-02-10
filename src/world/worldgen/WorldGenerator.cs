@@ -196,7 +196,7 @@ public class WorldGenerator
         foreach (var provider in structureProviders)
         {
             //TODO: use regions for restrictions
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < 5; i++)
             {
                 int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
                 int dy = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
@@ -208,6 +208,14 @@ public class WorldGenerator
                 if (result != null && provider.Record)
                 {
                     chunk.AddStructure(result);
+                }
+                lock (done)
+                {
+                    foreach (var c in area)
+                    {
+                        c.Value.GenerationState = ChunkGenerationState.GENERATED;
+                        done.Add(c.Value);
+                    }
                 }
             }
         }

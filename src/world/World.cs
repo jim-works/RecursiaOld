@@ -31,6 +31,7 @@ public class World : Node
     {
         WorldGen = new WorldGenerator();
         base._Ready();
+        doChunkLoading();
     }
 
     public override void _Process(float delta)
@@ -114,7 +115,10 @@ public class World : Node
 
     }
     private void loadChunk(ChunkCoord coord) {
-        if (Chunks.Contains(coord)) return; //already loaded
+        if (Chunks.TryGetValue(coord, out Chunk chunk)){
+            chunk.Loaded = true;
+            return; //already loaded
+        } 
         Chunk c = CreateChunk(coord);
         c.Loaded = true;
         WorldGen.GenerateDeferred(c);
