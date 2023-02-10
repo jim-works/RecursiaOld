@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://src/ui/CraftingRecipeUI.cs" type="Script" id=1]
+[ext_resource path="res://objects/ItemSlot.tscn" type="PackedScene" id=2]
+
+[node name="CraftingRecipeUI" type="ColorRect"]
+margin_right = 250.0
+margin_bottom = 100.0
+color = Color( 0.12549, 0.12549, 0.12549, 0.384314 )
+script = ExtResource( 1 )
+ItemSlotUI = ExtResource( 2 )
+
+[node name="IngredientsLabel" type="Label" parent="."]
+margin_right = 40.0
+margin_bottom = 14.0
+text = "Ingredients"
+
+[node name="ProductsLabel" type="Label" parent="."]
+margin_right = 75.0
+margin_bottom = 14.0
+text = "Products"

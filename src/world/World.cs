@@ -7,28 +7,80 @@ using System.Collections.Generic;
 public class World : Node
 {
     public static World Singleton;
-    public Dictionary<ChunkCoord, Chunk> Chunks = new Dictionary<ChunkCoord, Chunk>();
+    public ChunkCollection Chunks = new ChunkCollection();
+    public RegionOctree Octree = new RegionOctree(1,new BlockCoord(0,0,0));
+    //todo: optimize these
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
+    public List<Combatant> Combatants = new List<Combatant>();
+    public List<Player> Players = new List<Player>();
     public HashSet<Spatial> ChunkLoaders = new HashSet<Spatial>();
     public WorldGenerator WorldGen;
+    private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
-    [Export]
-    private int loadDistance = 10;
+    
+    [Export] private int loadDistance = 10;
 
     public override void _EnterTree()
     {
         Singleton = this;
-        BlockLoader.Load();
-        WorldGen = new WorldGenerator();
         base._EnterTree();
+    }
+
+    public override void _Ready()
+    {
+        WorldGen = new WorldGenerator();
+        base._Ready();
+        doChunkLoading();
     }
 
     public override void _Process(float delta)
     {
-        doChunkLoading();
-        WorldGen.SendToMesher();
+        WorldGen.GetFinishedChunks(fromWorldGen);
+        foreach (var item in fromWorldGen)
+        {
+            Mesher.Singleton.MeshDeferred(item);
+        }
+        fromWorldGen.Clear();
+        if (GlobalConfig.UseInfiniteWorlds) doChunkLoading();
         base._Process(delta);
+    }
+    public Player ClosestPlayer(Vector3 pos)
+    {
+        float minSqrDist = float.PositiveInfinity;
+        Player minPlayer = null;
+        foreach(var Player in Players)
+        {
+            float sqrDist = (pos-Player.Position).LengthSquared();
+            if (sqrDist < minSqrDist) {
+                minSqrDist = sqrDist;
+                minPlayer = Player;
+            }
+        }
+        return minPlayer;
+    }
+    public bool ClosestEnemy(Vector3 pos, Team team, out Combatant enemy)
+    {
+        float minSqrDist = float.PositiveInfinity;
+        enemy = null;
+        foreach(var c in Combatants)
+        {
+            float sqrDist = (pos-c.Position).LengthSquared();
+            if (sqrDist < minSqrDist && c.Team != team) {
+                minSqrDist = sqrDist;
+                enemy = c;
+            }
+        }
+        return enemy != null;
+    }
+    public Combatant CollidesWithEnemy(Box box, Team team)
+    {
+        foreach (var c in Combatants)
+        {
+            if (c.Team == team) continue;
+            if (c.GetBox().IntersectsBox(box)) return c;
+        }
+        return null;
     }
     private void doChunkLoading()
     {
@@ -63,14 +115,23 @@ public class World : Node
 
     }
     private void loadChunk(ChunkCoord coord) {
-        if (Chunks.ContainsKey(coord)) return; //already loaded
+        if (Chunks.TryGetValue(coord, out Chunk chunk)){
+            chunk.Loaded = true;
+            return; //already loaded
+        } 
         Chunk c = CreateChunk(coord);
+        c.Loaded = true;
         WorldGen.GenerateDeferred(c);
     }
     private void unloadChunk(ChunkCoord coord) {
-        if (!Chunks.ContainsKey(coord)) return;//already unloaded
-        Mesher.Singleton.Unload(Chunks[coord]);
-        Chunks.Remove(coord);
+        if (!Chunks.Contains(coord)) return;//already unloaded
+        Chunk c = Chunks[coord];
+        //allow us to keep some unloaded chunks in memory
+        if (c.Loaded) {
+            Chunks.Remove(coord);
+        } 
+        c.Loaded = false;
+        Mesher.Singleton.Unload(c);
     }
     public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -82,6 +143,8 @@ public class World : Node
     public Chunk CreateChunk(ChunkCoord chunkCoords) {
         Chunk c = new Chunk(chunkCoords);
         Chunks[chunkCoords] = c;
+        Octree.AddRegion(c);
+        c.Loaded = false;
         return c;
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
@@ -101,12 +164,20 @@ public class World : Node
     public Block GetBlock(Vector3 worldCoords) {
         return GetBlock((BlockCoord)worldCoords);
     }
+    public ItemStack BreakBlock(BlockCoord coords) {
+        DropTable dt = GetBlock(coords).DropTable;
+        if (dt == null) {
+            GD.Print("Null droptable!");
+        }
+        SetBlock(coords, null);
+        return dt?.GetDrop() ?? new ItemStack();
+    }
     public void SetBlock(BlockCoord coords, Block block, bool meshChunk=true) {
         ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetOrCreateChunk(chunkCoords);
         c[blockCoords] = block;
-        if (meshChunk) {
+        if (meshChunk && c.Loaded) {
             Mesher.Singleton.MeshDeferred(c);
             //mesh neighbors if needed
             if (blockCoords.x == 0 && GetChunk(chunkCoords+new ChunkCoord(-1,0,0)) is Chunk nx)
@@ -147,6 +218,7 @@ public class World : Node
             HitPos=origin,
             BlockPos=oldCoords,
             Block = b,
+            Normal = Vector3.Zero,
         };
         for (float t = 0; t < lineLength; t += stepSize) {
             //only query world when we are in a new block
@@ -159,6 +231,8 @@ public class World : Node
                 HitPos=testPoint,
                 BlockPos=oldCoords,
                 Block =b,
+                //normal direction will be the greatest difference from the center
+                Normal = Math.MaxComponent(testPoint-((Vector3)oldCoords+new Vector3(0.5f,0.5f,0.5f))).Normalized()
             };
         }
         return null;
@@ -176,6 +250,7 @@ public class World : Node
             HitPos=origin,
             BlockPos=oldCoords,
             Block = b,
+            Normal = Vector3.Zero
         });
         for (float t = 0; t < lineLength; t += stepSize) {
             //only query world when we are in a new block
@@ -188,6 +263,8 @@ public class World : Node
                 HitPos=testPoint,
                 BlockPos=oldCoords,
                 Block =b,
+                //normal direction will be the greatest difference from the center
+                Normal = Math.MaxComponent((Vector3)oldCoords+new Vector3(0.5f,0.5f,0.5f)-testPoint).Normalized()
             });
         }
     }

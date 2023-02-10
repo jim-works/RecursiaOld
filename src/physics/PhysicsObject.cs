@@ -5,46 +5,74 @@ public class PhysicsObject : Spatial
 {
     [Export]
     public Vector3 Size;
+    [Export] public Vector3 ColliderOffset;
     [Export]
     //reduces collision planes' sizes by this amount in each direction to avoid getting stuck on things.
     //For example, it would stop an x-axis collision to be detected while walking on flat ground.
     public float Epsilon = 0.1f;
+    [Export]
+    public float Mass = 1f;
     public Vector3 Velocity;
     public Vector3 Position {
         get => GlobalTransform.origin;
         set {GlobalTransform = new Transform(GlobalTransform.basis, value);}
     }
     [Export]
-    public Vector3 Gravity = new Vector3(0,-10,0);
+    public Vector3 Gravity = new Vector3(0,-20,0);
     [Export]
-    public bool PhysicsActive = true;
+    public float AirResistance = 0.1f;
+    [Export]
+    public float MaxSpeed = 100f;
+    [Export] public bool InitPhysicsActive = true;
+    [Export] public Vector3 InitialPosition;
+
+    //automatically updates World.Singleton.PhysicsObjects
+    public bool PhysicsActive {get => _physicsActive; protected set {
+        if (value != _physicsActive) {
+            if (value) World.Singleton.PhysicsObjects.Add(this);
+            else World.Singleton.PhysicsObjects.Remove(this);
+            _physicsActive = value;
+        }
+    }}
+    //doesn't update the World PhysicsObjects
+    protected bool _physicsActive = true;
+    public bool Collides = true;
 
     protected Vector3 currentForce; //zeroed each physics update
     protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Box GetBox() => Box.FromCenter(Position, Size);
+    public Box GetBox() => Box.FromCenter(Position+LocalDirectionToWorld(ColliderOffset), Size);
 
     public override void _EnterTree()
     {
+        _physicsActive = InitPhysicsActive;
+        Position = InitialPosition;
         base._EnterTree();
-        World.Singleton.PhysicsObjects.Add(this);
+    }
+
+    public override void _Ready()
+    {
+        base._Ready();
+        if (PhysicsActive) World.Singleton.PhysicsObjects.Add(this);
     }
 
     public override void _PhysicsProcess(float dt)
     {
         if (!PhysicsActive) return;
-        Velocity += currentForce*dt;
+        AddForce(-AirResistance*Velocity);
+        Velocity += currentForce*dt/Mass;
+        if (Velocity.LengthSquared() > MaxSpeed*MaxSpeed) Velocity=Velocity.Normalized()*MaxSpeed;
         //GD.Print(Velocity);
-        currentForce = Gravity;
-        doCollision(World.Singleton, dt);
+        currentForce = Gravity*Mass;
+        if (Collides) doCollision(World.Singleton, dt);
 
         Position += Velocity*dt;
     }
 
     public override void _ExitTree()
     {
-        World.Singleton.PhysicsObjects.Remove(this);
+        if (PhysicsActive) World.Singleton.PhysicsObjects.Remove(this);
         base._ExitTree();
     }
 
@@ -54,13 +82,22 @@ public class PhysicsObject : Spatial
     {
         currentForce += f;
     }
+    //adds an impulse. instant velocity change that accounts for mass.
+    public void AddImpulse(Vector3 f)
+    {
+        Velocity += f/Mass;
+    }
 
     //rotates v from local to world
     public Vector3 LocalDirectionToWorld(Vector3 v)
     {
         return GlobalTransform.basis.Xform(v);
     }
-    protected void doCollision(World world, float dt)
+    protected void doFriction(float coeff)
+    {
+        Velocity -= Velocity*coeff;
+    }
+    protected virtual void doCollision(World world, float dt)
     {
         Vector3 oldV = Velocity;
         int oldMask = collisionDirections;

@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=1]
+[ext_resource path="res://src/ui/HealthBar3D.cs" type="Script" id=2]
+
+[sub_resource type="ViewportTexture" id=1]
+viewport_path = NodePath("Viewport")
+
+[node name="HealthBar3D" type="Spatial"]
+script = ExtResource( 2 )
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform( -1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0 )
+billboard = 1
+transparent = false
+texture = SubResource( 1 )
+
+[node name="Viewport" type="Viewport" parent="."]
+size = Vector2( 200, 40 )
+render_target_v_flip = true
+
+[node name="HealthBar" parent="Viewport" instance=ExtResource( 1 )]

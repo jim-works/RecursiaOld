@@ -14,17 +14,20 @@ public class RotatingCamera : Spatial
     [Export]
     public bool RotateParentPitch = false;
 
+    public static RotatingCamera Singleton;
+
     private float yaw;
     private float pitch;
 
     public override void _Ready()
     {
+        Singleton = this;
         Input.SetMouseMode(Input.MouseMode.Captured);
         base._Ready();
     }
     public override void _Input(InputEvent e)
     {
-        if (e is InputEventMouseMotion m) {
+        if (!Settings.Paused && e is InputEventMouseMotion m) {
             Vector2 d = m.Relative;
             yaw = (yaw - LookSensitivity*d.x) % 360;
             pitch = System.Math.Min(System.Math.Max(pitch-LookSensitivity*d.y,-90),90);
@@ -35,6 +38,10 @@ public class RotatingCamera : Spatial
 
     public override void _Process(float delta)
     {
+        if (Settings.Paused) {
+            base._Process(delta);
+            return;
+        }
         Player parent = GetParent<Player>();
         float look_x = Input.GetActionStrength("look_left") - Input.GetActionStrength("look_right");
         float look_y = Input.GetActionStrength("look_down") - Input.GetActionStrength("look_up");

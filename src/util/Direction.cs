@@ -14,5 +14,5 @@ public enum Direction
 public static class DirectionUtils
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool MaskHas(int mask, Direction d) => ((1 << (int)d) & mask) == 1;
+    public static bool MaskHas(int mask, Direction d) => ((mask>>(int)d) & 1) ==1;
 }

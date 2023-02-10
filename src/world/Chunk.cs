@@ -1,18 +1,25 @@
-using System;
-using Godot;
+using System.Collections.Generic;
 
-
-public class Chunk
+//leaf node of region octree structure
+public class Chunk : Region
 {
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
     public Block[,,] Blocks;
     public ChunkMesh Mesh;
+    public bool Loaded = false;
+    public ChunkGenerationState GenerationState;
 
-    public Chunk(ChunkCoord chunkCoords)
+    public Chunk(ChunkCoord chunkCoords) : base(0,(BlockCoord)chunkCoords)
     {
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
+        Structures.Add(new Structure());
         Position = chunkCoords;
+    }
+    
+    public void ChunkTick(float dt)
+    {
+
     }
 
     public Block this[BlockCoord index] {
@@ -30,6 +37,11 @@ public class Chunk
 
     public static BlockCoord WorldToLocal(BlockCoord coord)
     {
-        return coord % CHUNK_SIZE;
+        return coord % (int)CHUNK_SIZE;
+    }
+
+    public override string ToString()
+    {
+        return $"Chunk at {Position} (origin {Origin})";
     }
 }

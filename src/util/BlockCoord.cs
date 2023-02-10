@@ -56,7 +56,7 @@ public struct BlockCoord
     }
     public static explicit operator BlockCoord(ChunkCoord conv)
     {
-        return new BlockCoord(conv.x*Chunk.CHUNK_SIZE,conv.y*Chunk.CHUNK_SIZE,conv.z*Chunk.CHUNK_SIZE);
+        return new BlockCoord(conv.x*(int)Chunk.CHUNK_SIZE,conv.y*(int)Chunk.CHUNK_SIZE,conv.z*(int)Chunk.CHUNK_SIZE);
     }
     public override string ToString()
     {
