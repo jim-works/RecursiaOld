@@ -16,6 +16,9 @@ public class PatrickQuack : BipedalCombatant
     [Export] public PackedScene Projectile;
     [Export] public NodePath SummonPoint;
 
+    [Export] public AudioStream SummonSound;
+    [Export] public AudioStream ShootSound;
+
     private AnimationNodeStateMachinePlayback stateMachine;
     private float stateSwitchTimer = 0;
     private float summonTimer = 0;
@@ -73,6 +76,7 @@ public class PatrickQuack : BipedalCombatant
         Velocity = new Vector3(dv.x, Velocity.y, dv.z);
         if (shootTimer >= ShootInterval)
         {
+            PlaySound(ShootSound);
             Projectile proj = Projectile.Instance<Projectile>();
             World.Singleton.AddChild(proj);
             Vector3 origin = summonPoint.GlobalTransform.origin;
@@ -87,6 +91,7 @@ public class PatrickQuack : BipedalCombatant
         Velocity = new Vector3(0,Velocity.y,0);
         if (summonTimer >= SummonInterval)
         {
+            PlaySound(SummonSound);
             Combatant c = EnemiesToSummon[spawnIdx].Instance<Combatant>();
             if (c is Marp m) m.CarryTarget = this;
             spawnIdx = (spawnIdx+1)%EnemiesToSummon.Length;

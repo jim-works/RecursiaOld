@@ -10,6 +10,11 @@ public class ItemLoader : Node
     [Export] public Texture MarpRodTexture;
     [Export] public Texture CursedIdolTexture;
 
+    [Export] public AudioStream GunSound;
+    [Export] public AudioStream ShotgunSound;
+    [Export] public AudioStream MarpRodSound;
+    [Export] public AudioStream CursedIdolSound;
+
     public override void _EnterTree()
     {
         BlockLoader.Load();
@@ -23,8 +28,9 @@ public class ItemLoader : Node
             Texture = GunTexture,
             MaxStack=1,
             Name="gun",
-            Damage=0,
-            Cooldown=0.3f,
+            Damage=2,
+            Cooldown=0.25f,
+            UseSound = GunSound,
         });
         ItemTypes.CreateType("shotgun", new ShotgunItem {
             Texture = ShotgunTexture,
@@ -32,6 +38,7 @@ public class ItemLoader : Node
             Name="shotgun",
             Damage=0,
             Cooldown=1,
+            UseSound = ShotgunSound,
         });
         ItemTypes.CreateType("explosive_bullet", new BulletItem {
             Texture=ExplosiveBulletTexture,
@@ -51,6 +58,7 @@ public class ItemLoader : Node
             ToSummon = GD.Load<PackedScene>("res://objects/enemies/Marp.tscn"),
             SetToUserTeam = true,
             Distance = 5,
+            UseSound = MarpRodSound,
         });
         ItemTypes.CreateType("cursed_idol", new SummoningItem {
             Texture=CursedIdolTexture,
@@ -58,6 +66,7 @@ public class ItemLoader : Node
             ToSummon = GD.Load<PackedScene>("res://objects/enemies/PatrickQuack.tscn"),
             SetToUserTeam = false,
             Distance = 75,
+            UseSound = CursedIdolSound,
         });
 
         RecipeLoader.Load();

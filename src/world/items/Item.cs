@@ -7,6 +7,7 @@ public class Item
     public int MaxStack = 999;
     public float Cooldown = 0;
     public Texture Texture;
+    public AudioStream UseSound;
     
     public virtual void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {

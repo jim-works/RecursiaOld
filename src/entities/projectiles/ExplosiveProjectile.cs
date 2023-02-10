@@ -4,9 +4,18 @@ public class ExplosiveProjectile : Projectile
 {
     [Export] public float ExplosionSize = 10;
     [Export] public float FlingFactor = 1;
+    [Export] public AudioStream ExplosionSound;
+    [Export] public NodePath AudioPlayerPath;
     private bool exploded = false;
     private bool dying = false;
     private float dieTime = 2;
+    private AudioStreamPlayer3D audioStreamPlayer;
+
+    public override void _Ready()
+    {
+        audioStreamPlayer = GetNode<AudioStreamPlayer3D>(AudioPlayerPath);
+        base._Ready();
+    }
 
     public override void _PhysicsProcess(float delta)
     {
@@ -31,6 +40,8 @@ public class ExplosiveProjectile : Projectile
     }
     public void Explode()
     {
+        audioStreamPlayer.Stream = ExplosionSound;
+        audioStreamPlayer.Play();
         exploded = true;
         SphereShaper.Shape(World.Singleton, Position, ExplosionSize);
         Particles TrailParticles = GetNode<Particles>("Trail");

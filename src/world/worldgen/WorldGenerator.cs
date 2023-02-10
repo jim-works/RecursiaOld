@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 public class WorldGenerator
 {
     private const int POLL_INTERVAL = 10;
-    public int WorldgenThreads {get; private set;} = Godot.Mathf.Max(1,System.Environment.ProcessorCount-1); //seems reasonable
+    public int WorldgenThreads {get; private set;} = Godot.Mathf.Max(1,System.Environment.ProcessorCount-4); //seems reasonable
     public int StructuresPerChunk = 10; //seems reasonable
         
     //contains chunks requested from outside sources (world loading)

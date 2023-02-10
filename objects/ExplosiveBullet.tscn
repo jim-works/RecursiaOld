@@ -1,6 +1,7 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://src/entities/projectiles/ExplosiveProjectile.cs" type="Script" id=1]
+[ext_resource path="res://sounds/explosion2.wav" type="AudioStream" id=2]
 
 [sub_resource type="PrismMesh" id=1]
 size = Vector3( 0.2, 0.2, 0.2 )
@@ -50,6 +51,8 @@ material/0 = null
 script = ExtResource( 1 )
 Size = Vector3( 0.2, 0.2, 0.2 )
 Epsilon = 0.0
+ExplosionSound = ExtResource( 2 )
+AudioPlayerPath = NodePath("AudioStreamPlayer3D")
 
 [node name="Trail" type="Particles" parent="."]
 amount = 32
@@ -67,3 +70,6 @@ randomness = 0.11
 local_coords = false
 process_material = SubResource( 10 )
 draw_pass_1 = SubResource( 3 )
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+unit_size = 25.0

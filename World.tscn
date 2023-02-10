@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=2]
+[gd_scene load_steps=30 format=2]
 
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
@@ -25,6 +25,10 @@
 [ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
 [ext_resource path="res://BossUI.cs" type="Script" id=24]
 [ext_resource path="res://src/ui/CoordinateTextUI.cs" type="Script" id=25]
+[ext_resource path="res://sounds/marprod.wav" type="AudioStream" id=26]
+[ext_resource path="res://sounds/shotgun.wav" type="AudioStream" id=27]
+[ext_resource path="res://sounds/summon.wav" type="AudioStream" id=28]
+[ext_resource path="res://sounds/pistol.wav" type="AudioStream" id=29]
 
 [node name="World" type="Spatial"]
 script = ExtResource( 5 )
@@ -45,6 +49,10 @@ ExplosiveBulletTexture = ExtResource( 22 )
 TrackingBulletTexture = ExtResource( 21 )
 MarpRodTexture = ExtResource( 9 )
 CursedIdolTexture = ExtResource( 10 )
+GunSound = ExtResource( 29 )
+ShotgunSound = ExtResource( 27 )
+MarpRodSound = ExtResource( 26 )
+CursedIdolSound = ExtResource( 28 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
 transform = Transform( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
@@ -76,6 +84,8 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0 )
 fov = 90.0
 far = 5000.0
 script = ExtResource( 6 )
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="Player"]
 
 [node name="Settings" type="Node" parent="."]
 script = ExtResource( 8 )

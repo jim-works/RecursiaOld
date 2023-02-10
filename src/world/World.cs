@@ -18,8 +18,8 @@ public class World : Node
     private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
-    [Export]
-    private int loadDistance = 10;
+    
+    [Export] private int loadDistance = 10;
 
     public override void _EnterTree()
     {

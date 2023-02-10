@@ -5,24 +5,24 @@ public class Combatant : PhysicsObject
     private float health;
     private float maxHealth;
     public Team Team = null;
-    [Export]
-    public string InitialTeamName;
-    [Export]
-    public float InitialHealth;
-    [Export]
-    public float InvincibilitySeconds = 0.001f; //should be 1 frame
-    [Export]
-    public float ContactDamage = 1;
+    [Export] public string InitialTeamName;
+    [Export] public float InitialHealth;
+    [Export] public float InvincibilitySeconds = 0.001f; //should be 1 frame
+    [Export] public float ContactDamage = 1;
+
+    [Export] public NodePath AudioPlayer = "AudioStreamPlayer3D";
 
     public Inventory Inventory;
     public float ItemCooldown;
 
     private float invicinibilityTimer = 0;
+    private AudioStreamPlayer3D audioStreamPlayer;
 
     public override void _Ready()
     {
         base._Ready();
         World.Singleton.Combatants.Add(this);
+        audioStreamPlayer = GetNodeOrNull<AudioStreamPlayer3D>(AudioPlayer);
         
         if (Team == null && !string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
         if (InitialHealth > 0) {
@@ -66,7 +66,19 @@ public class Combatant : PhysicsObject
     {
         if (ItemCooldown > 0) return;
         Inventory.Items[slot].Item?.OnUse(this, offset, direction, ref Inventory.Items[slot]);
+        //play usage sound
+        PlaySound(Inventory.Items[slot].Item?.UseSound);
         Inventory.TriggerUpdate();
+    }
+
+    public void PlaySound(AudioStream clip)
+    {
+        if (audioStreamPlayer != null && clip != null)
+        {
+            GD.Print("played sound on " + Name);
+            audioStreamPlayer.Stream = clip;
+            audioStreamPlayer.Play();
+        }
     }
 
     public virtual void DoContactDamage()
