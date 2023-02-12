@@ -22,6 +22,8 @@ public class Region
     public Region Parent;
     public Region[] Children;
     public RegionOctree Tree;
+    //True if any subregion is loaded
+    public bool Loaded {get; private set;} = false;
     //structure is contained if region contains the position of the structure.
     // structure could overfill into this region from neighbor without being in this list
     public List<Structure> Structures = new List<Structure>();
@@ -88,12 +90,12 @@ public class Region
         if (child.Level == 0 && !(child is Chunk)) return false;
         if (Children == null) Children = new Region[8];
 
-        return AddChildUnchecked(child);
+        return addChildUnchecked(child);
     }
 
     //skip initial checks on level,type, and in region.
     //returns false if tree already contains a region where we would put child
-    public bool AddChildUnchecked(Region child)
+    private bool addChildUnchecked(Region child)
     {
         int idx = GetOctantId(child.Origin);
         if (child.Level < Level-1)
@@ -117,6 +119,8 @@ public class Region
             Children[idx] = child;
             child.Parent = this;
             Children[idx].Tree = Tree;
+            //set loaded if needed
+            if (Children[idx].Loaded && !Loaded) updateLoadedStatus();
             Structures.AddRange(child.Structures);
         }
         
@@ -128,11 +132,68 @@ public class Region
         if (Children[id] == null) return;
         Children[id].Parent = null;
         Children[id] = null;
+        updateLoadedStatus();
+    }
+
+    //loads all children and parent (if needed)
+    public void Load()
+    {
+        bool oldLoaded = Loaded;
+        setLoaded(true);
+        if (!oldLoaded) Parent?.updateLoadedStatus(); //only need to update if not already loaded
+    }
+
+    //unload all children and parent (if needed)
+    public void Unload()
+    {
+        bool oldLoaded = Loaded;
+        setLoaded(false);
+        if (oldLoaded) Parent?.updateLoadedStatus(); //only need to update if not already unloaded
+    }
+
+    private void setLoaded(bool val)
+    {
+        Loaded = val;
+        if (Children == null) return;
+        foreach (var child in Children)
+        {
+            child?.setLoaded(val);
+        }
+    }
+
+    private void updateLoadedStatus()
+    {
+        if (Children == null) 
+        {
+            Parent?.updateLoadedStatus();
+            return;
+        }
+        if (Loaded)
+        {
+            //unload if all children are unloaded
+            foreach (var child in Children)
+            {
+                if (child != null && child.Loaded) return;
+            }
+            Loaded = false;
+            Parent?.updateLoadedStatus();
+        }
+        else
+        {
+            //load if any children are loaded
+            foreach (var child in Children)
+            {
+                if (child != null && child.Loaded) {
+                    Loaded = true;
+                    Parent?.updateLoadedStatus();
+                }
+            }
+        }
     }
 
     public override string ToString()
     {
-        return $"Region {Origin} level {Level} and size {Size}";
+        return $"{(Loaded ? "Loaded" : "Unloaded")} region {Origin} level {Level} and size {Size}";
     }
     public string Print(int indention=0, System.Text.StringBuilder output = null)
     {

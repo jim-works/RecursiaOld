@@ -116,11 +116,11 @@ public class World : Node
     }
     private void loadChunk(ChunkCoord coord) {
         if (Chunks.TryGetValue(coord, out Chunk chunk)){
-            chunk.Loaded = true;
+            chunk.Load();
             return; //already loaded
         } 
         Chunk c = CreateChunk(coord);
-        c.Loaded = true;
+        c.Load();
         WorldGen.GenerateDeferred(c);
     }
     private void unloadChunk(ChunkCoord coord) {
@@ -130,7 +130,7 @@ public class World : Node
         if (c.Loaded) {
             Chunks.Remove(coord);
         } 
-        c.Loaded = false;
+        c.Unload();
         Mesher.Singleton.Unload(c);
     }
     public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
@@ -144,7 +144,6 @@ public class World : Node
         Chunk c = new Chunk(chunkCoords);
         Chunks[chunkCoords] = c;
         Octree.AddRegion(c);
-        c.Loaded = false;
         return c;
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {

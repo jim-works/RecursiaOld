@@ -1,3 +1,4 @@
+using System.IO;
 
 //Faces of blocks are on integral coordinates
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
@@ -11,6 +12,18 @@ public struct BlockCoord
         this.z = z;
     }
     public int sqrMag() { return x * x + y * y + z*z; }
+    public void Serialize(BinaryWriter bw)
+    {
+        bw.Write(x);
+        bw.Write(y);
+        bw.Write(z);
+    }
+    public void Deserialize(BinaryReader br)
+    {
+        x = br.ReadInt32();
+        y = br.ReadInt32();
+        z = br.ReadInt32();
+    }
     public static BlockCoord operator +(BlockCoord lhs, BlockCoord rhs)
     {
         return new BlockCoord(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z+rhs.z);

@@ -1,3 +1,5 @@
+using System.IO;
+
 public struct ChunkCoord
 {
     public int x, y,z;
@@ -8,6 +10,18 @@ public struct ChunkCoord
         this.z = z;
     }
     public int sqrMag() { return x * x + y * y + z*z; }
+    public void Serialize(BinaryWriter bw)
+    {
+        bw.Write(x);
+        bw.Write(y);
+        bw.Write(z);
+    }
+    public void Deserialize(BinaryReader br)
+    {
+        x = br.ReadInt32();
+        y = br.ReadInt32();
+        z = br.ReadInt32();
+    }
     public static ChunkCoord operator +(ChunkCoord lhs, ChunkCoord rhs)
     {
         return new ChunkCoord(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z+rhs.z);

@@ -1,4 +1,6 @@
+using System.IO;
 using System.Collections.Generic;
+using System;
 
 //leaf node of region octree structure
 public class Chunk : Region
@@ -7,7 +9,6 @@ public class Chunk : Region
     public ChunkCoord Position;
     public Block[,,] Blocks;
     public ChunkMesh Mesh;
-    public bool Loaded = false;
     public ChunkGenerationState GenerationState;
 
     public Chunk(ChunkCoord chunkCoords) : base(0,(BlockCoord)chunkCoords)
@@ -38,6 +39,33 @@ public class Chunk : Region
     public static BlockCoord WorldToLocal(BlockCoord coord)
     {
         return coord % (int)CHUNK_SIZE;
+    }
+
+    public void Serialize(BinaryWriter bw, Dictionary<Block, int> ids)
+    {
+        Position.Serialize(bw);
+        Block curr = null;
+        int run = 0;
+        for (int i = 0; i < Blocks.Length; i++)
+        {
+            Block b = (Block)Blocks.GetValue(i);
+            if (curr == b)
+            {
+                run++;
+                continue;
+            }
+            bw.Write(run);
+            curr.Serialize(bw);
+            run = 1;
+            curr = b;
+        }
+        bw.Write(run);
+        curr.Serialize(bw);
+    }
+
+    public void Deserialize(BinaryReader br, Dictionary<int, Func<BinaryReader, Block>> ids)
+    {
+
     }
 
     public override string ToString()
