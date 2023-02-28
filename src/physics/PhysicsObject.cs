@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 public class PhysicsObject : Spatial
 {
+    private const int COLLISION_INTERVAL = 5; //physics updates per collision check
     [Export]
     public Vector3 Size;
     [Export] public Vector3 ColliderOffset;
@@ -25,6 +26,8 @@ public class PhysicsObject : Spatial
     public float MaxSpeed = 100f;
     [Export] public bool InitPhysicsActive = true;
     [Export] public Vector3 InitialPosition;
+
+    private int _updatesSinceCollision = 0;
 
     //automatically updates World.Singleton.PhysicsObjects
     public bool PhysicsActive {get => _physicsActive; protected set {
@@ -99,6 +102,8 @@ public class PhysicsObject : Spatial
     }
     protected virtual void doCollision(World world, float dt)
     {
+        _updatesSinceCollision++;
+        if (_updatesSinceCollision > COLLISION_INTERVAL) _updatesSinceCollision = 0;
         Vector3 oldV = Velocity;
         int oldMask = collisionDirections;
         collisionDirections = 0;

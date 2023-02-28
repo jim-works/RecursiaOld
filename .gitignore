@@ -12,4 +12,5 @@ export_presets.cfg
 .mono
 .vscode/
 mono_crash*
+.idea/
 ./data_*/

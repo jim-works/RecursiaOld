@@ -18,6 +18,9 @@ public class World : Node
     private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
+
+    private float chunkLoadingInterval = 0.5f; //seconds per chunk loading update
+    private float _chunkLoadingTimer = 0;
     
     [Export] private int loadDistance = 10;
 
@@ -41,8 +44,12 @@ public class World : Node
         {
             Mesher.Singleton.MeshDeferred(item);
         }
+
         fromWorldGen.Clear();
-        if (GlobalConfig.UseInfiniteWorlds) doChunkLoading();
+        if (GlobalConfig.UseInfiniteWorlds)
+        {
+            _chunkLoadingTimer += delta; doChunkLoading();
+        }
         base._Process(delta);
     }
     public Player ClosestPlayer(Vector3 pos)
@@ -84,6 +91,8 @@ public class World : Node
     }
     private void doChunkLoading()
     {
+        if (_chunkLoadingTimer < chunkLoadingInterval) return;
+        _chunkLoadingTimer = 0;
         loadedChunks.Clear();
         toUnload.Clear();
         foreach (Spatial loader in ChunkLoaders)

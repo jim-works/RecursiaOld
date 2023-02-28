@@ -74,16 +74,16 @@ public class PatrickQuack : BipedalCombatant
         if ((closest.Position-Position).LengthSquared() < MaxDistFromTarget*MaxDistFromTarget) return; // close enough to target, skip walking
         Vector3 dv = (closest.Position-Position).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.x, Velocity.y, dv.z);
-        if (shootTimer >= ShootInterval)
-        {
-            PlaySound(ShootSound);
-            Projectile proj = Projectile.Instance<Projectile>();
-            World.Singleton.AddChild(proj);
-            Vector3 origin = summonPoint.GlobalTransform.origin;
-            proj.Position = origin;
-            proj.Launch((closest.Position-origin).Normalized()*ProjectileVelocity, Team);
-            shootTimer = 0;
-        }
+        // if (shootTimer >= ShootInterval)
+        // {
+        //     PlaySound(ShootSound);
+        //     Projectile proj = Projectile.Instance<Projectile>();
+        //     World.Singleton.AddChild(proj);
+        //     Vector3 origin = summonPoint.GlobalTransform.origin;
+        //     proj.Position = origin;
+        //     proj.Launch((closest.Position-origin).Normalized()*ProjectileVelocity, Team);
+        //     shootTimer = 0;
+        // }
         shootTimer += dt;
     }
     private void doSummon(float dt)

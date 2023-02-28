@@ -82,7 +82,11 @@ public class WorldGenerator
         {
             shaping[tid].Add(c);
         }
+    }
 
+    public void GenerateArea(ChunkCoord origin, ChunkCoord radius)
+    {
+        
     }
     //runs on multiple generationThreads
     private void generationLoop(int id)
