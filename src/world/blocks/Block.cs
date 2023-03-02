@@ -2,7 +2,7 @@ using Godot;
 using System.IO;
 
 #pragma warning disable CS0660, CS0661 //intentionally not overriding gethashcode or .equals heres
-public class Block : ISerializable
+public partial class Block : ISerializable
 {
     public string Name;
     public bool Transparent = false;
@@ -12,7 +12,7 @@ public class Block : ISerializable
     public AtlasTextureInfo TextureInfo;
     public float ExplosionResistance=0;
     public DropTable DropTable;
-    public Texture ItemTexture;
+    public Texture2D ItemTexture;
 
     public virtual void OnUse(Combatant c, BlockCoord pos) {}
     public virtual void OnLoad(BlockCoord pos, Chunk c) {}

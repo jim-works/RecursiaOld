@@ -1,6 +1,6 @@
 using Godot;
 
-public class TextureAtlas
+public partial class TextureAtlas
 {
     public int TexWidth, TexHeight, CellSize;
 

@@ -11,12 +11,12 @@ public static class Plane
     public static bool CollidesWithWorldX(Vector3 corner, float ySize, float zSize, World world)
     {
         BlockCoord min = (BlockCoord)corner;
-        BlockCoord max = new BlockCoord(Mathf.FloorToInt(min.x), Mathf.CeilToInt(corner.y+ySize), Mathf.CeilToInt(corner.z+zSize));
-        for (int y = min.y; y < max.y; y++)
+        BlockCoord max = new BlockCoord(Mathf.FloorToInt(min.X), Mathf.CeilToInt(corner.Y+ySize), Mathf.CeilToInt(corner.Z+zSize));
+        for (int y = min.Y; y < max.Y; y++)
         {
-            for (int z = min.z; z < max.z; z++)
+            for (int z = min.Z; z < max.Z; z++)
             {
-                BlockCoord curr = new BlockCoord(max.x,y,z);
+                BlockCoord curr = new BlockCoord(max.X,y,z);
                 Block test = world.GetBlock(curr);
                 if (test != null && test.Collidable) return true;
             }
@@ -32,12 +32,12 @@ public static class Plane
     public static bool CollidesWithWorldY(Vector3 corner, float xSize, float zSize, World world)
     {
         BlockCoord min = (BlockCoord)corner;
-        BlockCoord max = new BlockCoord(Mathf.CeilToInt(corner.x+xSize), Mathf.FloorToInt(min.y), Mathf.CeilToInt(corner.z+zSize));
-        for (int x = min.x; x < max.x; x++)
+        BlockCoord max = new BlockCoord(Mathf.CeilToInt(corner.X+xSize), Mathf.FloorToInt(min.Y), Mathf.CeilToInt(corner.Z+zSize));
+        for (int x = min.X; x < max.X; x++)
         {
-            for (int z = min.z; z < max.z; z++)
+            for (int z = min.Z; z < max.Z; z++)
             {
-                BlockCoord curr = new BlockCoord(x,max.y,z);
+                BlockCoord curr = new BlockCoord(x,max.Y,z);
                 Block test = world.GetBlock(curr);
                 if (test != null && test.Collidable) return true;
             }
@@ -53,12 +53,12 @@ public static class Plane
     public static bool CollidesWithWorldZ(Vector3 corner, float xSize, float ySize, World world)
     {
         BlockCoord min = (BlockCoord)corner;
-        BlockCoord max = new BlockCoord(Mathf.CeilToInt(corner.x+xSize), Mathf.CeilToInt(corner.y+ySize), Mathf.FloorToInt(min.z));
-        for (int x = min.x; x < max.x; x++)
+        BlockCoord max = new BlockCoord(Mathf.CeilToInt(corner.X+xSize), Mathf.CeilToInt(corner.Y+ySize), Mathf.FloorToInt(min.Z));
+        for (int x = min.X; x < max.X; x++)
         {
-            for (int y = min.y; y < max.y; y++)
+            for (int y = min.Y; y < max.Y; y++)
             {
-                BlockCoord curr = new BlockCoord(x,y,max.z);
+                BlockCoord curr = new BlockCoord(x,y,max.Z);
                 Block test = world.GetBlock(curr);
                 if (test != null && test.Collidable) return true;
             }

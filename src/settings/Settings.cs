@@ -1,28 +1,33 @@
 using Godot;
 
-public class Settings : Node
+public partial class Settings : Node
 {
-    [Signal] public delegate void on_pause();
-    [Signal] public delegate void on_unpause();
+    [Signal] public delegate void on_pauseEventHandler();
+    [Signal] public delegate void on_unpauseEventHandler();
 
     public static bool Paused = false;
 
-    public override void _Process(float delta)
+    public override void _Ready()
     {
-        if (Input.IsActionJustPressed("toggle_fullscreen")) OS.WindowFullscreen = !OS.WindowFullscreen;
+        Input.MouseMode = Input.MouseModeEnum.Captured;
+    }
+
+    public override void _Process(double delta)
+    {
+        if (Input.IsActionJustPressed("toggle_fullscreen")) DisplayServer.WindowSetMode(DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Fullscreen ? DisplayServer.WindowMode.Windowed : DisplayServer.WindowMode.Fullscreen);
         if (Input.IsActionJustPressed("toggle_debug")) DebugDraw.Singleton.Draw = !DebugDraw.Singleton.Draw;
 
         if (Input.IsActionJustPressed("pause"))
         {
-            if (Input.GetMouseMode() == Input.MouseMode.Captured)
+            if (Input.MouseMode == Input.MouseModeEnum.Captured)
             {
-                Input.SetMouseMode(Input.MouseMode.Visible);
+                Input.MouseMode = Input.MouseModeEnum.Visible;
                 Paused = true;
                 EmitSignal("on_pause");
             }
-            else if (Input.GetMouseMode() == Input.MouseMode.Visible)
+            else if (Input.MouseMode == Input.MouseModeEnum.Visible)
             {
-                Input.SetMouseMode(Input.MouseMode.Captured);
+                Input.MouseMode = Input.MouseModeEnum.Captured;
                 Paused = false;
                 EmitSignal("on_unpause");
             }

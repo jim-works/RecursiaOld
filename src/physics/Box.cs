@@ -27,16 +27,16 @@ public struct Box
 
     public bool Inside(Vector3 point)
     {
-        return Corner.x <= point.x && point.x <= Corner.x+Size.x
-            && Corner.y <= point.y && point.y <= Corner.y+Size.y
-            && Corner.z <= point.z && point.z <= Corner.z+Size.z;
+        return Corner.X <= point.X && point.X <= Corner.X+Size.X
+            && Corner.Y <= point.Y && point.Y <= Corner.Y+Size.Y
+            && Corner.Z <= point.Z && point.Z <= Corner.Z+Size.Z;
     }
 
     public bool IntersectsBox(Box other)
     {
-        return Corner.x <= other.Corner.x+other.Size.x && Corner.x+Size.x >= other.Corner.x
-            && Corner.y <= other.Corner.y+other.Size.y && Corner.y+Size.y >= other.Corner.y
-            && Corner.z <= other.Corner.z+other.Size.z && Corner.z+Size.z >= other.Corner.z;
+        return Corner.X <= other.Corner.X+other.Size.X && Corner.X+Size.X >= other.Corner.X
+            && Corner.Y <= other.Corner.Y+other.Size.Y && Corner.Y+Size.Y >= other.Corner.Y
+            && Corner.Z <= other.Corner.Z+other.Size.Z && Corner.Z+Size.Z >= other.Corner.Z;
     }
 
 }

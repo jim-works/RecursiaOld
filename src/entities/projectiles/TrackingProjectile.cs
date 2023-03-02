@@ -1,21 +1,21 @@
 using Godot;
 
-public class TrackingProjectile : Projectile
+public partial class TrackingProjectile : Projectile
 {
-    [Export] public float TrackingDelay;
+    [Export] public double TrackingDelay;
     [Export] public float TrackSpeedMult = 1.5f;
     private Combatant target;
 
-    public override void _PhysicsProcess(float delta)
+    public override void _PhysicsProcess(double delta)
     {
         TrackingDelay -= delta;
         if (target == null && TrackingDelay <= 0)
         {
-            World.Singleton.ClosestEnemy(Position, team, out target);
+            World.Singleton.ClosestEnemy(GlobalPosition, team, out target);
         }
         if (target != null)
         {
-            Velocity = launchSpeed*TrackSpeedMult*(target.Position-Position).Normalized();
+            Velocity = launchSpeed*TrackSpeedMult*(target.GlobalPosition-GlobalPosition).Normalized();
         }
         
         base._PhysicsProcess(delta);

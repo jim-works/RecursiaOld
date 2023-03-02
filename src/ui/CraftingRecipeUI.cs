@@ -1,7 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
-public class CraftingRecipeUI : Control
+public partial class CraftingRecipeUI : Control
 {
     [Export]
     public PackedScene ItemSlotUI;
@@ -29,28 +29,28 @@ public class CraftingRecipeUI : Control
         Control ingredientsLabel = GetNode<Label>("IngredientsLabel");
         Control productsLabel = GetNode<Label>("ProductsLabel");
         //ingredients
-        float offsetY = ingredientsLabel.RectSize.y+Padding;
+        float offsetY = ingredientsLabel.Size.Y+Padding;
         int endrow = displayList(r.Ingredients, new Vector2(0,offsetY), 0);
         //products
-        productsLabel.RectPosition = new Vector2(productsLabel.RectPosition.x, offsetY+getHeight(endrow+1)+Padding);
-        offsetY += productsLabel.RectSize.y+Padding*2;
+        productsLabel.Position = new Vector2(productsLabel.Position.X, offsetY+getHeight(endrow+1)+Padding);
+        offsetY += productsLabel.Size.Y+Padding*2;
         endrow = displayList(r.Product, new Vector2(0,offsetY), endrow+1, (b) => craft());
-        RectSize = new Vector2(RectSize.x, offsetY + getHeight(endrow+1)+Padding);
-        return RectSize.y;
+        Size = new Vector2(Size.X, offsetY + getHeight(endrow+1)+Padding);
+        return Size.Y;
     }
 
-    private int displayList(List<ItemStack> items, Vector2 offset, int startRow, System.Action<int> onclick=null)
+    private int displayList(List<ItemStack> items, Vector2 offset, int startRow, System.Action<MouseButton> onclick=null)
     {
-        int slotsPerRow = Mathf.Max((int)RectSize.x/(SlotSizePx+Padding),1);
+        int slotsPerRow = Mathf.Max((int)Size.X/(SlotSizePx+Padding),1);
         int row = startRow-1;
         //ingredients
         for (int i = 0; i < items.Count; i++)
         {
             int column = i % slotsPerRow;
             if (column == 0) row++;
-            ItemSlotUI slot = ItemSlotUI.Instance<ItemSlotUI>();
+            ItemSlotUI slot = ItemSlotUI.Instantiate<ItemSlotUI>();
             AddChild(slot);
-            slot.RectPosition = new Vector2(offset.x+column*SlotSizePx+(column+1)*Padding, offset.y+getHeight(row));
+            slot.Position = new Vector2(offset.X+column*SlotSizePx+(column+1)*Padding, offset.Y+getHeight(row));
             int idx = i;
             if (onclick != null) slot.OnClick += onclick;
             slot.DisplayItem(items[i]);

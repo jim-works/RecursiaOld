@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public class Recipe
+public partial class Recipe
 {
     public List<ItemStack> Ingredients {get; private set;}
     public List<ItemStack> Product {get; private set;}

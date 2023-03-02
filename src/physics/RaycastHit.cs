@@ -1,4 +1,4 @@
-public class BlockcastHit
+public partial class BlockcastHit
 {
     public Block Block;
     public BlockCoord BlockPos;

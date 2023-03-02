@@ -1,4 +1,4 @@
-public class Structure
+public partial class Structure
 {
     public string Name;
     public BlockCoord Position;

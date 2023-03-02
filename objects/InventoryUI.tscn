@@ -4,8 +4,8 @@
 [ext_resource path="res://objects/ItemSlot.tscn" type="PackedScene" id=2]
 
 [node name="InventoryUI" type="ColorRect"]
-margin_right = 340.0
-margin_bottom = 132.0
+offset_right = 340.0
+offset_bottom = 132.0
 color = Color( 0.337255, 0.337255, 0.337255, 1 )
 script = ExtResource( 1 )
 ItemSlotUI = ExtResource( 2 )

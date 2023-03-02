@@ -1,6 +1,6 @@
 using Godot;
 
-public class HeightmapLayer : IChunkGenLayer
+public partial class HeightmapLayer : IChunkGenLayer
 {
     private Block stone, dirt, grass, copper;
     private const float noiseFreq = 0.2f;
@@ -38,7 +38,7 @@ public class HeightmapLayer : IChunkGenLayer
         {
             for (int z = 0; z < heightSamples.GetLength(1); z++)
             {
-                heightSamples[x, z] = noise.Sample(noiseSampleInterval*x+cornerWorldCoords.x,noiseSampleInterval*z+cornerWorldCoords.z);
+                heightSamples[x, z] = noise.Sample(noiseSampleInterval*x+cornerWorldCoords.X,noiseSampleInterval*z+cornerWorldCoords.Z);
             }
         }
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -50,7 +50,7 @@ public class HeightmapLayer : IChunkGenLayer
                     heightSamples[x / noiseSampleInterval, z / noiseSampleInterval], heightSamples[x / noiseSampleInterval, z / noiseSampleInterval + 1], heightSamples[x / noiseSampleInterval + 1, z / noiseSampleInterval + 1], heightSamples[x / noiseSampleInterval + 1, z / noiseSampleInterval]);
                 for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                 {
-                    int worldY = worldCoords.y+y;
+                    int worldY = worldCoords.Y+y;
                     if (worldY < height - 5) {
                         chunk[x,y,z] = stone;
                     } else if (worldY < height) {

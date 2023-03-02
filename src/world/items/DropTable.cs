@@ -1,4 +1,4 @@
-public class DropTable
+public partial class DropTable
 {
 
     public ItemStack drop;

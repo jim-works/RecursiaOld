@@ -1,0 +1,19 @@
+[gd_scene load_steps=5 format=3 uid="uid://cy26yr1s0mn6t"]
+
+[ext_resource type="Script" path="res://src/entities/ChainStriker.cs" id="1"]
+[ext_resource type="PackedScene" path="res://objects/Link.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://boxqknwhgom6a" path="res://objects/HealthBar3D.tscn" id="3"]
+
+[sub_resource type="BoxMesh" id="1"]
+
+[node name="Chain" type="MeshInstance3D"]
+mesh = SubResource("1")
+script = ExtResource("1")
+ChainLink = ExtResource("2")
+StrikeImpulse = 40.0
+AttackInterval = 2.0
+InitialTeamName = "enemy"
+InitialHealth = 10.0
+Size = Vector3(1, 1, 1)
+
+[node name="HealthBar3D" parent="." instance=ExtResource("3")]

@@ -1,6 +1,6 @@
 using Godot;
 
-public class ExplosiveProjectile : Projectile
+public partial class ExplosiveProjectile : Projectile
 {
     [Export] public float ExplosionSize = 10;
     [Export] public float FlingFactor = 1;
@@ -8,7 +8,7 @@ public class ExplosiveProjectile : Projectile
     [Export] public NodePath AudioPlayerPath;
     private bool exploded = false;
     private bool dying = false;
-    private float dieTime = 2;
+    private double dieTime = 2;
     private AudioStreamPlayer3D audioStreamPlayer;
 
     public override void _Ready()
@@ -17,7 +17,7 @@ public class ExplosiveProjectile : Projectile
         base._Ready();
     }
 
-    public override void _PhysicsProcess(float delta)
+    public override void _PhysicsProcess(double delta)
     {
         if (!exploded && collisionDirections != 0)
         {
@@ -43,9 +43,9 @@ public class ExplosiveProjectile : Projectile
         audioStreamPlayer.Stream = ExplosionSound;
         audioStreamPlayer.Play();
         exploded = true;
-        SphereShaper.Shape(World.Singleton, Position, ExplosionSize);
-        Particles TrailParticles = GetNode<Particles>("Trail");
-        Particles ExplosionParticles = GetNode<Particles>("Explosion");
+        SphereShaper.Shape3D(World.Singleton, GlobalPosition, ExplosionSize);
+        GpuParticles3D TrailParticles = GetNode<GpuParticles3D>("Trail");
+        GpuParticles3D ExplosionParticles = GetNode<GpuParticles3D>("Explosion");
         ExplosionParticles.Emitting = true;
         TrailParticles.Emitting = false;
         PhysicsActive = false;
@@ -53,12 +53,12 @@ public class ExplosiveProjectile : Projectile
         foreach(PhysicsObject obj in World.Singleton.PhysicsObjects)
         {
             if (obj == this) continue;
-            float mag = (obj.Position-Position).LengthSquared()+1;
-            obj.AddImpulse((obj.Position-Position)/mag*ExplosionSize*FlingFactor);
+            float mag = (obj.GlobalPosition-GlobalPosition).LengthSquared()+1;
+            obj.AddImpulse((obj.GlobalPosition-GlobalPosition)/mag*ExplosionSize*FlingFactor);
         }
         foreach(Combatant obj in World.Singleton.Combatants)
         {
-            if ((obj.Position-Position).LengthSquared() <= ExplosionSize*ExplosionSize) obj.TakeDamage(new Damage{Team=team,Amount=Damage});
+            if ((obj.GlobalPosition-GlobalPosition).LengthSquared() <= ExplosionSize*ExplosionSize) obj.TakeDamage(new Damage{Team=team,Amount=Damage});
         }
     }
 }

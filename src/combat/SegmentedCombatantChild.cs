@@ -1,6 +1,6 @@
 using Godot;
 
-public class SegmentedCombatantChild : Combatant
+public partial class SegmentedCombatantChild : Combatant
 {
     [Export] public NodePath ParentPath;
     public Combatant Parent;

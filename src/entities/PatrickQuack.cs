@@ -1,6 +1,6 @@
 using Godot;
 
-public class PatrickQuack : BipedalCombatant
+public partial class PatrickQuack : BipedalCombatant
 {
     [Export] public float MaxDistFromTarget = 50;
     [Export] public float WalkSpeed = 5;
@@ -20,21 +20,21 @@ public class PatrickQuack : BipedalCombatant
     [Export] public AudioStream ShootSound;
 
     private AnimationNodeStateMachinePlayback stateMachine;
-    private float stateSwitchTimer = 0;
-    private float summonTimer = 0;
-    private float shootTimer = 0;
-    private Spatial summonPoint;
+    private double stateSwitchTimer = 0;
+    private double summonTimer = 0;
+    private double shootTimer = 0;
+    private Node3D summonPoint;
     private int spawnIdx = 0;
 
     public override void _Ready()
     {
         base._Ready();
         stateMachine = (AnimationNodeStateMachinePlayback)animationTree.Get("parameters/playback");
-        summonPoint = GetNode<Spatial>(SummonPoint);
+        summonPoint = GetNode<Node3D>(SummonPoint);
         BossUI.Singleton.Track(this, "Patrick Quack");
     }
 
-    public override void _PhysicsProcess(float dt)
+    public override void _PhysicsProcess(double dt)
     {
         if (StateSwitchInterval <= stateSwitchTimer)
         {
@@ -52,11 +52,11 @@ public class PatrickQuack : BipedalCombatant
         
         if (stateMachine.GetCurrentNode() == SummonState)
         {
-            doSummon(dt);
+            doSummon((float)dt);
         }
         if (stateMachine.GetCurrentNode() == WalkBlendNode)
         {
-            doWalk(dt);
+            doWalk((float)dt);
         }
         base._PhysicsProcess(dt);
     }
@@ -65,38 +65,38 @@ public class PatrickQuack : BipedalCombatant
     {
         LootBlock b = (LootBlock)BlockTypes.Get("loot");
         b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=MinDrops+(Mathf.RoundToInt(GD.Randf()*RandomDrops))}};
-        World.Singleton.SetBlock((BlockCoord)Position, b);
+        World.Singleton.SetBlock((BlockCoord)GlobalPosition, b);
         base.Die();
     }
     private void doWalk(float dt)
     {
-        if (!World.Singleton.ClosestEnemy(Position, Team, out Combatant closest)) return;
-        if ((closest.Position-Position).LengthSquared() < MaxDistFromTarget*MaxDistFromTarget) return; // close enough to target, skip walking
-        Vector3 dv = (closest.Position-Position).Normalized()*WalkSpeed;
-        Velocity = new Vector3(dv.x, Velocity.y, dv.z);
-        // if (shootTimer >= ShootInterval)
-        // {
-        //     PlaySound(ShootSound);
-        //     Projectile proj = Projectile.Instance<Projectile>();
-        //     World.Singleton.AddChild(proj);
-        //     Vector3 origin = summonPoint.GlobalTransform.origin;
-        //     proj.Position = origin;
-        //     proj.Launch((closest.Position-origin).Normalized()*ProjectileVelocity, Team);
-        //     shootTimer = 0;
-        // }
+        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, out Combatant closest)) return;
+        if ((closest.GlobalPosition-GlobalPosition).LengthSquared() < MaxDistFromTarget*MaxDistFromTarget) return; // close enough to target, skip walking
+        Vector3 dv = (closest.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
+        Velocity = new Vector3(dv.X, Velocity.Y, dv.Z);
+        if (shootTimer >= ShootInterval)
+        {
+            PlaySound(ShootSound);
+            Projectile proj = Projectile.Instantiate<Projectile>();
+            World.Singleton.AddChild(proj);
+            Vector3 origin = summonPoint.GlobalPosition;
+            proj.GlobalPosition = origin;
+            proj.Launch((closest.GlobalPosition-origin).Normalized()*ProjectileVelocity, Team);
+            shootTimer = 0;
+        }
         shootTimer += dt;
     }
     private void doSummon(float dt)
     {
-        Velocity = new Vector3(0,Velocity.y,0);
+        Velocity = new Vector3(0,Velocity.Y,0);
         if (summonTimer >= SummonInterval)
         {
             PlaySound(SummonSound);
-            Combatant c = EnemiesToSummon[spawnIdx].Instance<Combatant>();
+            Combatant c = EnemiesToSummon[spawnIdx].Instantiate<Combatant>();
             if (c is Marp m) m.CarryTarget = this;
             spawnIdx = (spawnIdx+1)%EnemiesToSummon.Length;
             c.Team = Team;
-            c.InitialPosition = summonPoint.GlobalTransform.origin;
+            c.InitialPosition = summonPoint.GlobalPosition;
             World.Singleton.AddChild(c);
             summonTimer = 0;
         }

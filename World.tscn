@@ -1,188 +1,213 @@
-[gd_scene load_steps=30 format=2]
+[gd_scene load_steps=31 format=3 uid="uid://dyc42ayat11tg"]
 
-[ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
-[ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
-[ext_resource path="res://materials/chunkmaterial.tres" type="Material" id=3]
-[ext_resource path="res://textures/crosshair.png" type="Texture" id=4]
-[ext_resource path="res://src/world/World.cs" type="Script" id=5]
-[ext_resource path="res://src/camera/RotatingCamera.cs" type="Script" id=6]
-[ext_resource path="res://src/world/items/ItemLoader.cs" type="Script" id=7]
-[ext_resource path="res://src/settings/Settings.cs" type="Script" id=8]
-[ext_resource path="res://textures/marp_rod.png" type="Texture" id=9]
-[ext_resource path="res://textures/cursed_idol.png" type="Texture" id=10]
-[ext_resource path="res://src/ui/debug/DebugDraw.cs" type="Script" id=11]
-[ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=12]
-[ext_resource path="res://src/ui/PlayerUIAssignment.cs" type="Script" id=13]
-[ext_resource path="res://textures/gun.png" type="Texture" id=14]
-[ext_resource path="res://objects/InventoryUI.tscn" type="PackedScene" id=15]
-[ext_resource path="res://objects/MouseItemSlot.tscn" type="PackedScene" id=16]
-[ext_resource path="res://src/ui/InventoryUI.cs" type="Script" id=17]
-[ext_resource path="res://src/ui/FollowMouse.gd" type="Script" id=18]
-[ext_resource path="res://src/ui/RecipeListUI.cs" type="Script" id=19]
-[ext_resource path="res://objects/CraftingRecipeUI.tscn" type="PackedScene" id=20]
-[ext_resource path="res://textures/tracking_bullet.png" type="Texture" id=21]
-[ext_resource path="res://textures/explosive_bullet.png" type="Texture" id=22]
-[ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
-[ext_resource path="res://BossUI.cs" type="Script" id=24]
-[ext_resource path="res://src/ui/CoordinateTextUI.cs" type="Script" id=25]
-[ext_resource path="res://sounds/marprod.wav" type="AudioStream" id=26]
-[ext_resource path="res://sounds/shotgun.wav" type="AudioStream" id=27]
-[ext_resource path="res://sounds/summon.wav" type="AudioStream" id=28]
-[ext_resource path="res://sounds/pistol.wav" type="AudioStream" id=29]
+[ext_resource type="Script" path="res://src/world/Mesher.cs" id="1"]
+[ext_resource type="Script" path="res://src/entities/Player.cs" id="2"]
+[ext_resource type="Material" uid="uid://k1gkdkelwcjg" path="res://materials/chunkmaterial.tres" id="3"]
+[ext_resource type="Texture2D" uid="uid://doejm15pynr1e" path="res://textures/crosshair.png" id="4"]
+[ext_resource type="Script" path="res://src/world/World.cs" id="5"]
+[ext_resource type="Script" path="res://src/camera/RotatingCamera.cs" id="6"]
+[ext_resource type="Script" path="res://src/world/items/ItemLoader.cs" id="7"]
+[ext_resource type="Script" path="res://src/settings/Settings.cs" id="8"]
+[ext_resource type="Texture2D" uid="uid://b1hx352bixgap" path="res://textures/marp_rod.png" id="9"]
+[ext_resource type="Texture2D" uid="uid://bsmjw22m7h77p" path="res://textures/cursed_idol.png" id="10"]
+[ext_resource type="Script" path="res://src/ui/debug/DebugDraw.cs" id="11"]
+[ext_resource type="PackedScene" path="res://objects/HealthBar.tscn" id="12"]
+[ext_resource type="Script" path="res://src/ui/PlayerUIAssignment.cs" id="13"]
+[ext_resource type="Texture2D" uid="uid://cebwpdnbu2fwr" path="res://textures/gun.png" id="14"]
+[ext_resource type="PackedScene" path="res://objects/InventoryUI.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://objects/MouseItemSlot.tscn" id="16"]
+[ext_resource type="Script" path="res://src/ui/InventoryUI.cs" id="17"]
+[ext_resource type="Script" path="res://src/ui/FollowMouse.gd" id="18"]
+[ext_resource type="Script" path="res://src/ui/RecipeListUI.cs" id="19"]
+[ext_resource type="PackedScene" path="res://objects/CraftingRecipeUI.tscn" id="20"]
+[ext_resource type="Texture2D" uid="uid://cm5wkgqfxe6nt" path="res://textures/tracking_bullet.png" id="21"]
+[ext_resource type="Texture2D" uid="uid://du7h2h005hxt8" path="res://textures/explosive_bullet.png" id="22"]
+[ext_resource type="Texture2D" uid="uid://c1lnml1sb02dy" path="res://textures/shotgun.png" id="23"]
+[ext_resource type="Script" path="res://src/ui/CoordinateTextUI.cs" id="25"]
+[ext_resource type="AudioStream" uid="uid://ca22jlvlqy58i" path="res://sounds/marprod.wav" id="26"]
+[ext_resource type="AudioStream" uid="uid://daiesrh32pba2" path="res://sounds/shotgun.wav" id="27"]
+[ext_resource type="AudioStream" uid="uid://d0govxdavin7y" path="res://sounds/summon.wav" id="28"]
+[ext_resource type="Script" path="res://src/ui/BossUI.cs" id="28_utktg"]
+[ext_resource type="AudioStream" uid="uid://bnfk403lewvry" path="res://sounds/pistol.wav" id="29"]
 
-[node name="World" type="Spatial"]
-script = ExtResource( 5 )
+[sub_resource type="Environment" id="Environment_a61qj"]
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_energy = 0.25
+fog_density = 0.02
+
+[node name="World" type="Node3D"]
+script = ExtResource("5")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_a61qj")
 
 [node name="Mesher" type="Node" parent="."]
-script = ExtResource( 1 )
-ChunkMaterial = ExtResource( 3 )
+script = ExtResource("1")
+ChunkMaterial = ExtResource("3")
 
 [node name="DebugDrawer" type="Node" parent="."]
-script = ExtResource( 11 )
-Color = Color( 1, 0, 0, 1 )
+script = ExtResource("11")
+Color = Color(1, 0, 0, 1)
 
 [node name="ItemLoader" type="Node" parent="."]
-script = ExtResource( 7 )
-GunTexture = ExtResource( 14 )
-ShotgunTexture = ExtResource( 23 )
-ExplosiveBulletTexture = ExtResource( 22 )
-TrackingBulletTexture = ExtResource( 21 )
-MarpRodTexture = ExtResource( 9 )
-CursedIdolTexture = ExtResource( 10 )
-GunSound = ExtResource( 29 )
-ShotgunSound = ExtResource( 27 )
-MarpRodSound = ExtResource( 26 )
-CursedIdolSound = ExtResource( 28 )
+script = ExtResource("7")
+GunTexture = ExtResource("14")
+ShotgunTexture = ExtResource("23")
+ExplosiveBulletTexture = ExtResource("22")
+TrackingBulletTexture = ExtResource("21")
+MarpRodTexture = ExtResource("9")
+CursedIdolTexture = ExtResource("10")
+GunSound = ExtResource("29")
+ShotgunSound = ExtResource("27")
+MarpRodSound = ExtResource("26")
+CursedIdolSound = ExtResource("28")
 
-[node name="DirectionalLight" type="DirectionalLight" parent="."]
-transform = Transform( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
+[node name="Settings" type="Node" parent="."]
+script = ExtResource("8")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066)
+light_color = Color(1, 0.988235, 0.941176, 1)
+light_energy = 1.5
 shadow_enabled = true
+shadow_bias = 0.05
+directional_shadow_max_distance = 500.0
 
-[node name="TextureRect" type="TextureRect" parent="DirectionalLight"]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-margin_left = -16.0
-margin_top = -16.0
-margin_right = 16.0
-margin_bottom = 16.0
-texture = ExtResource( 4 )
-
-[node name="Player" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0 )
-script = ExtResource( 2 )
-Size = Vector3( 0.7, 1.8, 0.7 )
-InitialPosition = Vector3( 0, 25, 0 )
+[node name="Player" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0)
+script = ExtResource("2")
 InitialTeamName = "player"
 InitialHealth = 10.0
 InvincibilitySeconds = 0.1
 ContactDamage = 0.0
+Size = Vector3(0.7, 1.8, 0.7)
+InitialPosition = Vector3(0, 25, 0)
 
-[node name="Camera" type="Camera" parent="Player"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0 )
+[node name="Camera3D" type="Camera3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 fov = 90.0
 far = 5000.0
-script = ExtResource( 6 )
+script = ExtResource("6")
+
+[node name="Crosshair" type="TextureRect" parent="Player/Camera3D"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+texture = ExtResource("4")
 
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="Player"]
 
-[node name="Settings" type="Node" parent="."]
-script = ExtResource( 8 )
-
 [node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource( 13 )
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("13")
 HealthBar = NodePath("HealthBar")
 Inventory = NodePath("InventoryUI")
 MouseInventory = NodePath("FollowMouse/MouseInventoryUI")
 RecipeList = NodePath("ScrollContainer/RecipeList")
 CoordinateText = NodePath("DebugArea/CoordinateLabel")
 
-[node name="HealthBar" parent="UI" instance=ExtResource( 12 )]
+[node name="HealthBar" parent="UI" instance=ExtResource("12")]
+anchors_preset = 0
 anchor_right = 0.2
 anchor_bottom = 0.05
-margin_right = 0.0
-margin_bottom = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 
-[node name="InventoryUI" parent="UI" instance=ExtResource( 15 )]
+[node name="InventoryUI" parent="UI" instance=ExtResource("15")]
 visible = false
+layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -200.0
-margin_top = -200.0
-margin_right = 200.0
-margin_bottom = 200.0
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
 
 [node name="FollowMouse" type="Control" parent="UI"]
-margin_left = 600.0
-margin_right = 640.0
-margin_bottom = 40.0
+anchors_preset = 0
+offset_left = 600.0
+offset_right = 640.0
+offset_bottom = 40.0
 mouse_filter = 2
-script = ExtResource( 18 )
+script = ExtResource("18")
 
 [node name="MouseInventoryUI" type="Control" parent="UI/FollowMouse"]
-margin_right = 64.0
-margin_bottom = 64.0
+anchors_preset = 0
+offset_right = 64.0
+offset_bottom = 64.0
 mouse_filter = 2
-script = ExtResource( 17 )
-ItemSlotUI = ExtResource( 16 )
+script = ExtResource("17")
+ItemSlotUI = ExtResource("16")
 Padding = 0
 
 [node name="ScrollContainer" type="ScrollContainer" parent="UI"]
 visible = false
+layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = 208.0
-margin_top = -200.0
-margin_right = 478.0
-margin_bottom = 200.0
-scroll_horizontal_enabled = false
+offset_left = 208.0
+offset_top = -200.0
+offset_right = 478.0
+offset_bottom = 200.0
 
 [node name="RecipeList" type="Control" parent="UI/ScrollContainer"]
-script = ExtResource( 19 )
-CraftingRecipeUI = ExtResource( 20 )
+layout_mode = 2
+script = ExtResource("19")
+CraftingRecipeUI = ExtResource("20")
 Padding = 2
 
 [node name="BossHPPanel" type="Panel" parent="UI"]
 visible = false
+layout_mode = 0
 anchor_left = 0.4
 anchor_right = 0.6
 anchor_bottom = 0.05
-script = ExtResource( 24 )
+script = ExtResource("28_utktg")
 HealthBarPath = NodePath("HealthBar")
 NameLabelPath = NodePath("Label")
 
-[node name="HealthBar" parent="UI/BossHPPanel" instance=ExtResource( 12 )]
+[node name="HealthBar" parent="UI/BossHPPanel" instance=ExtResource("12")]
+anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 0.75
-margin_right = 0.0
-margin_bottom = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 
 [node name="Label" type="Label" parent="UI/BossHPPanel"]
+layout_mode = 0
 anchor_top = 0.75
 anchor_right = 1.0
 anchor_bottom = 1.0
 text = "Patrick Quack"
-align = 1
-valign = 1
 
 [node name="DebugArea" type="Control" parent="UI"]
+anchors_preset = 0
 anchor_left = 0.9
 anchor_right = 1.0
 anchor_bottom = 0.25
 
 [node name="CoordinateLabel" type="Label" parent="UI/DebugArea"]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 0.5
 text = "(-12, 12, 12)"
-autowrap = true
-script = ExtResource( 25 )
+script = ExtResource("25")
 
 [connection signal="on_pause" from="Settings" to="UI/InventoryUI" method="OnPause"]
 [connection signal="on_pause" from="Settings" to="UI/ScrollContainer/RecipeList" method="OnPause"]

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Godot;
 
-public class TreeStructureProvider : StructureProvider
+public partial class TreeStructureProvider : StructureProvider
 {
     private const int LEAF_SIZE = 4;
     private const int TRUNK_HEIGHT = 7;
@@ -42,7 +42,7 @@ public class TreeStructureProvider : StructureProvider
             {
                 for (int z = -LEAF_SIZE; z <= LEAF_SIZE; z++)
                 {
-                    float sample = BASE_DIST+(Mathf.Abs(x)+Mathf.Abs(y)+Mathf.Abs(z))*(1+0.5f*leafNoise.GetNoise(FREQ*(position.x+x),FREQ*(position.y+y),FREQ*(position.z+z))); //0..3*LEAF_SIZE
+                    float sample = BASE_DIST+(Mathf.Abs(x)+Mathf.Abs(y)+Mathf.Abs(z))*(1+0.5f*leafNoise.GetNoise(FREQ*(position.X+x),FREQ*(position.Y+y),FREQ*(position.Z+z))); //0..3*LEAF_SIZE
                     if (sample < CUTOFF) c.SetIfNull(new BlockCoord(x,y+TRUNK_HEIGHT,z)+position, leaves);
                 }
             }

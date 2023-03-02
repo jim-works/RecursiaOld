@@ -1,13 +1,14 @@
 [remap]
 
 importer="wav"
-type="AudioStreamSample"
-path="res://.import/shotgun.wav-e0a52da45436a45debff1d19ad85157f.sample"
+type="AudioStreamWAV"
+uid="uid://daiesrh32pba2"
+path="res://.godot/imported/shotgun.wav-e0a52da45436a45debff1d19ad85157f.sample"
 
 [deps]
 
 source_file="res://sounds/shotgun.wav"
-dest_files=[ "res://.import/shotgun.wav-e0a52da45436a45debff1d19ad85157f.sample" ]
+dest_files=["res://.godot/imported/shotgun.wav-e0a52da45436a45debff1d19ad85157f.sample"]
 
 [params]
 
@@ -17,5 +18,7 @@ force/max_rate=false
 force/max_rate_hz=44100
 edit/trim=false
 edit/normalize=false
-edit/loop=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
 compress/mode=0

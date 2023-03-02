@@ -2,74 +2,74 @@ using System.IO;
 
 public struct ChunkCoord
 {
-    public int x, y,z;
-    public ChunkCoord(int x, int y, int z)
+    public int X, Y,Z;
+    public ChunkCoord(int X, int Y, int Z)
     {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.X = X;
+        this.Y = Y;
+        this.Z = Z;
     }
-    public int sqrMag() { return x * x + y * y + z*z; }
+    public int sqrMag() { return X * X + Y * Y + Z*Z; }
     public void Serialize(BinaryWriter bw)
     {
-        bw.Write(x);
-        bw.Write(y);
-        bw.Write(z);
+        bw.Write(X);
+        bw.Write(Y);
+        bw.Write(Z);
     }
     public void Deserialize(BinaryReader br)
     {
-        x = br.ReadInt32();
-        y = br.ReadInt32();
-        z = br.ReadInt32();
+        X = br.ReadInt32();
+        Y = br.ReadInt32();
+        Z = br.ReadInt32();
     }
     public static ChunkCoord operator +(ChunkCoord lhs, ChunkCoord rhs)
     {
-        return new ChunkCoord(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z+rhs.z);
+        return new ChunkCoord(lhs.X + rhs.X, lhs.Y + rhs.Y, lhs.Z+rhs.Z);
     }
     public static ChunkCoord operator -(ChunkCoord lhs, ChunkCoord rhs)
     {
-        return new ChunkCoord(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z-rhs.z);
+        return new ChunkCoord(lhs.X - rhs.X, lhs.Y - rhs.Y, lhs.Z-rhs.Z);
     }
     public static ChunkCoord operator *(int lhs, ChunkCoord rhs)
     {
-        return new ChunkCoord(lhs * rhs.x, lhs * rhs.y, lhs*rhs.z);
+        return new ChunkCoord(lhs * rhs.X, lhs * rhs.Y, lhs*rhs.Z);
     }
     //rounds down, opposed to normal integer division which rounds towards 0
     public static ChunkCoord operator /(ChunkCoord lhs, int rhs)
     {
-        return new ChunkCoord(Divide.ToNegative(lhs.x,rhs), Divide.ToNegative(lhs.y,rhs), Divide.ToNegative(lhs.z, rhs));
+        return new ChunkCoord(Divide.ToNegative(lhs.X,rhs), Divide.ToNegative(lhs.Y,rhs), Divide.ToNegative(lhs.Z, rhs));
     }
     //returns positive modulus of each coordinate (ex: (-1,0,0)%16=(15,0,0))
     public static ChunkCoord operator %(ChunkCoord lhs, int rhs)
     {
-        ChunkCoord coords = new ChunkCoord(lhs.x%rhs,lhs.y%rhs,lhs.z%rhs);
-        coords.x = coords.x < 0 ? coords.x + rhs : coords.x;
-        coords.y = coords.y < 0 ? coords.y + rhs : coords.y;
-        coords.z = coords.z < 0 ? coords.z + rhs : coords.z;
+        ChunkCoord coords = new ChunkCoord(lhs.X%rhs,lhs.Y%rhs,lhs.Z%rhs);
+        coords.X = coords.X < 0 ? coords.X + rhs : coords.X;
+        coords.Y = coords.Y < 0 ? coords.Y + rhs : coords.Y;
+        coords.Z = coords.Z < 0 ? coords.Z + rhs : coords.Z;
         return coords;
     }
     public static bool operator ==(ChunkCoord lhs, ChunkCoord rhs)
     {
-        return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z;
+        return lhs.X == rhs.X && lhs.Y == rhs.Y && lhs.Z == rhs.Z;
     }
     public static bool operator !=(ChunkCoord lhs, ChunkCoord rhs)
     {
-        return lhs.x != rhs.x || lhs.y != rhs.y || lhs.z != rhs.z;
+        return lhs.X != rhs.X || lhs.Y != rhs.Y || lhs.Z != rhs.Z;
     }
     //rounds each coordinate down, opposed to normal int casting which rounds towards 0
     public static explicit operator ChunkCoord(BlockCoord conv)
     {
         BlockCoord c = conv/Chunk.CHUNK_SIZE;
-        return new ChunkCoord(c.x,c.y,c.z);
+        return new ChunkCoord(c.X,c.Y,c.Z);
     }
     public static explicit operator ChunkCoord(Godot.Vector3 conv)
     {
         BlockCoord c = (BlockCoord)conv/Chunk.CHUNK_SIZE;
-        return new ChunkCoord(c.x,c.y,c.z);
+        return new ChunkCoord(c.X,c.Y,c.Z);
     }
     public override string ToString()
     {
-        return $"({x}, {y}, {z})";
+        return $"({X}, {Y}, {Z})";
     }
     public override bool Equals(object obj)
     {
@@ -83,7 +83,7 @@ public struct ChunkCoord
     {
         unchecked
         {
-            return x.GetHashCode() * 31 + y.GetHashCode() * 17 + z.GetHashCode()*11;
+            return X.GetHashCode() * 31 + Y.GetHashCode() * 17 + Z.GetHashCode()*11;
         }
     }
 }

@@ -1,6 +1,6 @@
 using Godot;
 
-public class SummoningItem : Item
+public partial class SummoningItem : Item
 {
     public PackedScene ToSummon;
     public bool SetToUserTeam = false;
@@ -11,20 +11,20 @@ public class SummoningItem : Item
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
-        Combatant c = ToSummon.Instance<Combatant>();
+        Combatant c = ToSummon.Instantiate<Combatant>();
         //summon randomly in a circle distance away from position
         float angle = GD.Randf()*2*Mathf.Pi;
         Vector3 offset = new Vector3(Mathf.Cos(angle)*Distance,0,Mathf.Sin(angle)*Distance);
         //find open space
         BlockCoord summonPos = (BlockCoord)(position+offset);
-        int summonY = summonPos.y;
-        for (int y = summonPos.y; y < summonPos.y+MaxCheckHeight; y++)
+        int summonY = summonPos.Y;
+        for (int y = summonPos.Y; y < summonPos.Y+MaxCheckHeight; y++)
         {
             summonY=y;
-            if (World.Singleton.GetBlock(new BlockCoord(summonPos.x,y,summonPos.z)) == null) break; //open space found
+            if (World.Singleton.GetBlock(new BlockCoord(summonPos.X,y,summonPos.Z)) == null) break; //open space found
         }
         World.Singleton.AddChild(c);
-        c.Position = new Vector3(position.x+offset.x,summonY,position.z+offset.z);
+        c.GlobalPosition = new Vector3(position.X+offset.X,summonY,position.Z+offset.Z);
         if (SetToUserTeam) c.Team = user.Team;
 
         if (ConsumeOnUse) source.Size--;

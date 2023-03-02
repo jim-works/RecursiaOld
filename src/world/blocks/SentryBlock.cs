@@ -1,4 +1,4 @@
-// public class SentryBlock : TickableBlock
+// public partial class SentryBlock : TickableBlock
 // {
 
 // }

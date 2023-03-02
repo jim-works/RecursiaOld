@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 
 //leaf node of region octree structure
-public class Chunk : Region
+public partial class Chunk : Region
 {
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
@@ -24,8 +24,8 @@ public class Chunk : Region
     }
 
     public Block this[BlockCoord index] {
-        get {return Blocks[index.x,index.y,index.z];}
-        set {Blocks[index.x,index.y,index.z] = value;}
+        get {return Blocks[index.X,index.Y,index.Z];}
+        set {Blocks[index.X,index.Y,index.Z] = value;}
     }
     public Block this[int x, int y, int z] {
         get {return Blocks[x,y,z];}

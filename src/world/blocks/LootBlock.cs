@@ -1,6 +1,6 @@
 using Godot;
 
-public class LootBlock : Block
+public partial class LootBlock : Block
 {
     public ItemStack[] Drops;
 

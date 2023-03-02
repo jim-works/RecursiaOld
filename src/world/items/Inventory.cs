@@ -1,6 +1,6 @@
 using Godot;
 
-public class Inventory
+public partial class Inventory
 {
     public ItemStack[] Items;
     public int Size {get => Items.Length;}
