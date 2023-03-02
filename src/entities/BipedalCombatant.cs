@@ -1,6 +1,6 @@
 using Godot;
 
-public class BipedalCombatant : Combatant
+public partial class BipedalCombatant : Combatant
 {
     [Export] public NodePath AnimationTreePath;
     [Export] public string WalkBlendNode = "walk-blend";
@@ -15,28 +15,28 @@ public class BipedalCombatant : Combatant
     protected AnimationTree animationTree;
     private bool lFootOnGround = false;
     private bool rFootOnGround = false;
-    private Spatial lFootTarget;
-    private Spatial rFootTarget;
+    private Node3D lFootTarget;
+    private Node3D rFootTarget;
 
     public override void _Ready()
     {
         animationTree = GetNode<AnimationTree>(AnimationTreePath);
-        lFootTarget = GetNode<Spatial>(LFootBottom);
-        rFootTarget = GetNode<Spatial>(RFootBottom);
+        lFootTarget = GetNode<Node3D>(LFootBottom);
+        rFootTarget = GetNode<Node3D>(RFootBottom);
         base._Ready();
     }
 
-    public override void _PhysicsProcess(float dt)
+    public override void _PhysicsProcess(double dt)
     {
         if (SetSpeedToWalk) {
-            animationTree.Set($"parameters/{WalkBlendNode}/TimeScale/scale", new Vector3(Velocity.x,0,Velocity.z).Length()/StrideLength);
+            animationTree.Set($"parameters/{WalkBlendNode}/TimeScale/scale", new Vector3(Velocity.X,0,Velocity.Z).Length()/StrideLength);
         }
-        float currSlope = Mathf.Max(getFootHeight(lFootTarget.GlobalTransform.origin), getFootHeight(rFootTarget.GlobalTransform.origin));
+        float currSlope = Mathf.Max(getFootHeight(lFootTarget.GlobalPosition), getFootHeight(rFootTarget.GlobalPosition));
         if (currSlope >= MaxSlope) {
             Velocity = Vector3.Zero;
             collisionDirections = 0xff; //inside wall, so colliding in all directions
         } else {
-            Position = new Vector3(Position.x, Position.y + currSlope, Position.z);
+            GlobalPosition = new Vector3(GlobalPosition.X, GlobalPosition.Y + currSlope, GlobalPosition.Z);
             collisionDirections = 0 | (onGround() ? 1 : 0 << (int)Direction.NegY); //update if we are on ground or not
         }
         base._PhysicsProcess(dt);
@@ -50,24 +50,24 @@ public class BipedalCombatant : Combatant
     //returns the distance the foot needs to raise to be above the ground
     private float getFootHeight(Vector3 footTargetGlobal)
     {
-        Vector3 start = new Vector3(footTargetGlobal.x,footTargetGlobal.y+MaxSlope,footTargetGlobal.z);
+        Vector3 start = new Vector3(footTargetGlobal.X,footTargetGlobal.Y+MaxSlope,footTargetGlobal.Z);
         BlockcastHit hit = World.Singleton.Blockcast(start,new Vector3(0,-MaxSlope, 0));
         if (hit == null) return 0;
-        return hit.HitPos.y-footTargetGlobal.y;
+        return hit.HitPos.Y-footTargetGlobal.Y;
     }
 
     protected override void doCollision(World world, float dt)
     {
         updateGrounded();
         if (onGround()) {
-            Velocity.y = Mathf.Max(0,Velocity.y);
+            Velocity.Y = Mathf.Max(0,Velocity.Y);
         }
     }
 
     private void updateGrounded()
     {
-        lFootOnGround = World.Singleton.Blockcast(lFootTarget.GlobalTransform.origin, new Vector3(0,-0.05f,0)) != null;
-        rFootOnGround = World.Singleton.Blockcast(rFootTarget.GlobalTransform.origin, new Vector3(0,-0.05f,0)) != null;
+        lFootOnGround = World.Singleton.Blockcast(lFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
+        rFootOnGround = World.Singleton.Blockcast(rFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
     }
 
     private bool onGround() => lFootOnGround || rFootOnGround;

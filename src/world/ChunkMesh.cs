@@ -1,10 +1,11 @@
 using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
+using System;
 
-public class ChunkMesh
+public partial class ChunkMesh
 {
-    private Array data;
+    private Godot.Collections.Array data;
     private ArrayMesh arrayMesh;
 
     public List<Vector3> Verts {get; private set;} = new List<Vector3>();
@@ -12,25 +13,26 @@ public class ChunkMesh
     public List<Vector3> Norms {get; private set;} = new List<Vector3>();
     public List<Vector2> UVs {get; private set;} = new List<Vector2>();
 
-    public MeshInstance Node {get; private set;}
+    public MeshInstance3D Node {get; private set;}
 
     public ChunkMesh()
     {
         //setup mesh array
-        data = new Array();
+        data = new Godot.Collections.Array();
         arrayMesh = new ArrayMesh();
         data.Resize((int)ArrayMesh.ArrayType.Max);
     }
-    public void ApplyTo(MeshInstance node, Material mat)
+    public void ApplyTo(MeshInstance3D node, Material mat)
     {
-        data[(int)ArrayMesh.ArrayType.Vertex] = Verts;
-        data[(int)ArrayMesh.ArrayType.Index] = Tris;
-        data[(int)ArrayMesh.ArrayType.Normal] = Norms;
-        data[(int)ArrayMesh.ArrayType.TexUv] = UVs;
+        //TODO: make this more efficient
+        data[(int)ArrayMesh.ArrayType.Vertex] = Variant.CreateFrom(new Span<Vector3>(Verts.ToArray()));
+        data[(int)ArrayMesh.ArrayType.Index] = Variant.CreateFrom(new Span<int>(Tris.ToArray()));
+        data[(int)ArrayMesh.ArrayType.Normal] = Variant.CreateFrom(new Span<Vector3>(Norms.ToArray()));
+        data[(int)ArrayMesh.ArrayType.TexUV] = Variant.CreateFrom(new Span<Vector2>(UVs.ToArray()));
         arrayMesh.ClearSurfaces();
         arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, data);
         node.Mesh = arrayMesh;
-        node.SetSurfaceMaterial(0, mat);
+        node.SetSurfaceOverrideMaterial(0, mat);
         Node = node;
     }
     public void ClearData()

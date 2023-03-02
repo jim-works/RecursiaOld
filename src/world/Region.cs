@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 //Octtree above chunks
-public class Region
+public partial class Region
 {
     public enum Octant
     {
@@ -46,14 +46,14 @@ public class Region
     public bool InRegion(BlockCoord coord)
     {
         BlockCoord delta = coord-Origin;
-        return delta.x>=0&&delta.y>=0&&delta.z>=0&&delta.x<(int)Size && delta.y < (int)Size && delta.z < (int)Size;
+        return delta.X>=0&&delta.Y>=0&&delta.Z>=0&&delta.X<(int)Size && delta.Y < (int)Size && delta.Z < (int)Size;
     }
     //assumes in region
     public int GetOctantId(BlockCoord coord)
     {
         BlockCoord delta = coord-Origin;
         //construct mask according to octant enum
-        return (delta.x<OctantSize?0:1) << 2 | (delta.y < OctantSize?0:1) << 1 | (delta.z < OctantSize?0:1);
+        return (delta.X<OctantSize?0:1) << 2 | (delta.Y < OctantSize?0:1) << 1 | (delta.Z < OctantSize?0:1);
     }
     public Octant GetOctant(BlockCoord coord)
     {
@@ -63,9 +63,9 @@ public class Region
     {
         //check each bit in id mask
         BlockCoord delta = new BlockCoord(0,0,0);
-        if ((id & 0b100) == 0b100) delta.x += (int)OctantSize;
-        if ((id & 0b010) == 0b010) delta.y += (int)OctantSize;
-        if ((id & 0b001) == 0b001) delta.z += (int)OctantSize;
+        if ((id & 0b100) == 0b100) delta.X += (int)OctantSize;
+        if ((id & 0b010) == 0b010) delta.Y += (int)OctantSize;
+        if ((id & 0b001) == 0b001) delta.Z += (int)OctantSize;
         return Origin+delta;
     }
 

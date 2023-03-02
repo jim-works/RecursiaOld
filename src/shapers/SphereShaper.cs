@@ -3,16 +3,16 @@ using Godot;
 
 public static class SphereShaper
 {
-    public static void Shape(World world, Vector3 origin, float strength)
+    public static void Shape3D(World world, Vector3 origin, float strength)
     {
-        BlockCoord minBounds = new BlockCoord((int)(origin.x-strength),(int)(origin.y-strength),(int)(origin.z-strength));
-        BlockCoord maxBounds = new BlockCoord((int)(origin.x + strength), (int)(origin.y + strength), (int)(origin.z + strength));
+        BlockCoord minBounds = new BlockCoord((int)(origin.X-strength),(int)(origin.Y-strength),(int)(origin.Z-strength));
+        BlockCoord maxBounds = new BlockCoord((int)(origin.X + strength), (int)(origin.Y + strength), (int)(origin.Z + strength));
         BlockCoord originInt = (BlockCoord)origin;
-        for (int x = minBounds.x; x < maxBounds.x; x++)
+        for (int x = minBounds.X; x < maxBounds.X; x++)
         {
-            for (int y = minBounds.y; y < maxBounds.y; y++)
+            for (int y = minBounds.Y; y < maxBounds.Y; y++)
             {
-                for (int z = minBounds.z; z < maxBounds.z; z++)
+                for (int z = minBounds.Z; z < maxBounds.Z; z++)
                 {
                     BlockCoord p = new BlockCoord(x,y,z);
                     float sqrDist = (p-originInt).sqrMag();

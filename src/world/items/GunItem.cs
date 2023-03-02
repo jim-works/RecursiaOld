@@ -1,6 +1,6 @@
 using Godot;
 
-public class GunItem : WeaponItem
+public partial class GunItem : WeaponItem
 {
     public float ShootSpeed = 50;
     public int AmmoPerShot=1;

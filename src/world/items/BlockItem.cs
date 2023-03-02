@@ -1,6 +1,6 @@
 using Godot;
 
-public class BlockItem : Item
+public partial class BlockItem : Item
 {
     public Block Placing;
     public float Reach = 10;

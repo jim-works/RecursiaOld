@@ -3,26 +3,26 @@
 [ext_resource path="res://src/world/Mesher.cs" type="Script" id=1]
 [ext_resource path="res://src/entities/Player.cs" type="Script" id=2]
 [ext_resource path="res://materials/chunkmaterial.tres" type="Material" id=3]
-[ext_resource path="res://textures/crosshair.png" type="Texture" id=4]
+[ext_resource path="res://textures/crosshair.png" type="Texture2D" id=4]
 [ext_resource path="res://src/world/World.cs" type="Script" id=5]
 [ext_resource path="res://src/camera/RotatingCamera.cs" type="Script" id=6]
 [ext_resource path="res://src/world/items/ItemLoader.cs" type="Script" id=7]
 [ext_resource path="res://src/settings/Settings.cs" type="Script" id=8]
-[ext_resource path="res://textures/marp_rod.png" type="Texture" id=9]
-[ext_resource path="res://textures/cursed_idol.png" type="Texture" id=10]
+[ext_resource path="res://textures/marp_rod.png" type="Texture2D" id=9]
+[ext_resource path="res://textures/cursed_idol.png" type="Texture2D" id=10]
 [ext_resource path="res://src/ui/debug/DebugDraw.cs" type="Script" id=11]
 [ext_resource path="res://objects/HealthBar.tscn" type="PackedScene" id=12]
 [ext_resource path="res://src/ui/PlayerUIAssignment.cs" type="Script" id=13]
-[ext_resource path="res://textures/gun.png" type="Texture" id=14]
+[ext_resource path="res://textures/gun.png" type="Texture2D" id=14]
 [ext_resource path="res://objects/InventoryUI.tscn" type="PackedScene" id=15]
 [ext_resource path="res://objects/MouseItemSlot.tscn" type="PackedScene" id=16]
 [ext_resource path="res://src/ui/InventoryUI.cs" type="Script" id=17]
 [ext_resource path="res://src/ui/FollowMouse.gd" type="Script" id=18]
 [ext_resource path="res://src/ui/RecipeListUI.cs" type="Script" id=19]
 [ext_resource path="res://objects/CraftingRecipeUI.tscn" type="PackedScene" id=20]
-[ext_resource path="res://textures/tracking_bullet.png" type="Texture" id=21]
-[ext_resource path="res://textures/explosive_bullet.png" type="Texture" id=22]
-[ext_resource path="res://textures/shotgun.png" type="Texture" id=23]
+[ext_resource path="res://textures/tracking_bullet.png" type="Texture2D" id=21]
+[ext_resource path="res://textures/explosive_bullet.png" type="Texture2D" id=22]
+[ext_resource path="res://textures/shotgun.png" type="Texture2D" id=23]
 [ext_resource path="res://BossUI.cs" type="Script" id=24]
 [ext_resource path="res://src/ui/CoordinateTextUI.cs" type="Script" id=25]
 [ext_resource path="res://sounds/marprod.wav" type="AudioStream" id=26]
@@ -30,7 +30,7 @@
 [ext_resource path="res://sounds/summon.wav" type="AudioStream" id=28]
 [ext_resource path="res://sounds/pistol.wav" type="AudioStream" id=29]
 
-[node name="World" type="Spatial"]
+[node name="World" type="Node3D"]
 script = ExtResource( 5 )
 
 [node name="Mesher" type="Node" parent="."]
@@ -54,23 +54,23 @@ ShotgunSound = ExtResource( 27 )
 MarpRodSound = ExtResource( 26 )
 CursedIdolSound = ExtResource( 28 )
 
-[node name="DirectionalLight" type="DirectionalLight" parent="."]
-transform = Transform( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D( 0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066 )
 shadow_enabled = true
 
-[node name="TextureRect" type="TextureRect" parent="DirectionalLight"]
+[node name="TextureRect" type="TextureRect" parent="DirectionalLight3D"]
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -16.0
-margin_top = -16.0
-margin_right = 16.0
-margin_bottom = 16.0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
 texture = ExtResource( 4 )
 
-[node name="Player" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0 )
+[node name="Player" type="Node3D" parent="."]
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0 )
 script = ExtResource( 2 )
 Size = Vector3( 0.7, 1.8, 0.7 )
 InitialPosition = Vector3( 0, 25, 0 )
@@ -79,8 +79,8 @@ InitialHealth = 10.0
 InvincibilitySeconds = 0.1
 ContactDamage = 0.0
 
-[node name="Camera" type="Camera" parent="Player"]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0 )
+[node name="Camera3D" type="Camera3D" parent="Player"]
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0 )
 fov = 90.0
 far = 5000.0
 script = ExtResource( 6 )
@@ -103,8 +103,8 @@ CoordinateText = NodePath("DebugArea/CoordinateLabel")
 [node name="HealthBar" parent="UI" instance=ExtResource( 12 )]
 anchor_right = 0.2
 anchor_bottom = 0.05
-margin_right = 0.0
-margin_bottom = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 
 [node name="InventoryUI" parent="UI" instance=ExtResource( 15 )]
 visible = false
@@ -112,21 +112,21 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = -200.0
-margin_top = -200.0
-margin_right = 200.0
-margin_bottom = 200.0
+offset_left = -200.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = 200.0
 
 [node name="FollowMouse" type="Control" parent="UI"]
-margin_left = 600.0
-margin_right = 640.0
-margin_bottom = 40.0
+offset_left = 600.0
+offset_right = 640.0
+offset_bottom = 40.0
 mouse_filter = 2
 script = ExtResource( 18 )
 
 [node name="MouseInventoryUI" type="Control" parent="UI/FollowMouse"]
-margin_right = 64.0
-margin_bottom = 64.0
+offset_right = 64.0
+offset_bottom = 64.0
 mouse_filter = 2
 script = ExtResource( 17 )
 ItemSlotUI = ExtResource( 16 )
@@ -138,10 +138,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-margin_left = 208.0
-margin_top = -200.0
-margin_right = 478.0
-margin_bottom = 200.0
+offset_left = 208.0
+offset_top = -200.0
+offset_right = 478.0
+offset_bottom = 200.0
 scroll_horizontal_enabled = false
 
 [node name="RecipeList" type="Control" parent="UI/ScrollContainer"]
@@ -161,8 +161,8 @@ NameLabelPath = NodePath("Label")
 [node name="HealthBar" parent="UI/BossHPPanel" instance=ExtResource( 12 )]
 anchor_right = 1.0
 anchor_bottom = 0.75
-margin_right = 0.0
-margin_bottom = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
 
 [node name="Label" type="Label" parent="UI/BossHPPanel"]
 anchor_top = 0.75

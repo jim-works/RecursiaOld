@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public class HealthBar : Node
+public partial class HealthBar : Node
 {
     [Export]
     public Combatant Tracking;
@@ -14,7 +14,7 @@ public class HealthBar : Node
         healthbar = GetNode<ColorRect>("Health");
     }
 
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
         if (Tracking == null) {
             return;

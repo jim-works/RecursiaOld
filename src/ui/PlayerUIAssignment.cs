@@ -1,6 +1,6 @@
 using Godot;
 
-public class PlayerUIAssignment : Node
+public partial class PlayerUIAssignment : Node
 {
     [Export] public NodePath HealthBar;
     [Export] public NodePath Inventory;

@@ -1,14 +1,14 @@
 using Godot;
 
 //TODO: refactor to data loader
-public class ItemLoader : Node
+public partial class ItemLoader : Node
 {
-    [Export] public Texture GunTexture;
-    [Export] public Texture ShotgunTexture;
-    [Export] public Texture ExplosiveBulletTexture;
-    [Export] public Texture TrackingBulletTexture;
-    [Export] public Texture MarpRodTexture;
-    [Export] public Texture CursedIdolTexture;
+    [Export] public Texture2D GunTexture;
+    [Export] public Texture2D ShotgunTexture;
+    [Export] public Texture2D ExplosiveBulletTexture;
+    [Export] public Texture2D TrackingBulletTexture;
+    [Export] public Texture2D MarpRodTexture;
+    [Export] public Texture2D CursedIdolTexture;
 
     [Export] public AudioStream GunSound;
     [Export] public AudioStream ShotgunSound;
@@ -25,7 +25,7 @@ public class ItemLoader : Node
     public void Load()
     {
         ItemTypes.CreateType("gun", new GunItem {
-            Texture = GunTexture,
+            Texture2D = GunTexture,
             MaxStack=1,
             Name="gun",
             Damage=2,
@@ -33,7 +33,7 @@ public class ItemLoader : Node
             UseSound = GunSound,
         });
         ItemTypes.CreateType("shotgun", new ShotgunItem {
-            Texture = ShotgunTexture,
+            Texture2D = ShotgunTexture,
             MaxStack=1,
             Name="shotgun",
             Damage=0,
@@ -41,19 +41,19 @@ public class ItemLoader : Node
             UseSound = ShotgunSound,
         });
         ItemTypes.CreateType("explosive_bullet", new BulletItem {
-            Texture=ExplosiveBulletTexture,
+            Texture2D=ExplosiveBulletTexture,
             Name="explosive bullet",
             Damage=5,
             ProjectileScene = GD.Load<PackedScene>("res://objects/ExplosiveBullet.tscn")
         });
         ItemTypes.CreateType("tracking_bullet", new BulletItem {
-            Texture=TrackingBulletTexture,
+            Texture2D=TrackingBulletTexture,
             Name="tracking bullet",
             Damage=1,
             ProjectileScene = GD.Load<PackedScene>("res://objects/TrackingBullet.tscn")
         });
         ItemTypes.CreateType("marp_rod", new SummoningItem {
-            Texture=MarpRodTexture,
+            Texture2D=MarpRodTexture,
             Name="marp rod",
             ToSummon = GD.Load<PackedScene>("res://objects/enemies/Marp.tscn"),
             SetToUserTeam = true,
@@ -61,7 +61,7 @@ public class ItemLoader : Node
             UseSound = MarpRodSound,
         });
         ItemTypes.CreateType("cursed_idol", new SummoningItem {
-            Texture=CursedIdolTexture,
+            Texture2D=CursedIdolTexture,
             Name="cursed idol",
             ToSummon = GD.Load<PackedScene>("res://objects/enemies/PatrickQuack.tscn"),
             SetToUserTeam = false,

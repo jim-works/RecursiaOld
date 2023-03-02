@@ -4,10 +4,10 @@
 [ext_resource path="res://objects/Link.tscn" type="PackedScene" id=2]
 [ext_resource path="res://objects/HealthBar3D.tscn" type="PackedScene" id=3]
 
-[sub_resource type="CubeMesh" id=1]
+[sub_resource type="BoxMesh" id=1]
 size = Vector3( 1, 1, 1 )
 
-[node name="Chain" type="MeshInstance"]
+[node name="Chain" type="MeshInstance3D"]
 mesh = SubResource( 1 )
 material/0 = null
 script = ExtResource( 1 )

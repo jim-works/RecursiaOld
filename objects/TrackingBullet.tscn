@@ -11,7 +11,7 @@ _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), 0.0, 0.0, 0, 0 ]
 [sub_resource type="CurveTexture" id=5]
 curve = SubResource( 4 )
 
-[sub_resource type="ParticlesMaterial" id=2]
+[sub_resource type="ParticleProcessMaterial" id=2]
 emission_shape = 1
 emission_sphere_radius = 0.25
 spread = 180.0
@@ -21,9 +21,9 @@ scale = 0.05
 scale_curve = SubResource( 5 )
 color = Color( 0.121569, 0.121569, 0.121569, 1 )
 
-[sub_resource type="CubeMesh" id=3]
+[sub_resource type="BoxMesh" id=3]
 
-[node name="Bullet" type="MeshInstance"]
+[node name="Bullet" type="MeshInstance3D"]
 mesh = SubResource( 1 )
 material/0 = null
 script = ExtResource( 1 )

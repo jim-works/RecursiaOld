@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 //Faces of blocks are on integral coordinates
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
-public class World : Node
+public partial class World : Node
 {
     public static World Singleton;
     public ChunkCollection Chunks = new ChunkCollection();
@@ -13,14 +13,14 @@ public class World : Node
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public List<Combatant> Combatants = new List<Combatant>();
     public List<Player> Players = new List<Player>();
-    public HashSet<Spatial> ChunkLoaders = new HashSet<Spatial>();
+    public HashSet<Node3D> ChunkLoaders = new HashSet<Node3D>();
     public WorldGenerator WorldGen;
     private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
 
-    private float chunkLoadingInterval = 0.5f; //seconds per chunk loading update
-    private float _chunkLoadingTimer = 0;
+    private double chunkLoadingInterval = 0.5f; //seconds per chunk loading update
+    private double _chunkLoadingTimer = 0;
     
     [Export] private int loadDistance = 10;
 
@@ -37,7 +37,7 @@ public class World : Node
         doChunkLoading();
     }
 
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
         WorldGen.GetFinishedChunks(fromWorldGen);
         foreach (var item in fromWorldGen)
@@ -58,7 +58,7 @@ public class World : Node
         Player minPlayer = null;
         foreach(var Player in Players)
         {
-            float sqrDist = (pos-Player.Position).LengthSquared();
+            float sqrDist = (pos-Player.GlobalPosition).LengthSquared();
             if (sqrDist < minSqrDist) {
                 minSqrDist = sqrDist;
                 minPlayer = Player;
@@ -72,7 +72,7 @@ public class World : Node
         enemy = null;
         foreach(var c in Combatants)
         {
-            float sqrDist = (pos-c.Position).LengthSquared();
+            float sqrDist = (pos-c.GlobalPosition).LengthSquared();
             if (sqrDist < minSqrDist && c.Team != team) {
                 minSqrDist = sqrDist;
                 enemy = c;
@@ -95,9 +95,9 @@ public class World : Node
         _chunkLoadingTimer = 0;
         loadedChunks.Clear();
         toUnload.Clear();
-        foreach (Spatial loader in ChunkLoaders)
+        foreach (Node3D loader in ChunkLoaders)
         {
-            ChunkCoord center = (ChunkCoord)loader.GlobalTransform.origin;
+            ChunkCoord center = (ChunkCoord)loader.GlobalPosition;
             for (int x = -loadDistance; x <= loadDistance; x++)
             {
                 for (int y = -loadDistance; y <= loadDistance; y++)
@@ -188,27 +188,27 @@ public class World : Node
         if (meshChunk && c.Loaded) {
             Mesher.Singleton.MeshDeferred(c);
             //mesh neighbors if needed
-            if (blockCoords.x == 0 && GetChunk(chunkCoords+new ChunkCoord(-1,0,0)) is Chunk nx)
+            if (blockCoords.X == 0 && GetChunk(chunkCoords+new ChunkCoord(-1,0,0)) is Chunk nx)
             {
                 Mesher.Singleton.MeshDeferred(nx);
             }
-            if (blockCoords.y == 0 && GetChunk(chunkCoords+new ChunkCoord(0,-1,0)) is Chunk ny)
+            if (blockCoords.Y == 0 && GetChunk(chunkCoords+new ChunkCoord(0,-1,0)) is Chunk ny)
             {
                 Mesher.Singleton.MeshDeferred(ny);
             }
-            if (blockCoords.z == 0 && GetChunk(chunkCoords+new ChunkCoord(0,0,-1)) is Chunk nz)
+            if (blockCoords.Z == 0 && GetChunk(chunkCoords+new ChunkCoord(0,0,-1)) is Chunk nz)
             {
                 Mesher.Singleton.MeshDeferred(nz);
             }
-            if (blockCoords.x == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(1,0,0)) is Chunk px)
+            if (blockCoords.X == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(1,0,0)) is Chunk px)
             {
                 Mesher.Singleton.MeshDeferred(px);
             }
-            if (blockCoords.y == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,1,0)) is Chunk py)
+            if (blockCoords.Y == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,1,0)) is Chunk py)
             {
                 Mesher.Singleton.MeshDeferred(py);
             }
-            if (blockCoords.z == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,0,1)) is Chunk pz)
+            if (blockCoords.Z == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,0,1)) is Chunk pz)
             {
                 Mesher.Singleton.MeshDeferred(pz);
             }

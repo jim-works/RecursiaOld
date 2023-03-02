@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public class BossUI : Control
+public partial class BossUI : Control
 {
     public static BossUI Singleton;
 
@@ -20,7 +20,7 @@ public class BossUI : Control
         healthBar = GetNode<HealthBar>(HealthBarPath);
         nameLabel = GetNode<Label>(NameLabelPath);
     }
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
         if (healthBar.Tracking != null && !IsInstanceValid(healthBar.Tracking)) Untrack();
     }

@@ -2,7 +2,7 @@ using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
 
-public class FlyingCamera : Spatial
+public partial class FlyingCamera : Node3D
 {
     [Export]
     public float FlySpeed;
@@ -19,7 +19,6 @@ public class FlyingCamera : Spatial
 
     public override void _Ready()
     {
-        Input.SetMouseMode(Input.MouseMode.Captured);
         World.Singleton.ChunkLoaders.Add(this);
         base._Ready();
     }
@@ -27,33 +26,29 @@ public class FlyingCamera : Spatial
     {
         if (e is InputEventMouseMotion m) {
             Vector2 d = m.Relative;
-            yaw = (yaw - LookSensitivity*d.x) % 360;
-            pitch = System.Math.Min(System.Math.Max(pitch-LookSensitivity*d.y,-90),90);
+            yaw = (yaw - LookSensitivity*d.X) % 360;
+            pitch = System.Math.Min(System.Math.Max(pitch-LookSensitivity*d.Y,-90),90);
             RotationDegrees = new Vector3(pitch,yaw,0);
         }
         base._Input(e);
     }
 
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
-        move(delta);        
-        if (Input.IsActionJustPressed("pause")) {
-            if (Input.GetMouseMode() == Input.MouseMode.Captured) Input.SetMouseMode(Input.MouseMode.Visible);
-            else if (Input.GetMouseMode() == Input.MouseMode.Visible) Input.SetMouseMode(Input.MouseMode.Captured);
-        }
+        move((float)delta);
 
         if (Input.IsActionJustPressed("punch")) {
-            Vector3 dir = -Transform.basis.z*PunchDistance;
-            BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir);
+            Vector3 dir = -Basis.Z*PunchDistance;
+            BlockcastHit hit = World.Singleton.Blockcast(GlobalPosition, dir);
             if (hit != null) {
                 World.Singleton.SetBlock(hit.BlockPos, null);
             }
         }
         if (Input.IsActionJustPressed("use")) {
-            Vector3 dir = -Transform.basis.z*PunchDistance;
-            BlockcastHit hit = World.Singleton.Blockcast(Transform.origin, dir);
+            Vector3 dir = -Basis.Z*PunchDistance;
+            BlockcastHit hit = World.Singleton.Blockcast(GlobalPosition, dir);
             if (hit != null) {
-                SphereShaper.Shape(World.Singleton, hit.HitPos, 25);
+                SphereShaper.Shape3D(World.Singleton, hit.HitPos, 25);
             }
         }
         

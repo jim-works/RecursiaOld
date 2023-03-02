@@ -60,11 +60,11 @@ public static class BlockLoader
             GD.PrintErr("Cannot get block texture yet, mesher is not initialized");
             return null;
         }
-        Texture chunkTex = ((SpatialMaterial)Mesher.Singleton.ChunkMaterial).AlbedoTexture;
+        Texture2D chunkTex = ((StandardMaterial3D)Mesher.Singleton.ChunkMaterial).AlbedoTexture;
         AtlasTexture itemTex = new AtlasTexture();
         itemTex.Atlas = chunkTex;
-        Vector2 min = new Vector2(t.UVMin.x*t.Atlas.TexWidth, t.UVMin.y*t.Atlas.TexHeight);
-        Vector2 max = new Vector2(t.UVMax.x*t.Atlas.TexWidth, t.UVMax.y*t.Atlas.TexHeight);
+        Vector2 min = new Vector2(t.UVMin.X*t.Atlas.TexWidth, t.UVMin.Y*t.Atlas.TexHeight);
+        Vector2 max = new Vector2(t.UVMax.X*t.Atlas.TexWidth, t.UVMax.Y*t.Atlas.TexHeight);
         
         itemTex.Region = new Rect2(min,max-min);
         return itemTex;

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-public class ChunkCollection
+public partial class ChunkCollection
 {
     private Dictionary<ChunkCoord, Chunk> chunks = new Dictionary<ChunkCoord, Chunk>();
 

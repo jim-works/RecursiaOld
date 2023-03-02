@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-public class LayeredNoise
+public partial class LayeredNoise
 {
     private struct Layer
     {
@@ -47,11 +47,11 @@ public class LayeredNoise
         float res = 0;
         foreach (var layer in sumLayer)
         {
-            res += layer.amp*layer.noise.GetNoise(Seed+layer.freq.x*x,Seed+layer.freq.y*y,Seed);
+            res += layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed);
         }
         foreach (var layer in prodLayer)
         {
-            res *= layer.amp*layer.noise.GetNoise(Seed+layer.freq.x*x,Seed+layer.freq.y*y,Seed);
+            res *= layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed);
         }
         return res;
     }
@@ -61,11 +61,11 @@ public class LayeredNoise
         float res = 0;
         foreach (var layer in sumLayer)
         {
-            res += layer.amp*layer.noise.GetNoise(Seed+layer.freq.x*x,Seed+layer.freq.y*y,Seed+layer.freq.z*z);
+            res += layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed+layer.freq.Z*z);
         }
         foreach (var layer in prodLayer)
         {
-            res *= layer.amp*layer.noise.GetNoise(Seed+layer.freq.x*x,Seed+layer.freq.y*y,Seed+layer.freq.z*z);
+            res *= layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed+layer.freq.Z*z);
         }
         return res;
     }

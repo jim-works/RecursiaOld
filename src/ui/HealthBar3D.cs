@@ -1,11 +1,11 @@
 using Godot;
 using System;
 
-public class HealthBar3D : Spatial
+public partial class HealthBar3D : Node3D
 {
     public override void _Ready()
     {
         base._Ready();
-        GetNode<HealthBar>("Viewport/HealthBar").Tracking = GetParent<Combatant>();
+        GetNode<HealthBar>("SubViewport/HealthBar").Tracking = GetParent<Combatant>();
     }
 }

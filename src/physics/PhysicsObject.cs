@@ -1,7 +1,7 @@
 using Godot;
 using System.Runtime.CompilerServices;
 
-public class PhysicsObject : Spatial
+public partial class PhysicsObject : Node3D
 {
     private const int COLLISION_INTERVAL = 5; //physics updates per collision check
     [Export]
@@ -14,10 +14,6 @@ public class PhysicsObject : Spatial
     [Export]
     public float Mass = 1f;
     public Vector3 Velocity;
-    public Vector3 Position {
-        get => GlobalTransform.origin;
-        set {GlobalTransform = new Transform(GlobalTransform.basis, value);}
-    }
     [Export]
     public Vector3 Gravity = new Vector3(0,-20,0);
     [Export]
@@ -45,12 +41,12 @@ public class PhysicsObject : Spatial
     protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Box GetBox() => Box.FromCenter(Position+LocalDirectionToWorld(ColliderOffset), Size);
+    public Box GetBox() => Box.FromCenter(GlobalPosition+LocalDirectionToWorld(ColliderOffset), Size);
 
     public override void _EnterTree()
     {
         _physicsActive = InitPhysicsActive;
-        Position = InitialPosition;
+        GlobalPosition = InitialPosition;
         base._EnterTree();
     }
 
@@ -60,17 +56,17 @@ public class PhysicsObject : Spatial
         if (PhysicsActive) World.Singleton.PhysicsObjects.Add(this);
     }
 
-    public override void _PhysicsProcess(float dt)
+    public override void _PhysicsProcess(double dt)
     {
         if (!PhysicsActive) return;
-        AddForce(-AirResistance*Velocity);
-        Velocity += currentForce*dt/Mass;
+        AddConstantForce(-AirResistance*Velocity);
+        Velocity += currentForce*(float)dt/Mass;
         if (Velocity.LengthSquared() > MaxSpeed*MaxSpeed) Velocity=Velocity.Normalized()*MaxSpeed;
         //GD.Print(Velocity);
         currentForce = Gravity*Mass;
-        if (Collides) doCollision(World.Singleton, dt);
+        if (Collides) doCollision(World.Singleton, (float)dt);
 
-        Position += Velocity*dt;
+        GlobalPosition += Velocity*(float)dt;
     }
 
     public override void _ExitTree()
@@ -81,7 +77,7 @@ public class PhysicsObject : Spatial
 
     //adds a force for the next physics update, does not persist across updates
     //world space
-    public void AddForce(Vector3 f)
+    public void AddConstantForce(Vector3 f)
     {
         currentForce += f;
     }
@@ -94,7 +90,7 @@ public class PhysicsObject : Spatial
     //rotates v from local to world
     public Vector3 LocalDirectionToWorld(Vector3 v)
     {
-        return GlobalTransform.basis.Xform(v);
+        return GlobalTransform.Basis * v;
     }
     protected void doFriction(float coeff)
     {
@@ -108,20 +104,20 @@ public class PhysicsObject : Spatial
         int oldMask = collisionDirections;
         collisionDirections = 0;
         Vector3 frameVelocity = Velocity * dt; //this is the amount the object will move this update
-        Vector3 postPosition = Position;
+        Vector3 postPosition = GlobalPosition;
         //we're going to check collision by iterating through each plane orthogonal to the Velocity the the three axes directions.
         //we only have to check each plane of blocks that the frame Velocity vector hits.
 
         //y axis
-        if (frameVelocity.y < 0)
+        if (frameVelocity.Y < 0)
         {
             //moving down
-            for (int y = 0; y > Mathf.FloorToInt(frameVelocity.y); y--)
+            for (int y = 0; y > Mathf.FloorToInt(frameVelocity.Y); y--)
             {
-                if (Plane.CollidesWithWorldY(Position + new Vector3(-Size.x/2,-Size.y/2+y, -Size.z/2), Size.x, Size.z, world))
+                if (Plane.CollidesWithWorldY(GlobalPosition + new Vector3(-Size.X/2,-Size.Y/2+y, -Size.Z/2), Size.X, Size.Z, world))
                 {
-                    postPosition.y = Mathf.CeilToInt(Position.y-Size.y/2+y)+Size.y/2;
-                    Velocity.y = 0;
+                    postPosition.Y = Mathf.CeilToInt(GlobalPosition.Y-Size.Y/2+y)+Size.Y/2;
+                    Velocity.Y = 0;
                     collisionDirections |= (1<<(int)Direction.NegY);
                     break;
                 }
@@ -130,12 +126,12 @@ public class PhysicsObject : Spatial
         else
         {
             //moving up
-            for (int y = 0; y < Mathf.CeilToInt(frameVelocity.y); y++)
+            for (int y = 0; y < Mathf.CeilToInt(frameVelocity.Y); y++)
             {
-                if (Plane.CollidesWithWorldY(Position + new Vector3(-Size.x/2,Size.y/2+y, -Size.z/2), Size.x, Size.z, world))
+                if (Plane.CollidesWithWorldY(GlobalPosition + new Vector3(-Size.X/2,Size.Y/2+y, -Size.Z/2), Size.X, Size.Z, world))
                 {
-                    postPosition.y = Mathf.FloorToInt(Position.y+Size.y/2+y)-Size.y/2;
-                    Velocity.y = 0;
+                    postPosition.Y = Mathf.FloorToInt(GlobalPosition.Y+Size.Y/2+y)-Size.Y/2;
+                    Velocity.Y = 0;
                     collisionDirections |= (1<<(int)Direction.PosY);
                     break;
                 }
@@ -143,15 +139,15 @@ public class PhysicsObject : Spatial
         }
 
         //x axis
-        if (frameVelocity.x < 0)
+        if (frameVelocity.X < 0)
         {
             //moving left
-            for (int x = 0; x > Mathf.FloorToInt(frameVelocity.x); x--)
+            for (int x = 0; x > Mathf.FloorToInt(frameVelocity.X); x--)
             {
-                if (Plane.CollidesWithWorldX(Position + new Vector3(-Size.x/2+x,-Size.y/2+Epsilon, -Size.z/2+Epsilon), Size.y-2*Epsilon, Size.z-2*Epsilon, world))
+                if (Plane.CollidesWithWorldX(GlobalPosition + new Vector3(-Size.X/2+x,-Size.Y/2+Epsilon, -Size.Z/2+Epsilon), Size.Y-2*Epsilon, Size.Z-2*Epsilon, world))
                 {
-                    //postPosition.x = Mathf.CeilToInt(Position.x-Size.x/2+x)+Size.x/2;
-                    Velocity.x = 0;
+                    //postPosition.X = Mathf.CeilToInt(GlobalPosition.X-Size.X/2+x)+Size.X/2;
+                    Velocity.X = 0;
                     collisionDirections |= (1<<(int)Direction.NegX);
                     break;
                 }
@@ -160,27 +156,27 @@ public class PhysicsObject : Spatial
         else
         {
             //moving right
-            for (int x = 0; x < Mathf.CeilToInt(frameVelocity.x); x++)
+            for (int x = 0; x < Mathf.CeilToInt(frameVelocity.X); x++)
             {
-                if (Plane.CollidesWithWorldX(Position + new Vector3(Size.x/2+x,-Size.y/2+Epsilon, -Size.z/2+Epsilon), Size.y-2*Epsilon, Size.z-2*Epsilon, world))
+                if (Plane.CollidesWithWorldX(GlobalPosition + new Vector3(Size.X/2+x,-Size.Y/2+Epsilon, -Size.Z/2+Epsilon), Size.Y-2*Epsilon, Size.Z-2*Epsilon, world))
                 {
-                    postPosition.x = Mathf.FloorToInt(Position.x+Size.x/2+x)-Size.x/2;
-                    Velocity.x = 0;
+                    postPosition.X = Mathf.FloorToInt(GlobalPosition.X+Size.X/2+x)-Size.X/2;
+                    Velocity.X = 0;
                     collisionDirections |= (1<<(int)Direction.PosX);
                     break;
                 }
             }
         }
         //z azis
-        if (frameVelocity.z < 0)
+        if (frameVelocity.Z < 0)
         {
             //moving forward
-            for (int z = 0; z > Mathf.FloorToInt(frameVelocity.z); z--)
+            for (int z = 0; z > Mathf.FloorToInt(frameVelocity.Z); z--)
             {
-                if (Plane.CollidesWithWorldZ(Position + new Vector3(-Size.z/2+Epsilon,-Size.y/2+Epsilon, -Size.z/2+z), Size.x-2*Epsilon,Size.y-2*Epsilon, world))
+                if (Plane.CollidesWithWorldZ(GlobalPosition + new Vector3(-Size.Z/2+Epsilon,-Size.Y/2+Epsilon, -Size.Z/2+z), Size.X-2*Epsilon,Size.Y-2*Epsilon, world))
                 {
-                    //postPosition.z = Mathf.CeilToInt(Position.z-Size.z/2+z)+Size.z/2;
-                    Velocity.z = 0;
+                    //postPosition.Z = Mathf.CeilToInt(GlobalPosition.Z-Size.Z/2+z)+Size.Z/2;
+                    Velocity.Z = 0;
                     collisionDirections |= (1<<(int)Direction.NegZ);
                     break;
                 }
@@ -189,18 +185,18 @@ public class PhysicsObject : Spatial
         else
         {
             //moving backward
-            for (int z = 0; z < Mathf.CeilToInt(frameVelocity.z); z++)
+            for (int z = 0; z < Mathf.CeilToInt(frameVelocity.Z); z++)
             {
-                if (Plane.CollidesWithWorldZ(Position + new Vector3(-Size.x/2+Epsilon,-Size.y/2+Epsilon, Size.z/2+z), Size.x-2*Epsilon, Size.y-2*Epsilon, world))
+                if (Plane.CollidesWithWorldZ(GlobalPosition + new Vector3(-Size.X/2+Epsilon,-Size.Y/2+Epsilon, Size.Z/2+z), Size.X-2*Epsilon, Size.Y-2*Epsilon, world))
                 {
-                    postPosition.z = Mathf.FloorToInt(Position.z+Size.z/2+z)-Size.z/2;
-                    Velocity.z = 0;
+                    postPosition.Z = Mathf.FloorToInt(GlobalPosition.Z+Size.Z/2+z)-Size.Z/2;
+                    Velocity.Z = 0;
                     collisionDirections |= (1<<(int)Direction.PosZ);
                     break;
                 }
             }
         }
 
-        Position = postPosition;
+        GlobalPosition = postPosition;
     }
 }

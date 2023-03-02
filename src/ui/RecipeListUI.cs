@@ -1,7 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
-public class RecipeListUI : Control
+public partial class RecipeListUI : Control
 {
     [Export]
     public PackedScene CraftingRecipeUI;
@@ -27,13 +27,13 @@ public class RecipeListUI : Control
         float startHeight = 0;
         foreach (var recipe in recipes)
         {
-            var ui = CraftingRecipeUI.Instance<CraftingRecipeUI>();
+            var ui = CraftingRecipeUI.Instantiate<CraftingRecipeUI>();
             recipeUIs.Add(ui);
             AddChild(ui);
-            ui.RectPosition = new Vector2(0, startHeight);
+            ui.Position = new Vector2(0, startHeight);
             startHeight += ui.DisplayRecipe(recipe)+Padding;
         }
-        RectMinSize = new Vector2(RectMinSize.x, startHeight);
+        CustomMinimumSize = new Vector2(CustomMinimumSize.X, startHeight);
     }
 
 
