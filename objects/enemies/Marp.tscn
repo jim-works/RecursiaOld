@@ -1,33 +1,42 @@
-[gd_scene load_steps=11 format=3 uid="uid://dmhs78phwv078"]
+[gd_scene load_steps=13 format=3 uid="uid://dmhs78phwv078"]
 
 [ext_resource type="PackedScene" uid="uid://fdkd1tdqfhgn" path="res://blender/skeleton.gltf" id="1_nya33"]
 [ext_resource type="Script" path="res://src/entities/Marp.cs" id="2_gi3kk"]
-[ext_resource type="PackedScene" path="res://objects/HealthBar3D.tscn" id="3_j6hsj"]
+[ext_resource type="PackedScene" uid="uid://boxqknwhgom6a" path="res://objects/HealthBar3D.tscn" id="3_j6hsj"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_0rdbb"]
 animation = &"summon"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_l5pc0"]
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_jsy58"]
 animation = &"walk"
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_35b2h"]
+[sub_resource type="AnimationNodeTimeScale" id="AnimationNodeTimeScale_3qtwd"]
+
+[sub_resource type="AnimationNodeBlendTree" id="AnimationNodeBlendTree_ts8f7"]
+graph_offset = Vector2(-159.059, -14.564)
+nodes/Animation/node = SubResource("AnimationNodeAnimation_jsy58")
+nodes/Animation/position = Vector2(-60, 60)
+nodes/TimeScale/node = SubResource("AnimationNodeTimeScale_3qtwd")
+nodes/TimeScale/position = Vector2(120, 40)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_4iqry"]
 advance_mode = 2
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_rm471"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_5sf4v"]
 xfade_time = 0.4
-advance_mode = 2
+advance_mode = 0
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_35gj4"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_q8xw6"]
 xfade_time = 0.4
-switch_mode = 2
-advance_mode = 2
+advance_mode = 0
 
 [sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_eq6hv"]
 states/summon/node = SubResource("AnimationNodeAnimation_0rdbb")
 states/summon/position = Vector2(418, 123)
-states/walk/node = SubResource("AnimationNodeAnimation_l5pc0")
-states/walk/position = Vector2(418, 52)
-transitions = ["Start", "walk", SubResource("AnimationNodeStateMachineTransition_35b2h"), "walk", "summon", SubResource("AnimationNodeStateMachineTransition_rm471"), "summon", "walk", SubResource("AnimationNodeStateMachineTransition_35gj4")]
+states/walk/node = SubResource("AnimationNodeBlendTree_ts8f7")
+states/walk/position = Vector2(355, 39)
+transitions = ["Start", "walk", SubResource("AnimationNodeStateMachineTransition_4iqry"), "walk", "summon", SubResource("AnimationNodeStateMachineTransition_5sf4v"), "summon", "walk", SubResource("AnimationNodeStateMachineTransition_q8xw6")]
 
 [sub_resource type="AnimationNodeStateMachinePlayback" id="AnimationNodeStateMachinePlayback_skko0"]
 
@@ -37,7 +46,7 @@ WalkSpeed = 20.0
 SmackState = "summon"
 Smackitude = 30.0
 AnimationTreePath = NodePath("AnimationTree")
-WalkBlendNode = "walk"
+StrideLength = 5.0
 LFootBottom = NodePath("metarig/Skeleton3D/LFootBottom")
 RFootBottom = NodePath("metarig/Skeleton3D/RFootBottom")
 InitialTeamName = "enemy"
@@ -49,20 +58,48 @@ Size = Vector3(4, 3, 4)
 [node name="metarig" parent="." index="0"]
 transform = Transform3D(5, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0)
 
+[node name="Skeleton3D" parent="metarig" index="0"]
+bones/0/position = Vector3(0, 1.01074, -0.000100541)
+bones/2/rotation = Quaternion(0.0144944, 1.19197e-07, 1.72787e-09, -0.999895)
+bones/4/rotation = Quaternion(-0.518007, 0.375406, -0.474978, 0.604264)
+bones/5/rotation = Quaternion(0.000769518, 0.19434, -0.00380052, 0.980927)
+bones/6/rotation = Quaternion(-0.00192008, -0.022848, 0.00449698, 0.999727)
+bones/8/rotation = Quaternion(-0.608247, -0.478615, 0.369728, 0.514067)
+bones/9/rotation = Quaternion(0.00146584, -0.194916, 0.00201204, 0.980817)
+bones/10/rotation = Quaternion(-0.00373784, 0.0226973, -0.00222203, 0.999733)
+bones/15/rotation = Quaternion(0.998716, 0.00188601, 0.00203685, 0.0505779)
+bones/15/scale = Vector3(1.00005, 1.00003, 1.00028)
+bones/16/rotation = Quaternion(0.35748, 0.0029182, -0.0112138, 0.933849)
+bones/16/scale = Vector3(1, 0.999999, 1)
+bones/17/rotation = Quaternion(0.323253, 0.00239379, 0.0195133, 0.946108)
+bones/17/scale = Vector3(1, 0.999998, 0.999997)
+bones/18/rotation = Quaternion(0.999881, -0.00409366, 0.0013915, 0.0147838)
+bones/18/scale = Vector3(1.00005, 1.00003, 1.00027)
+bones/19/rotation = Quaternion(0.0286539, 5.05685e-05, 0.00397289, 0.999582)
+bones/19/scale = Vector3(1, 0.99997, 0.999971)
+bones/20/rotation = Quaternion(-0.0037334, 2.12783e-05, -0.00714857, 0.999968)
+bones/20/scale = Vector3(0.999999, 0.999961, 0.999961)
+bones/21/position = Vector3(0.208642, 0.150162, -0.262591)
+bones/22/position = Vector3(-0.208642, -3.23728e-06, 0.0149752)
+bones/23/position = Vector3(0.316259, 0.898684, 0.110539)
+bones/24/position = Vector3(-0.316259, 0.898684, -0.115196)
+
 [node name="RFootBottom" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="17"]
-transform = Transform3D(1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.019868, -0.262572)
+transform = Transform3D(1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, -3.23728e-06, 0.0149752)
 bone_name = "foot.r.ik"
 bone_idx = 22
 
 [node name="LFootBottom" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="18"]
-transform = Transform3D(1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.267113)
+transform = Transform3D(1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, 0.150162, -0.262591)
 bone_name = "foot.L.ik"
 bone_idx = 21
 
 [node name="AnimationTree" type="AnimationTree" parent="." index="2"]
 tree_root = SubResource("AnimationNodeStateMachine_eq6hv")
 anim_player = NodePath("../AnimationPlayer")
+active = true
 parameters/playback = SubResource("AnimationNodeStateMachinePlayback_skko0")
+parameters/walk/TimeScale/scale = 1.0
 
 [node name="HealthBar3D" parent="." index="3" instance=ExtResource("3_j6hsj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.02079, 0)
