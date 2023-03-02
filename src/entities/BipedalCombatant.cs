@@ -3,7 +3,7 @@ using Godot;
 public partial class BipedalCombatant : Combatant
 {
     [Export] public NodePath AnimationTreePath;
-    [Export] public string WalkBlendNode = "walk-blend";
+    [Export] public string WalkBlendNode = "walk";
     [Export] public bool SetSpeedToWalk=true;
     [Export] public float StrideLength = 40;
 

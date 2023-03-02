@@ -66,10 +66,10 @@ public partial class RotatingCamera : Node3D
             RotationDegrees = new Vector3(pitch,yaw,RotationDegrees.Z);
         }
         if (Input.IsActionJustPressed("punch")) {
-            parent.Punch(-Basis.Z);
+            parent.Punch(-GlobalTransform.Basis.Z);
         }
         if (Input.IsActionJustPressed("use")) {
-            parent.Use(-Basis.Z);
+            parent.Use(-GlobalTransform.Basis.Z);
         }  
         
         base._Process(delta);

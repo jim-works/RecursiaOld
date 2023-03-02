@@ -20,6 +20,7 @@ public partial class Player : Combatant
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("gun"), Size = 1 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("explosive_bullet"), Size = 100 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("cursed_idol"), Size = 1 });
+        Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 });
         World.Singleton.ChunkLoaders.Add(this);
         World.Singleton.Players.Add(this);
         jumpsLeft = JumpCount;
