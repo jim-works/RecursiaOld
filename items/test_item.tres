@@ -1,0 +1,9 @@
+[gd_resource type="Resource" load_steps=2 format=3 uid="uid://d187ktabwr2ml"]
+
+[ext_resource type="Script" path="res://src/world/items/Item.cs" id="1_eynvl"]
+
+[resource]
+script = ExtResource("1_eynvl")
+Name = ""
+MaxStack = 999
+Cooldown = 0.0

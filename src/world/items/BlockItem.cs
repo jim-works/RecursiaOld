@@ -3,7 +3,7 @@ using Godot;
 public partial class BlockItem : Item
 {
     public Block Placing;
-    public float Reach = 10;
+    [Export] public float Reach = 10;
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {

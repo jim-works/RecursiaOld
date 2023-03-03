@@ -2,8 +2,8 @@ using Godot;
 
 public partial class GunItem : WeaponItem
 {
-    public float ShootSpeed = 50;
-    public int AmmoPerShot=1;
+    [Export] public float ShootSpeed = 50;
+    [Export] public int AmmoPerShot=1;
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {

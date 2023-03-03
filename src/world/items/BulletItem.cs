@@ -2,7 +2,7 @@ using Godot;
 
 public partial class BulletItem : AmmoItem
 {
-    public PackedScene ProjectileScene;
+    [Export] public PackedScene ProjectileScene {get; set;}
 
     public override void Fire(Vector3 origin, Vector3 velocity, Combatant user, GunItem gun)
     {

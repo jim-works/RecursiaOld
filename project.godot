@@ -8,6 +8,12 @@
 
 config_version=5
 
+[MonoCustomResourceRegistry]
+
+ClassPrefix=""
+SearchType=0
+ResourceScriptDirectories=["res://src/world/items"]
+
 [application]
 
 config/name="Swarmed"
@@ -18,6 +24,10 @@ config/icon="res://textures/cursed_idol.png"
 [dotnet]
 
 project/assembly_name="Swarmed"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/MonoCustomResourceRegistry/plugin.cfg")
 
 [global]
 

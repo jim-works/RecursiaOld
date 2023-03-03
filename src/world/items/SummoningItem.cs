@@ -2,12 +2,12 @@ using Godot;
 
 public partial class SummoningItem : Item
 {
-    public PackedScene ToSummon;
-    public bool SetToUserTeam = false;
-    public bool ConsumeOnUse = true;
-    public float Distance;
+    [Export] public PackedScene ToSummon;
+    [Export] public bool SetToUserTeam = false;
+    [Export] public bool ConsumeOnUse = true;
+    [Export] public float Distance;
     //will check at most this many blocks up for an open space to summon
-    public int MaxCheckHeight = 50;
+    [Export] public int MaxCheckHeight = 50;
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {

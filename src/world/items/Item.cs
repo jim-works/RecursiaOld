@@ -2,13 +2,14 @@ using Godot;
 using System.IO;
 
 #pragma warning disable CS0660, CS0661 //intentionally not overriding gethashcode or .equals here
-public partial class Item : ISerializable
+[MonoCustomResourceRegistry.RegisteredType(nameof(Item), "", nameof(Resource))]
+public partial class Item : Resource, ISerializable
 {
-    public string Name;
-    public int MaxStack = 999;
-    public float Cooldown = 0;
-    public Texture2D Texture2D;
-    public AudioStream UseSound;
+    [Export] public string Name;
+    [Export] public int MaxStack = 999;
+    [Export] public float Cooldown = 0;
+    [Export] public Texture2D Texture2D;
+    [Export] public AudioStream UseSound;
     
     public virtual void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {

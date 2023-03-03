@@ -2,8 +2,8 @@ using Godot;
 
 public partial class ShotgunItem : GunItem
 {
-    public float Spread = 0.05f;
-    public int BulletsPerShot = 5;
+    [Export] public float Spread = 0.05f;
+    [Export] public int BulletsPerShot = 5;
 
     protected override void onFire(BulletItem bullet, Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
