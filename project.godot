@@ -27,7 +27,7 @@ project/assembly_name="Swarmed"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/MonoCustomResourceRegistry/plugin.cfg")
+enabled=PackedStringArray()
 
 [global]
 

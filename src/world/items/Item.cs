@@ -2,7 +2,8 @@ using Godot;
 using System.IO;
 
 #pragma warning disable CS0660, CS0661 //intentionally not overriding gethashcode or .equals here
-[MonoCustomResourceRegistry.RegisteredType(nameof(Item), "", nameof(Resource))]
+//TODO: submit issue to fix godot import bug with c# plugins
+//[MonoCustomResourceRegistry.RegisteredType(nameof(Item), "", nameof(Resource))]
 public partial class Item : Resource, ISerializable
 {
     [Export] public string Name;
@@ -19,6 +20,10 @@ public partial class Item : Resource, ISerializable
     public virtual void Serialize(BinaryWriter bw)
     {
         bw.Write(Name);
+    }
+    public static Item Deserialize(BinaryReader br)
+    {
+        throw new System.NotImplementedException();
     }
 
     //allows subclasses to override .Equals, keeping == and != consistent with that

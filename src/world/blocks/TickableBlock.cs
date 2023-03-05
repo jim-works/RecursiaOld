@@ -3,7 +3,6 @@ public abstract class TickableBlock : Block
 {
     public TickableBlock()
     {
-        HasOnLoad = true;
     }
 
     public override void OnLoad(BlockCoord pos, Chunk c)

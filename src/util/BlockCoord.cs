@@ -2,7 +2,7 @@ using System.IO;
 
 //Faces of blocks are on integral coordinates
 //EX: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
-public struct BlockCoord
+public struct BlockCoord : ISerializable
 {
     public int X, Y,Z;
     public BlockCoord(int X, int Y, int Z)
@@ -12,17 +12,15 @@ public struct BlockCoord
         this.Z = Z;
     }
     public int sqrMag() { return X * X + Y * Y + Z*Z; }
-    public void SerialiZe(BinaryWriter bw)
+    public void Serialize(BinaryWriter bw)
     {
         bw.Write(X);
         bw.Write(Y);
         bw.Write(Z);
     }
-    public void DeserialiZe(BinaryReader br)
+    public static BlockCoord Deserialize(BinaryReader br)
     {
-        X = br.ReadInt32();
-        Y = br.ReadInt32();
-        Z = br.ReadInt32();
+        return new BlockCoord(br.ReadInt32(),br.ReadInt32(),br.ReadInt32());
     }
     public static BlockCoord operator +(BlockCoord lhs, BlockCoord rhs)
     {

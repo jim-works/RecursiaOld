@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-
+using System.IO;
+using System.Linq;
 //Octtree above chunks
-public partial class Region
+public partial class Region : ISerializable
 {
     public enum Octant
     {
@@ -206,5 +207,37 @@ public partial class Region
             Children[i]?.Print(indention+1, output);
         }
         return output.ToString();
+    }
+    public virtual void Serialize(BinaryWriter bw)
+    {
+        var blockIds = new Dictionary<Block,int>();
+        bw.Write(Level);
+        Origin.Serialize(bw);
+        if (Children == null) {
+            bw.Write(0);
+            return;
+        }
+        bw.Write(Children.Count(x => x != null));
+        for (int i = 0; i < Children.Length; i++) {
+            if (Children[i] != null) {
+                bw.Write(i);
+                Children[i].Serialize(bw);
+            }
+        }
+    }
+    public static Region Deserialize(BinaryReader br) {
+        int level = br.ReadInt32();
+        if (level == 0) {//this is a chunk 
+            return Chunk.Deserialize(br);
+        }
+        BlockCoord origin = BlockCoord.Deserialize(br);
+        Region r = new Region(level, origin);
+        int children = br.ReadInt32();
+        if (children == 0) return r;
+        for (int i = 0; i < children; i++) {
+            int childIdx = br.ReadInt32();
+            r.Children[childIdx] = Region.Deserialize(br);
+        }
+        return r;
     }
 }

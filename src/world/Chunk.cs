@@ -14,7 +14,7 @@ public partial class Chunk : Region
     public Chunk(ChunkCoord chunkCoords) : base(0,(BlockCoord)chunkCoords)
     {
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
-        Structures.Add(new Structure());
+        //Structures.Add(new Structure());
         Position = chunkCoords;
     }
     
@@ -41,7 +41,7 @@ public partial class Chunk : Region
         return coord % (int)CHUNK_SIZE;
     }
 
-    public void Serialize(BinaryWriter bw, Dictionary<Block, int> ids)
+    public override void Serialize(BinaryWriter bw)
     {
         Position.Serialize(bw);
         Block curr = null;
@@ -55,17 +55,34 @@ public partial class Chunk : Region
                 continue;
             }
             bw.Write(run);
-            curr.Serialize(bw);
+            if (curr == null) bw.Write(0);
+            else {bw.Write(1); curr.Serialize(bw);}
             run = 1;
             curr = b;
         }
         bw.Write(run);
-        curr.Serialize(bw);
+        if (curr == null) bw.Write(0);
+        else {bw.Write(1); curr.Serialize(bw);}
     }
 
-    public void Deserialize(BinaryReader br, Dictionary<int, Func<BinaryReader, Block>> ids)
+    new public static Chunk Deserialize(BinaryReader br)
     {
+        var pos = ChunkCoord.Deserialize(br);
+        Chunk c = new Chunk(pos);
 
+        for (int i = 0; i < Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE; i++)
+        {
+            int run = br.ReadInt32();
+            bool nullBlock = br.ReadInt32() == 0;
+            Block read;
+            if (nullBlock) read = null;
+            else {read = BlockTypes.Get(br.ReadString()); read.Deserialize(br);}
+            for (int j = i; j < i+run;j++) {
+                c.Blocks.SetValue(read, j);
+            }
+            i += run;
+        }
+        return c;
     }
 
     public override string ToString()

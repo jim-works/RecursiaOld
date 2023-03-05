@@ -16,11 +16,9 @@ public struct ChunkCoord
         bw.Write(Y);
         bw.Write(Z);
     }
-    public void Deserialize(BinaryReader br)
+    public static ChunkCoord Deserialize(BinaryReader br)
     {
-        X = br.ReadInt32();
-        Y = br.ReadInt32();
-        Z = br.ReadInt32();
+        return new ChunkCoord(br.ReadInt32(),br.ReadInt32(),br.ReadInt32());
     }
     public static ChunkCoord operator +(ChunkCoord lhs, ChunkCoord rhs)
     {

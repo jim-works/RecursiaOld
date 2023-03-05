@@ -24,4 +24,12 @@ public static class SerializationExtensions
             item.Serialize(bw);
         }
     }
+    public static T[] DeserializeArray<T>(BinaryReader br, System.Func<BinaryReader, T> deserializer) {
+        T[] arr = new T[br.ReadInt32()];
+        for (int i = 0; i < arr.Length; i++)
+        {
+            arr[i] = deserializer(br);
+        }
+        return arr;
+    }
 }
