@@ -7,6 +7,7 @@ using System.Collections.Generic;
 public partial class World : Node
 {
     public static World Singleton;
+    [Export] public string WorldName = "World1"; 
     public ChunkCollection Chunks = new ChunkCollection();
     public RegionOctree Octree = new RegionOctree(1,new BlockCoord(0,0,0));
     //todo: optimize these
@@ -33,8 +34,18 @@ public partial class World : Node
     public override void _Ready()
     {
         WorldGen = new WorldGenerator();
+        tmpLoadWorld(GetNode<WorldSaver>("WorldSaver"));
+        
         base._Ready();
-        doChunkLoading();
+    }
+
+    private void tmpLoadWorld(WorldSaver saver)
+    {
+        Octree.Root = saver.LoadRec(saver.GetPath(Octree.Root));
+        Octree.Root.AddChunks(Chunks);
+        foreach (var kvp in Chunks) {
+            Mesher.Singleton.MeshDeferred(kvp.Value);
+        }
     }
 
     public override void _Process(double delta)

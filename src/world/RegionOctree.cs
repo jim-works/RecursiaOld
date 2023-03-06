@@ -1,6 +1,6 @@
 public partial class RegionOctree
 {
-    public Region Root {get; private set;}
+    public Region Root {get; set;}
 
     public RegionOctree(int startingLevel, BlockCoord origin)
     {

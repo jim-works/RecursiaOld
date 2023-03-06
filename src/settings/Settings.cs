@@ -5,6 +5,8 @@ public partial class Settings : Node
     [Signal] public delegate void on_pauseEventHandler();
     [Signal] public delegate void on_unpauseEventHandler();
 
+    public const int SAVE_FORMAT_VERSION = 1;
+
     public static bool Paused = false;
 
     public override void _Ready()

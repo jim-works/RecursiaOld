@@ -60,6 +60,13 @@ public partial class Region : ISerializable
     {
         return (Octant)GetOctantId(coord);
     }
+    public int GetChildIdx(Region child) {
+        if (Children == null) return -1;
+        for (int i = 0; i < Children.Length; i++) {
+            if (Children[i] == child) return i;
+        }
+        return -1;
+    }
     public BlockCoord GetOctantOrigin(int id)
     {
         //check each bit in id mask
@@ -208,35 +215,94 @@ public partial class Region : ISerializable
         }
         return output.ToString();
     }
-    public virtual void Serialize(BinaryWriter bw)
+    public void AddChunks(ChunkCollection col)
     {
-        var blockIds = new Dictionary<Block,int>();
+        if (this is Chunk c) {
+            col.Add(c);
+            return;
+        }
+        if (Children == null) return;
+        foreach (var child in Children) {
+            child?.AddChunks(col);
+        }
+    }
+    //writes the 0 byte to indicate nonrecursive, then calls SerializeInfo()
+    public void SerializeNonRecursive(BinaryWriter bw)
+    {
+        bw.Write((byte)0); //indicate this is a nonrecursive file
+        SerializeInfo(bw);
+    }
+    //writes the 1 byte to indicate recursive, then calls Serialize()
+    public void SerializeRecursive(BinaryWriter bw) {
+        bw.Write((byte)1); //indicate that this is a recursive file
+        Serialize(bw);
+    }
+    //doesn't serialize children, but includes the number of and indicies of children
+    public void SerializeInfo(BinaryWriter bw) {
         bw.Write(Level);
         Origin.Serialize(bw);
         if (Children == null) {
-            bw.Write(0);
+            bw.Write((byte)0);
             return;
         }
-        bw.Write(Children.Count(x => x != null));
+        bw.Write((byte)Children.Count(x => x != null));
+        for (int i = 0; i < Children.Length; i++) {
+            if (Children[i] != null) bw.Write((byte)i);
+        }
+    }
+    //Calls SerializeInfo(), recursively calls Serialize() for all non-null children
+    public virtual void Serialize(BinaryWriter bw)
+    {
+        SerializeInfo(bw);
         for (int i = 0; i < Children.Length; i++) {
             if (Children[i] != null) {
-                bw.Write(i);
                 Children[i].Serialize(bw);
             }
         }
     }
-    public static Region Deserialize(BinaryReader br) {
+    //depth-first traversal of octree. If callback returns false, we don't visit that region's children
+    public void Traverse(System.Func<Region, bool> callback) {
+        if (callback(this)) {
+            if (Children == null) return;
+            for (int i = 0; i < Children.Length; i++) {
+                if (Children[i] != null) Children[i].Traverse(callback);
+            }
+        }
+    }
+    //adds the path of children you'd need to stack from the root to get to this node to the stack
+    public void AddPathToRoot(Stack<int> dest)
+    {
+        Region r = this;
+        while (r.Parent != null) {
+            dest.Push(r.Parent.GetChildIdx(r));
+            r = r.Parent;
+        }
+    }
+    //returns (region, children indexes)
+    public static (Region, int[]) DeserializeNonRecursive(BinaryReader br)
+    {
         int level = br.ReadInt32();
         if (level == 0) {//this is a chunk 
-            return Chunk.Deserialize(br);
+            return (Chunk.Deserialize(br), null);
         }
         BlockCoord origin = BlockCoord.Deserialize(br);
         Region r = new Region(level, origin);
-        int children = br.ReadInt32();
-        if (children == 0) return r;
+        //read # children
+        int children = br.ReadByte();
+        if (children == 0) return (r, null);
+        r.Children = new Region[8];
+        int[] idxs = new int[children];
+        //read child indicies
         for (int i = 0; i < children; i++) {
-            int childIdx = br.ReadInt32();
-            r.Children[childIdx] = Region.Deserialize(br);
+            idxs[i] = br.ReadByte();
+        }
+        return (r,idxs);
+    }
+    public static Region DeserializeRecursive(BinaryReader br) {
+        (Region r, int[] childrenIdxs) = DeserializeNonRecursive(br);
+        if (childrenIdxs == null) return r;
+        foreach (var i in childrenIdxs) {
+            r.Children[i] = Region.DeserializeRecursive(br);
         }
         return r;
     }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://dyc42ayat11tg"]
+[gd_scene load_steps=32 format=3 uid="uid://dyc42ayat11tg"]
 
 [ext_resource type="Script" path="res://src/world/Mesher.cs" id="1"]
 [ext_resource type="Script" path="res://src/entities/Player.cs" id="2"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://objects/InventoryUI.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://objects/MouseItemSlot.tscn" id="16"]
 [ext_resource type="Script" path="res://src/ui/InventoryUI.cs" id="17"]
+[ext_resource type="Script" path="res://src/world/WorldSaver.cs" id="17_4534m"]
 [ext_resource type="Script" path="res://src/ui/FollowMouse.gd" id="18"]
 [ext_resource type="Script" path="res://src/ui/RecipeListUI.cs" id="19"]
 [ext_resource type="PackedScene" path="res://objects/CraftingRecipeUI.tscn" id="20"]
@@ -65,6 +66,9 @@ CursedIdolSound = ExtResource("28")
 
 [node name="Settings" type="Node" parent="."]
 script = ExtResource("8")
+
+[node name="WorldSaver" type="Node" parent="."]
+script = ExtResource("17_4534m")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.638768, -0.669201, 0.379665, 0, 0.493456, 0.869771, -0.7694, -0.555582, 0.315204, 0, 0, 11.3066)

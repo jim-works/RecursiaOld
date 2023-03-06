@@ -43,44 +43,54 @@ public partial class Chunk : Region
 
     public override void Serialize(BinaryWriter bw)
     {
+        bw.Write(Level);
         Position.Serialize(bw);
-        Block curr = null;
+        Block curr = Blocks[0,0,0];
         int run = 0;
-        for (int i = 0; i < Blocks.Length; i++)
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
         {
-            Block b = (Block)Blocks.GetValue(i);
-            if (curr == b)
+            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
             {
-                run++;
-                continue;
+                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                {
+                    Block b = Blocks[x,y,z];
+                    if (curr == b)
+                    {
+                        run++;
+                        continue;
+                    }
+                    bw.Write(run);
+                    if (curr == null) bw.Write(0);
+                    else { bw.Write(1); curr.Serialize(bw); }
+                    run = 1;
+                    curr = b;
+                }
             }
-            bw.Write(run);
-            if (curr == null) bw.Write(0);
-            else {bw.Write(1); curr.Serialize(bw);}
-            run = 1;
-            curr = b;
         }
         bw.Write(run);
         if (curr == null) bw.Write(0);
         else {bw.Write(1); curr.Serialize(bw);}
     }
 
-    new public static Chunk Deserialize(BinaryReader br)
+    public static Chunk Deserialize(BinaryReader br)
     {
         var pos = ChunkCoord.Deserialize(br);
         Chunk c = new Chunk(pos);
-
-        for (int i = 0; i < Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE; i++)
-        {
-            int run = br.ReadInt32();
-            bool nullBlock = br.ReadInt32() == 0;
-            Block read;
-            if (nullBlock) read = null;
-            else {read = BlockTypes.Get(br.ReadString()); read.Deserialize(br);}
-            for (int j = i; j < i+run;j++) {
-                c.Blocks.SetValue(read, j);
+        int run = 0;
+        Block read = null;
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
+            for (int y = 0; y < Chunk.CHUNK_SIZE; y++) {
+                for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
+                    if (run == 0) {
+                        run = br.ReadInt32();
+                        bool nullBlock = br.ReadInt32() == 0;
+                        if (nullBlock) read = null;
+                        else { read = BlockTypes.Get(br.ReadString()); read.Deserialize(br); }
+                    }
+                    c.Blocks[x,y,z] = read;
+                    run --;
+                }
             }
-            i += run;
         }
         return c;
     }
