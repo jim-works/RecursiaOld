@@ -7,7 +7,7 @@ public partial class Chunk : Region
 {
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
-    public Block[,,] Blocks;
+    private Block[,,] Blocks;
     public ChunkMesh Mesh;
     public ChunkGenerationState GenerationState;
 
@@ -25,11 +25,11 @@ public partial class Chunk : Region
 
     public Block this[BlockCoord index] {
         get {return Blocks[index.X,index.Y,index.Z];}
-        set {Blocks[index.X,index.Y,index.Z] = value;}
+        set {Blocks[index.X,index.Y,index.Z] = value; SetBlockDirty(); }
     }
     public Block this[int x, int y, int z] {
         get {return Blocks[x,y,z];}
-        set {Blocks[x,y,z] = value;}
+        set {Blocks[x,y,z] = value; SetBlockDirty(); }
     }
 
     public BlockCoord LocalToWorld(BlockCoord local) {
@@ -78,6 +78,7 @@ public partial class Chunk : Region
         Chunk c = new Chunk(pos);
         int run = 0;
         Block read = null;
+        c.BlockDirtyFlag = false;
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
             for (int y = 0; y < Chunk.CHUNK_SIZE; y++) {
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
@@ -97,6 +98,6 @@ public partial class Chunk : Region
 
     public override string ToString()
     {
-        return $"Chunk at {Position} (origin {Origin})";
+        return $"Chunk at {Position} (origin {Origin}) {BlockDirtyFlag}";
     }
 }

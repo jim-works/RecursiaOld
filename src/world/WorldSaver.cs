@@ -65,6 +65,8 @@ public partial class WorldSaver : Node
     //recursively save region and all children according to filestructure above
     private void Save(Region region)
     {
+        if (!region.BlockDirtyFlag) return; //only need to save changed regions
+        Godot.GD.Print("Saved " + region);
         if (region.Level <= SERIALIZATION_LEVEL) {
             writeEntireRegion(region, GetPath(region));
             return;
@@ -77,6 +79,7 @@ public partial class WorldSaver : Node
                 if (c != null) Save(c);
             }
         }
+        region.UnsetBlockDirty();
     }
     //writes the entire region recursively to one file
     private void writeEntireRegion(Region r, string fileName)

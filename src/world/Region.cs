@@ -25,6 +25,9 @@ public partial class Region : ISerializable
     public RegionOctree Tree;
     //True if any subregion is loaded
     public bool Loaded {get; private set;} = false;
+    //True if blocks have been changed since last save
+    //Use Unset/SetBlockDirty() to update children/parents respectively 
+    public bool BlockDirtyFlag {get; protected set;} = true;
     //structure is contained if region contains the position of the structure.
     // structure could overfill into this region from neighbor without being in this list
     public List<Structure> Structures = new List<Structure>();
@@ -106,6 +109,7 @@ public partial class Region : ISerializable
     private bool addChildUnchecked(Region child)
     {
         int idx = GetOctantId(child.Origin);
+        
         if (child.Level < Level-1)
         {
             //will be at least a grandchild
@@ -159,6 +163,22 @@ public partial class Region : ISerializable
         if (oldLoaded) Parent?.updateLoadedStatus(); //only need to update if not already unloaded
     }
 
+    public void SetBlockDirty()
+    {
+        if (!BlockDirtyFlag && Parent != null) Parent.SetBlockDirty();
+        BlockDirtyFlag = true;
+    }
+    public void UnsetBlockDirty()
+    {
+        if (!BlockDirtyFlag) return; //already clean! no need to recurse!
+        BlockDirtyFlag = false;
+        if (Children == null) return;
+        foreach (var child in Children)
+        {
+            child?.UnsetBlockDirty();
+        }
+    }
+
     private void setLoaded(bool val)
     {
         Loaded = val;
@@ -201,7 +221,7 @@ public partial class Region : ISerializable
 
     public override string ToString()
     {
-        return $"{(Loaded ? "Loaded" : "Unloaded")} region {Origin} level {Level} and size {Size}";
+        return $"{(Loaded ? "Loaded" : "Unloaded")} region {Origin} level {Level} and size {Size} {BlockDirtyFlag}";
     }
     public string Print(int indention=0, System.Text.StringBuilder output = null)
     {
@@ -287,6 +307,7 @@ public partial class Region : ISerializable
         }
         BlockCoord origin = BlockCoord.Deserialize(br);
         Region r = new Region(level, origin);
+        r.BlockDirtyFlag = false;
         //read # children
         int children = br.ReadByte();
         if (children == 0) return (r, null);
@@ -302,7 +323,9 @@ public partial class Region : ISerializable
         (Region r, int[] childrenIdxs) = DeserializeNonRecursive(br);
         if (childrenIdxs == null) return r;
         foreach (var i in childrenIdxs) {
-            r.Children[i] = Region.DeserializeRecursive(br);
+            Region child = Region.DeserializeRecursive(br);
+            r.Children[i] = child;
+            child.Parent = r;
         }
         return r;
     }
