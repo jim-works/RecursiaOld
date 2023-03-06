@@ -43,6 +43,8 @@ public partial class Chunk : Region
 
     public override void Serialize(BinaryWriter bw)
     {
+        long startPos = bw.BaseStream.Position;
+        bw.Write(0); //placeholder for length of region in bytes
         bw.Write(Level);
         Position.Serialize(bw);
         Block curr = Blocks[0,0,0];
@@ -70,6 +72,13 @@ public partial class Chunk : Region
         bw.Write(run);
         if (curr == null) bw.Write(0);
         else {bw.Write(1); curr.Serialize(bw);}
+        long endPos = bw.BaseStream.Position;
+        int size = (int)(endPos-startPos);
+        //seek back to start to write the size of the region
+        bw.Seek((int)startPos, SeekOrigin.Begin);
+        bw.Write(size);
+        //go back to end so region isn't overwritten
+        bw.Seek((int)endPos, SeekOrigin.Begin);
     }
 
     public static Chunk Deserialize(BinaryReader br)

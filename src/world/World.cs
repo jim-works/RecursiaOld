@@ -9,7 +9,7 @@ public partial class World : Node
     public static World Singleton;
     [Export] public string WorldName = "World1"; 
     public ChunkCollection Chunks = new ChunkCollection();
-    public RegionOctree Octree = new RegionOctree(1,new BlockCoord(0,0,0));
+    public RegionOctree Octree = new RegionOctree();
     //todo: optimize these
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public List<Combatant> Combatants = new List<Combatant>();
@@ -41,8 +41,11 @@ public partial class World : Node
 
     private void tmpLoadWorld(WorldSaver saver)
     {
-        Octree.Root = saver.LoadRec(saver.GetPath(Octree.Root));
-        Octree.Root.AddChunks(Chunks);
+        Region r = saver.TryLoadRegion(this, new BlockCoord(0,0,0), level: 2);
+        if (r != null) {
+            Octree.Root = r;//saver.LoadRec(saver.GetPath(Octree.Root));
+            Octree.Root?.AddChunks(Chunks);
+        }
         foreach (var kvp in Chunks) {
             Mesher.Singleton.MeshDeferred(kvp.Value);
         }
@@ -102,6 +105,7 @@ public partial class World : Node
     }
     private void doChunkLoading()
     {
+        return;
         if (_chunkLoadingTimer < chunkLoadingInterval) return;
         _chunkLoadingTimer = 0;
         loadedChunks.Clear();

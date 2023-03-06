@@ -2,17 +2,19 @@ public partial class RegionOctree
 {
     public Region Root {get; set;}
 
-    public RegionOctree(int startingLevel, BlockCoord origin)
+    public RegionOctree()
     {
-        Root = Region.MakeRegion(startingLevel, origin);
-        Root.Tree = this;
     }
 
     //returns false if region is invalid
     public bool AddRegion(Region r)
     {
+        if (Root == null) {
+            Root = r;
+            r.Tree = this;
+        }
         // Godot.GD.Print($"Trying to add region {r}");
-        if (Root.InRegion(r.Origin)) return Root.AddChild(r);
+        if (Root.Contains(r.Origin)) return Root.AddChild(r);
         //region is outside octree, so we must expand with a new root    
         BlockCoord delta = r.Origin-Root.Origin;
         BlockCoord movement = new BlockCoord(delta.X < 0 ? (int)Root.Size : 0,delta.Y < 0 ? (int)Root.Size : 0,delta.Z < 0 ? (int)Root.Size : 0);

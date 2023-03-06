@@ -22,6 +22,7 @@ public partial class Region : ISerializable
     public readonly int OctantSize;
     public Region Parent;
     public Region[] Children;
+    public byte[] SavedChildIndicies;
     public RegionOctree Tree;
     //True if any subregion is loaded
     public bool Loaded {get; private set;} = false;
@@ -47,7 +48,7 @@ public partial class Region : ISerializable
         Origin = origin;
     }
 
-    public bool InRegion(BlockCoord coord)
+    public bool Contains(BlockCoord coord)
     {
         BlockCoord delta = coord-Origin;
         return delta.X>=0&&delta.Y>=0&&delta.Z>=0&&delta.X<(int)Size && delta.Y < (int)Size && delta.Z < (int)Size;
@@ -96,7 +97,7 @@ public partial class Region : ISerializable
     //child level=0 must be Chunk
     public bool AddChild(Region child)
     {
-        if (!InRegion(child.Origin)) return false;
+        if (!Contains(child.Origin)) return false;
         if (child.Level >= Level) return false;
         if (child.Level == 0 && !(child is Chunk)) return false;
         if (Children == null) Children = new Region[8];
@@ -250,6 +251,7 @@ public partial class Region : ISerializable
     public void SerializeNonRecursive(BinaryWriter bw)
     {
         bw.Write((byte)0); //indicate this is a nonrecursive file
+        bw.Write(0); //size field, not used for non recursive files
         SerializeInfo(bw);
     }
     //writes the 1 byte to indicate recursive, then calls Serialize()
@@ -273,12 +275,21 @@ public partial class Region : ISerializable
     //Calls SerializeInfo(), recursively calls Serialize() for all non-null children
     public virtual void Serialize(BinaryWriter bw)
     {
+        long startPos = bw.BaseStream.Position;
+        bw.Write(0); //placeholder for length of region in bytes
         SerializeInfo(bw);
         for (int i = 0; i < Children.Length; i++) {
             if (Children[i] != null) {
                 Children[i].Serialize(bw);
             }
         }
+        long endPos = bw.BaseStream.Position;
+        int size = (int)(endPos-startPos);
+        //seek back to start to write the size of the region
+        bw.Seek((int)startPos, SeekOrigin.Begin);
+        bw.Write(size);
+        //go back to end so region isn't overwritten
+        bw.Seek((int)endPos, SeekOrigin.Begin);
     }
     //depth-first traversal of octree. If callback returns false, we don't visit that region's children
     public void Traverse(System.Func<Region, bool> callback) {
@@ -299,30 +310,32 @@ public partial class Region : ISerializable
         }
     }
     //returns (region, children indexes)
-    public static (Region, int[]) DeserializeNonRecursive(BinaryReader br)
+    public static (Region, long) DeserializeNonRecursive(BinaryReader br)
     {
+        long startPos = br.BaseStream.Position;
+        long size = br.ReadInt32();
         int level = br.ReadInt32();
         if (level == 0) {//this is a chunk 
-            return (Chunk.Deserialize(br), null);
+            return (Chunk.Deserialize(br), -1);
         }
         BlockCoord origin = BlockCoord.Deserialize(br);
         Region r = new Region(level, origin);
         r.BlockDirtyFlag = false;
         //read # children
         int children = br.ReadByte();
-        if (children == 0) return (r, null);
+        if (children == 0) return (r, br.BaseStream.Position-startPos) ;
         r.Children = new Region[8];
-        int[] idxs = new int[children];
+        r.SavedChildIndicies = new byte[children];
         //read child indicies
         for (int i = 0; i < children; i++) {
-            idxs[i] = br.ReadByte();
+            r.SavedChildIndicies[i] = br.ReadByte();
         }
-        return (r,idxs);
+        return (r, br.BaseStream.Position-startPos);
     }
     public static Region DeserializeRecursive(BinaryReader br) {
-        (Region r, int[] childrenIdxs) = DeserializeNonRecursive(br);
-        if (childrenIdxs == null) return r;
-        foreach (var i in childrenIdxs) {
+        (Region r, _) = DeserializeNonRecursive(br);
+        if (r.SavedChildIndicies == null) return r;
+        foreach (var i in r.SavedChildIndicies) {
             Region child = Region.DeserializeRecursive(br);
             r.Children[i] = child;
             child.Parent = r;

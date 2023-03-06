@@ -14,3 +14,6 @@ export_presets.cfg
 mono_crash*
 .idea/
 ./data_*/
+
+#worlds
+worlds/
