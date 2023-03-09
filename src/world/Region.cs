@@ -31,7 +31,7 @@ public partial class Region : ISerializable
     public bool BlockDirtyFlag {get; protected set;} = true;
     //structure is contained if region contains the position of the structure.
     // structure could overfill into this region from neighbor without being in this list
-    public List<Structure> Structures = new List<Structure>();
+    public HashSet<Structure> Structures = new HashSet<Structure>();
 
     public static Region MakeRegion(int level, BlockCoord origin)
     {
@@ -134,7 +134,7 @@ public partial class Region : ISerializable
             Children[idx].Tree = Tree;
             //set loaded if needed
             if (Children[idx].Loaded && !Loaded) updateLoadedStatus();
-            Structures.AddRange(child.Structures);
+            foreach(var s in child.Structures) Structures.Add(s);
         }
         
         return true;
@@ -143,6 +143,7 @@ public partial class Region : ISerializable
     public void RemoveChild(int id)
     {
         if (Children[id] == null) return;
+        foreach (var s in Children[id].Structures) Structures.Remove(s);
         Children[id].Parent = null;
         Children[id] = null;
         updateLoadedStatus();
@@ -247,6 +248,22 @@ public partial class Region : ISerializable
             child?.AddChunks(col);
         }
     }
+    public void AddChunks(List<Chunk> col)
+    {
+        if (this is Chunk c) {
+            col.Add(c);
+            return;
+        }
+        if (Children == null) return;
+        foreach (var child in Children) {
+            child?.AddChunks(col);
+        }
+    }
+    //returns if the chunk containing coord is in memory and a descendant of this region
+    public bool HasActiveChunk(BlockCoord coord) {
+        if (this is Chunk c && c.Position == (ChunkCoord)coord) return true;
+        return Contains(coord) && Children != null && Children[GetOctantId(coord)].HasActiveChunk(coord);
+    }
     //writes the 0 byte to indicate nonrecursive, then calls SerializeInfo()
     public void SerializeNonRecursive(BinaryWriter bw)
     {
@@ -341,5 +358,38 @@ public partial class Region : ISerializable
             child.Parent = r;
         }
         return r;
+    }
+    //merges region b into a, overwriting a's data with b's if needed.
+    //a.level should be >= b.level
+    public static void Merge(ref Region a, Region b)
+    {
+        if (a.Level < b.Level || !a.Contains(b.Origin)) return;
+        if (a.Level == b.Level) {
+            if (a.Level == 0) {
+                //dealing with chunks
+                a = b;
+            }
+            //need to maintain structures and children
+            foreach (var s in b.Structures) a.Structures.Add(s);
+            if (a.Children == null || b.Children == null) return;
+            if (a.Children == null) a.Children = new Region[8];
+            for(int i = 0; i < b.Children.Length; i++) {
+                if (b.Children[i] != null) {
+                    if (a.Children[i] == null) {
+                        a.Children[i] = b.Children[i];
+                        continue;
+                    }
+                    Merge(ref a.Children[i],b.Children[i]);
+                }
+            }
+        }
+        //a.level > b.level
+        if (a.Children == null) a.Children = new Region[8];
+        int target = a.GetOctantId(b.Origin);
+        if (a.Children[target] == null) {
+            a.AddChild(b);
+            return;
+        }
+        Merge(ref a.Children[target], b);
     }
 }

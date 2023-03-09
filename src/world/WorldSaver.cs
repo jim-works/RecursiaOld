@@ -105,9 +105,21 @@ public partial class WorldSaver : Node
     //writes the entire region recursively to one file
     private void writeEntireRegion(Region r, string fileName)
     {
-        using (BinaryWriter bw = new BinaryWriter(File.Open(fileName, FileMode.OpenOrCreate)))
-        {
-            r.SerializeRecursive(bw);
+        try {
+            //Region savedOnDisk = LoadRec(GetPath(r, World.Singleton.Octree.Root.Level));
+            //merge data saved on disk with the data in memory
+            //Region.Merge(ref savedOnDisk, r);
+            using (BinaryWriter bw = new BinaryWriter(File.Open(fileName, FileMode.OpenOrCreate)))
+            {
+                r.SerializeRecursive(bw);
+            }
+
+        } catch (System.IO.FileNotFoundException) {
+            //nothing saved on disk for this region, so we can just write the whole thing
+            using (BinaryWriter bw = new BinaryWriter(File.Open(fileName, FileMode.OpenOrCreate)))
+            {
+                r.SerializeRecursive(bw);
+            }
         }
     }
     //writes the surface level region data, then creates directories for children if needed
@@ -188,7 +200,6 @@ public partial class WorldSaver : Node
                 //our target is not in memory so...
                 //find out if target region or parent is saved to disk
                 bool found = false;
-                Godot.GD.Print("blah blah" + r);
                 if (r.SavedChildIndicies == null) return null;
                 for (int i = 0; i < r.SavedChildIndicies.Length; i++)
                 {
@@ -200,6 +211,7 @@ public partial class WorldSaver : Node
                 //maintain tree
                 Godot.GD.Print($"eeeeek {r} {next} {rootLevel}");
                 Region child = findRegionInFile(GetChildPath(r, next, rootLevelCutoff: rootLevel), rootLevel, coords, level);
+                if (child == null) return null; //not found
                 r.AddChild(child);
                 return child;
             }

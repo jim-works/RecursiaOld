@@ -8,6 +8,8 @@ public partial class World : Node
 {
     public static World Singleton;
     [Export] public string WorldName = "World1"; 
+    //loads a parent region of this level when we try to load a chunk (reduces # of times we read the file)
+    [Export] public int LoadChunkRegionLevel = 1;
     public ChunkCollection Chunks = new ChunkCollection();
     public RegionOctree Octree = new RegionOctree();
     //todo: optimize these
@@ -22,6 +24,7 @@ public partial class World : Node
 
     private double chunkLoadingInterval = 0.5f; //seconds per chunk loading update
     private double _chunkLoadingTimer = 0;
+    private WorldSaver saver;
     
     [Export] private int loadDistance = 10;
 
@@ -34,21 +37,9 @@ public partial class World : Node
     public override void _Ready()
     {
         WorldGen = new WorldGenerator();
-        tmpLoadWorld(GetNode<WorldSaver>("WorldSaver"));
+        saver = GetNode<WorldSaver>("WorldSaver");
         
         base._Ready();
-    }
-
-    private void tmpLoadWorld(WorldSaver saver)
-    {
-        Region r = saver.TryLoadRegion(this, new BlockCoord(0,0,0), level: 2);
-        if (r != null) {
-            Octree.Root = r;//saver.LoadRec(saver.GetPath(Octree.Root));
-            Octree.Root?.AddChunks(Chunks);
-        }
-        foreach (var kvp in Chunks) {
-            Mesher.Singleton.MeshDeferred(kvp.Value);
-        }
     }
 
     public override void _Process(double delta)
@@ -105,7 +96,6 @@ public partial class World : Node
     }
     private void doChunkLoading()
     {
-        return;
         if (_chunkLoadingTimer < chunkLoadingInterval) return;
         _chunkLoadingTimer = 0;
         loadedChunks.Clear();
@@ -143,6 +133,22 @@ public partial class World : Node
             chunk.Load();
             return; //already loaded
         } 
+        BlockCoord bc = (BlockCoord) coord;
+        Region r = saver.TryLoadRegion(this, bc, LoadChunkRegionLevel);
+        if (r != null) {
+            List<Chunk> inRegion = new List<Chunk>();
+            r.AddChunks(inRegion);
+            foreach (var toLoad in inRegion)
+            {
+                if (GetChunk(toLoad.Position) != null) {
+                    AddChunk(toLoad);
+                    Mesher.Singleton.MeshDeferred(toLoad);
+                }
+            }
+            return;
+        }
+        
+        
         Chunk c = CreateChunk(coord);
         c.Load();
         WorldGen.GenerateDeferred(c);
@@ -166,9 +172,12 @@ public partial class World : Node
     }
     public Chunk CreateChunk(ChunkCoord chunkCoords) {
         Chunk c = new Chunk(chunkCoords);
-        Chunks[chunkCoords] = c;
-        Octree.AddRegion(c);
+        AddChunk(c);
         return c;
+    }
+    public void AddChunk(Chunk c) {
+        Chunks[c.Position] = c;
+        Octree.AddRegion(c);
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
