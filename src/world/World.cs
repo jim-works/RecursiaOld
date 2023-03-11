@@ -1,5 +1,5 @@
 using Godot;
-using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 //Faces of blocks are on integral coordinates
@@ -11,13 +11,14 @@ public partial class World : Node
     //loads a parent region of this level when we try to load a chunk (reduces # of times we read the file)
     [Export] public int LoadChunkRegionLevel = 1;
     public ChunkCollection Chunks = new ChunkCollection();
-    public RegionOctree Octree = new RegionOctree();
     //todo: optimize these
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public List<Combatant> Combatants = new List<Combatant>();
     public List<Player> Players = new List<Player>();
     public HashSet<Node3D> ChunkLoaders = new HashSet<Node3D>();
     public WorldGenerator WorldGen;
+    
+    private Dictionary<ChunkGroupCoord, ChunkGroup> chunkGroups = new Dictionary<ChunkGroupCoord, ChunkGroup>();
     private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
@@ -38,7 +39,8 @@ public partial class World : Node
     {
         WorldGen = new WorldGenerator();
         saver = GetNode<WorldSaver>("WorldSaver");
-        
+        _chunkLoadingTimer = 9999;
+        doChunkLoading();
         base._Ready();
     }
 
@@ -53,9 +55,21 @@ public partial class World : Node
         fromWorldGen.Clear();
         if (GlobalConfig.UseInfiniteWorlds)
         {
-            _chunkLoadingTimer += delta; doChunkLoading();
+            _chunkLoadingTimer += delta; //doChunkLoading();
         }
         base._Process(delta);
+    }
+
+    public ChunkGroup GetChunkGroup(ChunkCoord c)
+    {
+        return GetChunkGroup((ChunkGroupCoord)c);
+    }
+    public ChunkGroup GetChunkGroup(ChunkGroupCoord c)
+    {
+        if (chunkGroups.TryGetValue(c, out var g)) return g;
+        ChunkGroup newGroup = new ChunkGroup(c);
+        chunkGroups[c] = newGroup;
+        return newGroup;
     }
     public Player ClosestPlayer(Vector3 pos)
     {
@@ -133,34 +147,77 @@ public partial class World : Node
             chunk.Load();
             return; //already loaded
         } 
-        BlockCoord bc = (BlockCoord) coord;
-        Region r = saver.TryLoadRegion(this, bc, LoadChunkRegionLevel);
-        if (r != null) {
-            List<Chunk> inRegion = new List<Chunk>();
-            r.AddChunks(inRegion);
-            foreach (var toLoad in inRegion)
-            {
-                if (GetChunk(toLoad.Position) != null) {
-                    AddChunk(toLoad);
-                    Mesher.Singleton.MeshDeferred(toLoad);
-                }
-            }
+        ChunkGroupCoord cgcoord = (ChunkGroupCoord)coord;
+        //we only load/unload whole chunk groups at once
+        if (!chunkGroups.ContainsKey(cgcoord) && saver.PathToChunkGroupExists(cgcoord))
+        {
+            loadChunkGroup(cgcoord);
+            //Task.Run(() => loadChunkGroup(cgcoord));
             return;
         }
-        
-        
-        Chunk c = CreateChunk(coord);
-        c.Load();
-        WorldGen.GenerateDeferred(c);
+        //need to generate the chunk
+        // Chunk c = CreateChunk(coord);
+        // c.Load();
+        // WorldGen.GenerateDeferred(c);
+    }
+    private void loadChunkGroup(ChunkGroupCoord coord)
+    {
+        lock (chunkGroups)
+        {
+            ChunkGroup cg = saver.Load(coord);
+            if (cg != null)
+            {
+                chunkGroups[cg.Position] = cg;
+                for (int x = 0; x < ChunkGroup.GROUP_SIZE; x++)
+                {
+                    for (int y = 0; y < ChunkGroup.GROUP_SIZE; y++)
+                    {
+                        for (int z = 0; z < ChunkGroup.GROUP_SIZE; z++)
+                        {
+                            Chunk cgc = cg.Chunks[x, y, z];
+                            if (cgc != null) {
+                                AddChunk(cgc);
+                                cgc.Load();
+                                Mesher.Singleton.MeshDeferred(cgc);
+                                Godot.GD.Print("a" + cgc.Position);
+                            }
+                            
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private void saveChunkGroup(ChunkGroupCoord coord)
+    {
+        lock (chunkGroups)
+        {
+            ChunkGroup cg = chunkGroups[coord];
+            saver.Save(cg);
+            chunkGroups.Remove(coord);
+        }
     }
     private void unloadChunk(ChunkCoord coord) {
         if (!Chunks.Contains(coord)) return;//already unloaded
         Chunk c = Chunks[coord];
-        //allow us to keep some unloaded chunks in memory
-        if (c.Loaded) {
-            Chunks.Remove(coord);
-        } 
         c.Unload();
+        if (c.Group.ChunksLoaded == 0)
+        {
+            for (int x = 0; x < ChunkGroup.GROUP_SIZE; x++)
+            {
+                for (int y = 0; y < ChunkGroup.GROUP_SIZE; y++)
+                {
+                    for (int z = 0; z < ChunkGroup.GROUP_SIZE; z++)
+                    {
+                        Chunk cgc = c.Group.Chunks[x, y, z];
+                        if (cgc != null) Chunks.Remove(cgc.Position);
+                    }
+                }
+            }
+            saveChunkGroup(c.Group.Position);
+            //Task.Run(() => saveChunkGroup(c.Group.Position));
+        }
+
         Mesher.Singleton.Unload(c);
     }
     public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
@@ -171,13 +228,17 @@ public partial class World : Node
         return CreateChunk(chunkCoords);
     }
     public Chunk CreateChunk(ChunkCoord chunkCoords) {
-        Chunk c = new Chunk(chunkCoords);
+        Chunk c = new Chunk(chunkCoords, GetChunkGroup(chunkCoords));
         AddChunk(c);
         return c;
     }
     public void AddChunk(Chunk c) {
+        if (!chunkGroups.TryGetValue((ChunkGroupCoord)c.Position, out ChunkGroup cg)) {
+            cg = new ChunkGroup((ChunkGroupCoord)c.Position);
+            chunkGroups.Add(cg.Position, cg);
+        }
+        cg.AddChunk(c);
         Chunks[c.Position] = c;
-        Octree.AddRegion(c);
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -209,7 +270,7 @@ public partial class World : Node
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetOrCreateChunk(chunkCoords);
         c[blockCoords] = block;
-        if (meshChunk && c.Loaded) {
+        if (meshChunk && c.State == ChunkState.Loaded) {
             Mesher.Singleton.MeshDeferred(c);
             //mesh neighbors if needed
             if (blockCoords.X == 0 && GetChunk(chunkCoords+new ChunkCoord(-1,0,0)) is Chunk nx)

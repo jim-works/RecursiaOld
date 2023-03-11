@@ -30,6 +30,7 @@ public partial class Mesher : Node
         {
             multithreadGenerateChunk(mesghin);
         }
+        if (toMesh.Count > 0) Godot.GD.Print("Meshed " + toMesh.Count);
         toMesh.Clear();
         //spawn all on single thread to avoid a million race conditions
         while (finishedMeshes.Count > 0)

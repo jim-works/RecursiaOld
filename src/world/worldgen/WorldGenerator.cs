@@ -211,7 +211,7 @@ public partial class WorldGenerator
                 Structure result = await provider.PlaceStructure(world.Chunks, origin);
                 if (result != null && provider.Record)
                 {
-                    chunk.AddStructure(result);
+                    chunk.Structures.Add(result);
                 }
                 lock (done)
                 {

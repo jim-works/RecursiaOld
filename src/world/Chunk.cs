@@ -2,19 +2,28 @@ using System.IO;
 using System.Collections.Generic;
 using System;
 
-//leaf node of region octree structure
-public partial class Chunk : Region
+public enum ChunkState
+{
+    Loaded,
+    Unloaded
+}
+public partial class Chunk : ISerializable
 {
     public const int CHUNK_SIZE = 16;
+    public ChunkGroup Group;
     public ChunkCoord Position;
     private Block[,,] Blocks;
     public ChunkMesh Mesh;
     public ChunkGenerationState GenerationState;
+    public ChunkState State {get; private set;}
+    public List<Structure> Structures = new List<Structure>();
+    public bool SaveDirtyFlag;
 
-    public Chunk(ChunkCoord chunkCoords) : base(0,(BlockCoord)chunkCoords)
+    public Chunk(ChunkCoord chunkCoords, ChunkGroup group)
     {
+        //TODO: don't allocate unless block has been set in chunk, return null blocks if not allocated
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
-        //Structures.Add(new Structure());
+        group.AddChunk(this);
         Position = chunkCoords;
     }
     
@@ -25,11 +34,23 @@ public partial class Chunk : Region
 
     public Block this[BlockCoord index] {
         get {return Blocks[index.X,index.Y,index.Z];}
-        set {Blocks[index.X,index.Y,index.Z] = value; SetBlockDirty(); }
+        set {Blocks[index.X,index.Y,index.Z] = value; SaveDirtyFlag = true; }
     }
     public Block this[int x, int y, int z] {
         get {return Blocks[x,y,z];}
-        set {Blocks[x,y,z] = value; SetBlockDirty(); }
+        set {Blocks[x,y,z] = value; SaveDirtyFlag=true; }
+    }
+
+    public void Load()
+    {
+        if (State != ChunkState.Loaded) Group.ChunksLoaded++;
+        State = ChunkState.Loaded;
+    }
+
+    public void Unload()
+    {
+        if (State != ChunkState.Unloaded) Group.ChunksLoaded--;
+        State = ChunkState.Unloaded;
     }
 
     public BlockCoord LocalToWorld(BlockCoord local) {
@@ -41,11 +62,8 @@ public partial class Chunk : Region
         return coord % (int)CHUNK_SIZE;
     }
 
-    public override void Serialize(BinaryWriter bw)
+    public void Serialize(BinaryWriter bw)
     {
-        long startPos = bw.BaseStream.Position;
-        bw.Write(0); //placeholder for length of region in bytes
-        bw.Write(Level);
         Position.Serialize(bw);
         Block curr = Blocks[0,0,0];
         int run = 0;
@@ -72,22 +90,15 @@ public partial class Chunk : Region
         bw.Write(run);
         if (curr == null) bw.Write(0);
         else {bw.Write(1); curr.Serialize(bw);}
-        long endPos = bw.BaseStream.Position;
-        int size = (int)(endPos-startPos);
-        //seek back to start to write the size of the region
-        bw.Seek((int)startPos, SeekOrigin.Begin);
-        bw.Write(size);
-        //go back to end so region isn't overwritten
-        bw.Seek((int)endPos, SeekOrigin.Begin);
     }
 
-    public static Chunk Deserialize(BinaryReader br)
+    public static void Deserialize(BinaryReader br, ChunkGroup into)
     {
         var pos = ChunkCoord.Deserialize(br);
-        Chunk c = new Chunk(pos);
+        Chunk c = new Chunk(pos, into);
         int run = 0;
         Block read = null;
-        c.BlockDirtyFlag = false;
+        c.SaveDirtyFlag = false;
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
             for (int y = 0; y < Chunk.CHUNK_SIZE; y++) {
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
@@ -102,11 +113,10 @@ public partial class Chunk : Region
                 }
             }
         }
-        return c;
     }
 
     public override string ToString()
     {
-        return $"Chunk at {Position} (origin {Origin}) {BlockDirtyFlag}";
+        return $"Chunk at {Position}";
     }
 }
