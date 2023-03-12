@@ -45,6 +45,7 @@ public partial class Mesher : Node
     {
         if (chunk == null) return;
         chunk.Mesh?.ClearData();
+        chunk.GenerationState = ChunkGenerationState.GENERATED;
         chunk.Mesh = null;
     }
     //queues a chunk to be meshed
