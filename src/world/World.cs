@@ -49,13 +49,14 @@ public partial class World : Node
         WorldGen.GetFinishedChunks(fromWorldGen);
         foreach (var item in fromWorldGen)
         {
-            Mesher.Singleton.MeshDeferred(item);
+            Mesher.Singleton.MeshDeferred(item, checkMeshed: true);
         }
 
         fromWorldGen.Clear();
         if (GlobalConfig.UseInfiniteWorlds)
         {
-            _chunkLoadingTimer += delta; //doChunkLoading();
+            _chunkLoadingTimer += delta;
+            doChunkLoading();
         }
         base._Process(delta);
     }
@@ -123,7 +124,7 @@ public partial class World : Node
                 {
                     for (int z = -loadDistance; z <= loadDistance; z++)
                     {
-                        if (x*x+y*y+z+z > loadDistance*loadDistance) continue; //load in a sphere instead of cube
+                        if (x * x + y * y + z + z > loadDistance * loadDistance) continue; //load in a sphere instead of cube
                         loadedChunks.Add(center + new ChunkCoord(x,y,z));
                     }
                 }
@@ -132,6 +133,9 @@ public partial class World : Node
         foreach (var kvp in Chunks) {
             if (!loadedChunks.Contains(kvp.Key)) {
                 toUnload.Add(kvp.Key);
+            } else {
+                //loaded, check if needs mesh
+                Mesher.Singleton.MeshDeferred(kvp.Value, checkMeshed: true);
             }
         }
         foreach (var c in toUnload) {
@@ -142,23 +146,35 @@ public partial class World : Node
         }
 
     }
+    
     private void loadChunk(ChunkCoord coord) {
+        
         if (Chunks.TryGetValue(coord, out Chunk chunk)){
             chunk.Load();
             return; //already loaded
-        } 
+        }
         ChunkGroupCoord cgcoord = (ChunkGroupCoord)coord;
         //we only load/unload whole chunk groups at once
-        if (!chunkGroups.ContainsKey(cgcoord) && saver.PathToChunkGroupExists(cgcoord))
+        if (!chunkGroups.TryGetValue(cgcoord, out ChunkGroup cg) && saver.PathToChunkGroupExists(cgcoord))
         {
+            //TODO: multithread this part (Task.Run doesn't work immediately)
             loadChunkGroup(cgcoord);
-            //Task.Run(() => loadChunkGroup(cgcoord));
             return;
+        } 
+        else if (cg != null)
+        {
+            //ChunkGroup is loaded, see if it contains the chunk we want
+            Chunk inGroup = cg.GetChunk(coord);
+            if (inGroup != null)
+            {
+                inGroup.Load();
+                return;
+            }
         }
         //need to generate the chunk
-        // Chunk c = CreateChunk(coord);
-        // c.Load();
-        // WorldGen.GenerateDeferred(c);
+        Chunk c = CreateChunk(coord);
+        c.Load();
+        WorldGen.GenerateDeferred(c);
     }
     private void loadChunkGroup(ChunkGroupCoord coord)
     {
@@ -178,8 +194,6 @@ public partial class World : Node
                             if (cgc != null) {
                                 AddChunk(cgc);
                                 cgc.Load();
-                                Mesher.Singleton.MeshDeferred(cgc);
-                                Godot.GD.Print("a" + cgc.Position);
                             }
                             
                         }
@@ -214,8 +228,7 @@ public partial class World : Node
                     }
                 }
             }
-            saveChunkGroup(c.Group.Position);
-            //Task.Run(() => saveChunkGroup(c.Group.Position));
+            Task.Run(() => saveChunkGroup(c.Group.Position));
         }
 
         Mesher.Singleton.Unload(c);

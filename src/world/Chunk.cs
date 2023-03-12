@@ -17,14 +17,14 @@ public partial class Chunk : ISerializable
     public ChunkGenerationState GenerationState;
     public ChunkState State {get; private set;}
     public List<Structure> Structures = new List<Structure>();
-    public bool SaveDirtyFlag;
+    public bool SaveDirtyFlag = true;
 
     public Chunk(ChunkCoord chunkCoords, ChunkGroup group)
     {
         //TODO: don't allocate unless block has been set in chunk, return null blocks if not allocated
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
-        group.AddChunk(this);
         Position = chunkCoords;
+        group.AddChunk(this);
     }
     
     public void ChunkTick(float dt)

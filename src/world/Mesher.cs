@@ -30,7 +30,6 @@ public partial class Mesher : Node
         {
             multithreadGenerateChunk(mesghin);
         }
-        if (toMesh.Count > 0) Godot.GD.Print("Meshed " + toMesh.Count);
         toMesh.Clear();
         //spawn all on single thread to avoid a million race conditions
         while (finishedMeshes.Count > 0)
@@ -48,14 +47,10 @@ public partial class Mesher : Node
         chunk.Mesh?.ClearData();
         chunk.Mesh = null;
     }
-    public void MeshAll()
-    {
-        foreach (var kvp in World.Singleton.Chunks) {
-           MeshDeferred(kvp.Value); 
-        }
-    }
-    public void MeshDeferred(Chunk chunk) {
-        toMesh.Add(chunk);
+    //queues a chunk to be meshed
+    //checkMeshed: we only update the mesh of this chunk if it hasn't already been meshed (useful for loading/worldgeneration)
+    public void MeshDeferred(Chunk chunk, bool checkMeshed=false) {
+        if (!checkMeshed || chunk.GenerationState != ChunkGenerationState.MESHED) toMesh.Add(chunk);
         chunk.GenerationState = ChunkGenerationState.MESHED;
     }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node

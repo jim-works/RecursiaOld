@@ -35,6 +35,12 @@ public partial class WorldSaver : Node
             Task.Run( () => Save(World.Singleton) );
         }
     }
+
+    public override void _ExitTree()
+    {
+        Save(World.Singleton);
+    }
+
     //gets path to data file for region
     public string GetPath(ChunkGroupCoord group)
     {
@@ -54,15 +60,15 @@ public partial class WorldSaver : Node
             if (kvp.Value.SaveDirtyFlag) toSave[kvp.Value.Group.Position] = kvp.Value.Group;
         }
         Godot.GD.Print($"Saving {toSave.Count} groups...");
-        foreach(var kvp in toSave) Save(kvp.Value);
-        //Parallel.ForEach(toSave, kvp => Save(kvp.Value));
+        //foreach(var kvp in toSave) Save(kvp.Value);
+        Parallel.ForEach(toSave, kvp => Save(kvp.Value));
     }
     public void Save(ChunkGroup g)
     {
         try {
         Godot.GD.Print("saving " + g.Position.ToString());
         using (FileStream fs = File.Open(GetPath(g.Position), FileMode.Create))
-        //using (GZipStream gz = new GZipStream(fs, CompressionLevel.Fastest))
+        using (GZipStream gz = new GZipStream(fs, CompressionLevel.Fastest))
         using (BinaryWriter bw = new BinaryWriter(fs))
         {
             bw.Write(GROUP_MAGIC_NUMBER);
@@ -102,7 +108,7 @@ public partial class WorldSaver : Node
         try
         {
             using (FileStream fs = File.Open(GetPath(gc), FileMode.Open))
-            //using (GZipStream gz = new GZipStream(fs, CompressionMode.Decompress))
+            using (GZipStream gz = new GZipStream(fs, CompressionMode.Decompress))
             using (BinaryReader br = new BinaryReader(fs))
             {
                 int magnum = br.ReadInt32();
