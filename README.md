@@ -7,11 +7,11 @@ Current Features:
   - Rough AABB physics
   - Multithreaded world generation and meshing
     - Support for very large, multi-chunk structures
-    - Octree world structure for future optimization
+  - Terrain saving/loading
   - Robust block system, blocks can contain arbitrary data
   - Item/Inventory system
     - With crafting
-  - Combat system
+  - Combat system with multiple gun/ammo types
   - Boss fight with Patrick Quack (giant skeleton man)
   - Several enemy types with unique behavior:
     - Chain striker - has many segments connected by spring physics, tries to launch itself at you
@@ -22,11 +22,12 @@ Current Features:
 
 Download the latest release from the releases page, or...
 
-Download the project and open in Godot 3.4.4-mono.
+Download the project and open in Godot 4.0-mono.
 Run in the editor.
 
 Controls:
   -  WASD/Space to move and jump
+  -  1/2 to select item
   -  F11 for fullscreen
   -  ESC for locking/unlocking mouse
   -  Left click to break blocks
@@ -36,6 +37,7 @@ Controls:
 
 - Currently structures do not properly mesh, so sometimes (quite often) you'll see trees with holes in them.
 - The game crashes if the player dies. Skill issue
+- Godot 4.0 has a bug where viewport textures do not work in release builds, so healthbars will look weird.
 
 # Future Plans
 
