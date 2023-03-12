@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 //Faces of blocks are on integral coordinates
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
+//TODO: fix unloading, I think there's a memory leak
 public partial class World : Node
 {
     public static World Singleton;

@@ -36,8 +36,9 @@ public partial class WorldGenerator
     {
         //initialize worldgen threads
         Godot.GD.Print($"Starting world generator with {WorldgenThreads} threads!");
-        chunkGenLayers.Add(initLayer(new HeightmapLayer()));
-        chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
+        chunkGenLayers.Add(initLayer(new PlateauLayer()));
+        chunkGenLayers.Add(initLayer(new FloatingIslandLayer()));
+        //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
         structureProviders.Add(new TreeStructureProvider());
         shaping = new HashSet<Chunk>[WorldgenThreads];
         expanding = new Dictionary<ChunkCoord, Chunk>[WorldgenThreads];

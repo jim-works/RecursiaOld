@@ -1,8 +1,13 @@
+//saves annoyance
+#define NO_SAVING
+
 using Godot;
 using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
+
 
 //encode path using coordinate of chunk group:
 //-1,0,0.group -> group containing chunks from -GROUP_SIZE,0,0 through -1,0,0
@@ -49,11 +54,18 @@ public partial class WorldSaver : Node
 
     public bool PathToChunkGroupExists(ChunkGroupCoord group)
     {
-        return File.Exists(GetPath(group));
+        #if NO_SAVING
+            return false;
+        #else
+            return File.Exists(GetPath(group));
+        #endif
     }
 
     public void Save(World world)
     {
+#if NO_SAVING
+        return;
+#else
         Dictionary<ChunkGroupCoord, ChunkGroup> toSave = new Dictionary<ChunkGroupCoord, ChunkGroup>();
         foreach (var kvp in world.Chunks)
         {
@@ -62,9 +74,13 @@ public partial class WorldSaver : Node
         Godot.GD.Print($"Saving {toSave.Count} groups...");
         //foreach(var kvp in toSave) Save(kvp.Value);
         Parallel.ForEach(toSave, kvp => Save(kvp.Value));
+#endif
     }
     public void Save(ChunkGroup g)
     {
+#if NO_SAVING
+        return;
+#else
         try {
         Godot.GD.Print("saving " + g.Position.ToString());
         using (FileStream fs = File.Open(GetPath(g.Position), FileMode.Create))
@@ -101,9 +117,13 @@ public partial class WorldSaver : Node
         } catch (System.Exception e) {
             Godot.GD.Print("error saving: " + e);
         }
+#endif
     }
     public ChunkGroup Load(ChunkGroupCoord gc)
     {
+#if NO_SAVING
+        return null;
+#else
         Godot.GD.Print("loading " + gc.ToString());
         try
         {
@@ -134,5 +154,6 @@ public partial class WorldSaver : Node
             Godot.GD.PrintErr("Error loading chunkgroup " + e);
             return null;
         }
+#endif
     }
 }

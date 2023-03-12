@@ -1,28 +1,39 @@
 using Godot;
 
-public partial class HeightmapLayer : IChunkGenLayer
+public partial class PlateauLayer : IChunkGenLayer
 {
-    private Block stone, dirt, grass, copper;
+    private Block stone, dirt, grass;
     private const float noiseFreq = 0.2f;
     private const float noiseScale = 50;
     private const float celluarFreq = 0.2f;
     private const float cellularScale = 1f;
-    private LayeredNoise noise = new LayeredNoise();
+    private LayeredNoise plateauNoise = new LayeredNoise();
+    private LayeredNoise layerNoise = new LayeredNoise();
+    private const float tierMult = 0.025f;
+    private const float layerMult = 5;
+    private const float layerFreq = 0.5f;
 
     private float seed;
     private const int noiseSampleInterval = 4;
     
-    public HeightmapLayer()
+    public PlateauLayer()
     {
         stone = BlockTypes.Get("stone");
         dirt = BlockTypes.Get("dirt");
         grass = BlockTypes.Get("grass");
+
+        //setup main shape of plateaus
         FastNoiseLite fn = new FastNoiseLite();
         fn.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
-        noise.AddLayers(fn, 5, noiseFreq*Vector3.One, 2f, noiseScale, 0.7f);
+        plateauNoise.AddLayers(fn, 5, noiseFreq*Vector3.One, 2f, noiseScale, 0.7f);
         FastNoiseLite cellular = new FastNoiseLite();
         cellular.SetNoiseType(FastNoiseLite.NoiseType.Cellular);
-        noise.AddProductLayer(cellular, celluarFreq*Vector3.One, cellularScale);
+        plateauNoise.AddProductLayer(cellular, celluarFreq*Vector3.One, cellularScale);
+
+        //setup detail noise of plateau layers
+        FastNoiseLite layerFn = new FastNoiseLite((int)seed);
+        layerFn.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+        layerNoise.AddLayers(layerFn, 2, Vector3.One*layerFreq, 5, layerMult, 0.4f);
     }
 
     public void InitRandom(float seed)
@@ -38,7 +49,8 @@ public partial class HeightmapLayer : IChunkGenLayer
         {
             for (int z = 0; z < heightSamples.GetLength(1); z++)
             {
-                heightSamples[x, z] = noise.Sample(noiseSampleInterval * x + cornerWorldCoords.X, noiseSampleInterval * z + cornerWorldCoords.Z);
+                float sample = plateauNoise.Sample(noiseSampleInterval * x + cornerWorldCoords.X, noiseSampleInterval * z + cornerWorldCoords.Z);;
+                heightSamples[x, z] = (1/tierMult)*(Mathf.Floor(sample*tierMult))+layerMult*layerNoise.Sample(noiseSampleInterval * x + cornerWorldCoords.X, noiseSampleInterval * z + cornerWorldCoords.Z);
             }
         }
         return heightSamples;
