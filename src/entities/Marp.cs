@@ -1,6 +1,6 @@
 using Godot;
 
-public class Marp : BipedalCombatant
+public partial class Marp : BipedalCombatant
 {
     [Export] public float WalkSpeed = 10;
     [Export] public float CarryTime = 2;
@@ -11,11 +11,11 @@ public class Marp : BipedalCombatant
     [Export] public float SmackHeight = 10;
     [Export] public float SmackDamage = 1;
 
-    [Export] public Spatial CarryTarget;
+    [Export] public Node3D CarryTarget;
 
     private Combatant carrying = null;
     private AnimationNodeStateMachinePlayback stateMachine;
-    private float stateSwitchTimer = 0;
+    private double stateSwitchTimer = 0;
 
     public override void _Ready()
     {
@@ -23,7 +23,7 @@ public class Marp : BipedalCombatant
         stateMachine = (AnimationNodeStateMachinePlayback)animationTree.Get("parameters/playback");
     }
 
-    public override void _PhysicsProcess(float dt)
+    public override void _PhysicsProcess(double dt)
     {
         if (StateSwitchInterval <= stateSwitchTimer)
         {
@@ -36,7 +36,7 @@ public class Marp : BipedalCombatant
         stateSwitchTimer += dt;
         if (stateMachine.GetCurrentNode() == WalkBlendNode)
         {
-            doWalk(dt);
+            doWalk((float)dt);
         }
         base._PhysicsProcess(dt);
     }
@@ -45,22 +45,22 @@ public class Marp : BipedalCombatant
         if (IsInstanceValid(carrying))
         {
             Vector3 carryDest = new Vector3(0,0,WalkSpeed);
-            if (IsInstanceValid(CarryTarget)) carryDest = (CarryTarget.GlobalTransform.origin-Position).Normalized()*WalkSpeed;
-            Velocity = new Vector3(carryDest.x, Velocity.y, carryDest.z);
-            carrying.Position = Position+new Vector3(0,2,0);
+            if (IsInstanceValid(CarryTarget)) carryDest = (CarryTarget.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
+            Velocity = new Vector3(carryDest.X, Velocity.Y, carryDest.Z);
+            carrying.GlobalPosition = GlobalPosition+new Vector3(0,2,0);
             carrying.Velocity = Vector3.Zero;
             if (CarryTime <= stateSwitchTimer) carrying = null;
             return;
         }
         
-        if (!World.Singleton.ClosestEnemy(Position, Team, out Combatant closest)) return;
+        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, out Combatant closest)) return;
         if (closest == null) return;
-        Vector3 dv = (closest.Position-Position).Normalized()*WalkSpeed;
-        Velocity = new Vector3(dv.x, Velocity.y, dv.z);
-        Vector3 dp = (closest.Position-Position);
-        if (new Vector3(dp.x,0,dp.z).LengthSquared() < 2 && dp.y < 4)
+        Vector3 dv = (closest.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
+        Velocity = new Vector3(dv.X, Velocity.Y, dv.Z);
+        Vector3 dp = (closest.GlobalPosition-GlobalPosition);
+        if (new Vector3(dp.X,0,dp.Z).LengthSquared() < 2 && dp.Y < 4)
         {
-            if (dp.y > 3)
+            if (dp.Y > 3)
             {
                 carrying = closest;
                 stateSwitchTimer = 0;
@@ -74,7 +74,7 @@ public class Marp : BipedalCombatant
     {
         stateMachine.Travel(SmackState);
         stateSwitchTimer = 0;
-        c.Velocity = (c.Position-Position).Normalized()*Smackitude+new Vector3(0,SmackHeight,0);
+        c.Velocity = (c.GlobalPosition-GlobalPosition).Normalized()*Smackitude+new Vector3(0,SmackHeight,0);
         c.TakeDamage(new Damage{Amount=SmackDamage,Team=Team});
     }
 }

@@ -1,6 +1,7 @@
+using System.IO;
 using Godot;
 
-public class LootBlock : Block
+public partial class LootBlock : Block
 {
     public ItemStack[] Drops;
 
@@ -11,5 +12,14 @@ public class LootBlock : Block
             c.Inventory.CopyItem(item);
         }
         World.Singleton.SetBlock(pos, null);
+    }
+
+    public override void Serialize(BinaryWriter bw)
+    {
+        Drops.Serialize(bw);
+    }
+    public override void Deserialize(BinaryReader br)
+    {
+        Drops = SerializationExtensions.DeserializeArray<ItemStack>(br,br => ItemStack.Deserialize(br));
     }
 }

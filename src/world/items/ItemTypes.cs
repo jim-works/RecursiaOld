@@ -17,7 +17,7 @@ public static class ItemTypes
         return new BlockFactoryItem {
             BlockName = blockName,
             Name = blockName,
-            Texture = b.ItemTexture
+            Texture2D = b.ItemTexture
         };
     }
 
@@ -27,7 +27,7 @@ public static class ItemTypes
     public static BlockItem GetBlockItem(Block b) => new BlockItem {
             Name=b.Name,
             Placing=b,
-            Texture = b.ItemTexture
+            Texture2D = b.ItemTexture
         };
 
     public static void CreateType(string name, Item item) {

@@ -2,7 +2,7 @@ using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
 
-public class RotatingCamera : Spatial
+public partial class RotatingCamera : Node3D
 {
 
     [Export]
@@ -22,21 +22,20 @@ public class RotatingCamera : Spatial
     public override void _Ready()
     {
         Singleton = this;
-        Input.SetMouseMode(Input.MouseMode.Captured);
         base._Ready();
     }
     public override void _Input(InputEvent e)
     {
         if (!Settings.Paused && e is InputEventMouseMotion m) {
             Vector2 d = m.Relative;
-            yaw = (yaw - LookSensitivity*d.x) % 360;
-            pitch = System.Math.Min(System.Math.Max(pitch-LookSensitivity*d.y,-90),90);
+            yaw = (yaw - LookSensitivity*d.X) % 360;
+            pitch = System.Math.Min(System.Math.Max(pitch-LookSensitivity*d.Y,-90),90);
             RotationDegrees = new Vector3(pitch,yaw,0);
         }
         base._Input(e);
     }
 
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
         if (Settings.Paused) {
             base._Process(delta);
@@ -49,28 +48,28 @@ public class RotatingCamera : Spatial
         pitch = System.Math.Min(System.Math.Max(pitch-ControllerLookSensitivity*look_y,-90),90);
         if (RotateParentPitch && RotateParentYaw)
         {
-            parent.RotationDegrees = new Vector3(pitch,yaw,parent.RotationDegrees.z);
-            RotationDegrees = new Vector3(0,0,RotationDegrees.z);
+            parent.RotationDegrees = new Vector3(pitch,yaw,parent.RotationDegrees.Z);
+            RotationDegrees = new Vector3(0,0,RotationDegrees.Z);
         }
         else if (RotateParentPitch)
         {
-            parent.RotationDegrees = new Vector3(pitch, parent.RotationDegrees.y, parent.RotationDegrees.z);
-            RotationDegrees = new Vector3(0, RotationDegrees.y, RotationDegrees.z);
+            parent.RotationDegrees = new Vector3(pitch, parent.RotationDegrees.Y, parent.RotationDegrees.Z);
+            RotationDegrees = new Vector3(0, RotationDegrees.Y, RotationDegrees.Z);
         }
         else if (RotateParentYaw)
         {
-            parent.RotationDegrees = new Vector3(parent.RotationDegrees.x, yaw, parent.RotationDegrees.z);
-            RotationDegrees = new Vector3(RotationDegrees.x, 0, RotationDegrees.z); 
+            parent.RotationDegrees = new Vector3(parent.RotationDegrees.X, yaw, parent.RotationDegrees.Z);
+            RotationDegrees = new Vector3(RotationDegrees.X, 0, RotationDegrees.Z); 
         }
         else
         {
-            RotationDegrees = new Vector3(pitch,yaw,RotationDegrees.z);
+            RotationDegrees = new Vector3(pitch,yaw,RotationDegrees.Z);
         }
         if (Input.IsActionJustPressed("punch")) {
-            parent.Punch(-GlobalTransform.basis.z);
+            parent.Punch(-GlobalTransform.Basis.Z);
         }
         if (Input.IsActionJustPressed("use")) {
-            parent.Use(-GlobalTransform.basis.z);
+            parent.Use(-GlobalTransform.Basis.Z);
         }  
         
         base._Process(delta);

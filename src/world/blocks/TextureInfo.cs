@@ -1,4 +1,4 @@
-public class AtlasTextureInfo
+public partial class AtlasTextureInfo
 {
     public Godot.Vector2 UVMin;
     public Godot.Vector2 UVMax;

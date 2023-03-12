@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 //Faces of blocks are on integral coordinates
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
-public class Mesher : Node
+public partial class Mesher : Node
 {
     [Export]
     public Material ChunkMaterial;
@@ -23,7 +23,7 @@ public class Mesher : Node
         GD.Print("Mesher initialized!");
         base._EnterTree();
     }
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
         //multithread chunk generation
         foreach (var mesghin in toMesh)
@@ -45,16 +45,13 @@ public class Mesher : Node
     {
         if (chunk == null) return;
         chunk.Mesh?.ClearData();
+        chunk.GenerationState = ChunkGenerationState.GENERATED;
         chunk.Mesh = null;
     }
-    public void MeshAll()
-    {
-        foreach (var kvp in World.Singleton.Chunks) {
-           MeshDeferred(kvp.Value); 
-        }
-    }
-    public void MeshDeferred(Chunk chunk) {
-        toMesh.Add(chunk);
+    //queues a chunk to be meshed
+    //checkMeshed: we only update the mesh of this chunk if it hasn't already been meshed (useful for loading/worldgeneration)
+    public void MeshDeferred(Chunk chunk, bool checkMeshed=false) {
+        if (!checkMeshed || chunk.GenerationState != ChunkGenerationState.MESHED) toMesh.Add(chunk);
         chunk.GenerationState = ChunkGenerationState.MESHED;
     }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
@@ -66,10 +63,10 @@ public class Mesher : Node
         chunk.Mesh = mesh;
         if (mesh == null)
         {
-            //no need to spawn in a new MeshInstance if the chunk is empty
+            //no need to spawn in a new MeshInstance3D if the chunk is empty
             return;
         }
-        MeshInstance meshNode = new MeshInstance();
+        MeshInstance3D meshNode = new MeshInstance3D();
         chunk.Mesh.ApplyTo(meshNode, ChunkMaterial);
         AddChild(chunk.Mesh.Node);
     }
@@ -133,22 +130,22 @@ public class Mesher : Node
         Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);
 
         //check if there's no block/a transparent block in each direction. only generate face if so.
-        if (localPos.x == 0 && nonOpaque(neighbors[(int)Direction.NegX], (int)Chunk.CHUNK_SIZE-1,localPos.y,localPos.z) || localPos.x != 0 && nonOpaque(chunk,localPos.x-1,localPos.y,localPos.z)) {
+        if (localPos.X == 0 && nonOpaque(neighbors[(int)Direction.NegX], (int)Chunk.CHUNK_SIZE-1,localPos.Y,localPos.Z) || localPos.X != 0 && nonOpaque(chunk,localPos.X-1,localPos.Y,localPos.Z)) {
             addFacePosX(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.y == 0 && nonOpaque(neighbors[(int)Direction.NegY], localPos.x, (int)Chunk.CHUNK_SIZE-1,localPos.z) || localPos.y != 0 && nonOpaque(chunk,localPos.x,localPos.y-1,localPos.z)) {
+        if (localPos.Y == 0 && nonOpaque(neighbors[(int)Direction.NegY], localPos.X, (int)Chunk.CHUNK_SIZE-1,localPos.Z) || localPos.Y != 0 && nonOpaque(chunk,localPos.X,localPos.Y-1,localPos.Z)) {
             addFaceNegY(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.z == 0 && nonOpaque(neighbors[(int)Direction.NegZ], localPos.x,localPos.y,(int)Chunk.CHUNK_SIZE-1) || localPos.z != 0 && nonOpaque(chunk,localPos.x,localPos.y,localPos.z-1)) {
+        if (localPos.Z == 0 && nonOpaque(neighbors[(int)Direction.NegZ], localPos.X,localPos.Y,(int)Chunk.CHUNK_SIZE-1) || localPos.Z != 0 && nonOpaque(chunk,localPos.X,localPos.Y,localPos.Z-1)) {
             addFacePosZ(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.x == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosX], 0,localPos.y,localPos.z) || localPos.x != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.x+1,localPos.y,localPos.z)) {
+        if (localPos.X == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosX], 0,localPos.Y,localPos.Z) || localPos.X != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.X+1,localPos.Y,localPos.Z)) {
             addFaceNegX(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.y == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosY], localPos.x,0,localPos.z) || localPos.y != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.x,localPos.y+1,localPos.z)) {
+        if (localPos.Y == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosY], localPos.X,0,localPos.Z) || localPos.Y != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.X,localPos.Y+1,localPos.Z)) {
             addFacePosY(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.z == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosZ], localPos.x,localPos.y,0) || localPos.z != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.x,localPos.y,localPos.z+1)) {
+        if (localPos.Z == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosZ], localPos.X,localPos.Y,0) || localPos.Z != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.X,localPos.Y,localPos.Z+1)) {
             addFaceNegZ(pos, tex, verts, uvs, normals, tris);
         }
     }
@@ -174,9 +171,9 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(1, 0, 0));
         verts.Add(origin + new Vector3(0, 0, 0));
 
-        uvs.Add(new Vector2(info.UVMax.x, info.UVMin.y));
+        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
         uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.x, info.UVMax.y));
+        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
         uvs.Add(info.UVMax);
 
         finishFace(info, new Vector3(0, 0, 1), normals, tris);
@@ -189,9 +186,9 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(1, 1, 1));
         verts.Add(origin + new Vector3(0, 1, 1));
         
-        uvs.Add(new Vector2(info.UVMin.x, info.UVMax.y));
+        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
         uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.x, info.UVMin.y));
+        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
         uvs.Add(info.UVMin);
         
         finishFace(info, new Vector3(0, 0, -1), normals, tris);
@@ -205,9 +202,9 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0, 0, 0));
         
         uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.x, info.UVMin.y)); //2
+        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y)); //2
         uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.x, info.UVMax.y)); //3
+        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y)); //3
 
 
         finishFace(info, new Vector3(1, 0, 0), normals, tris);
@@ -221,9 +218,9 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(1, 0, 1));
         
         uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.x, info.UVMin.y));
+        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
         uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.x, info.UVMax.y));
+        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
         
 
         finishFace(info, new Vector3(-1, 0, 0), normals, tris);
@@ -237,9 +234,9 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(1, 1, 0));
 
         uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.x, info.UVMax.y));
+        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
         uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.x, info.UVMin.y));
+        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
 
         finishFace(info, new Vector3(0, 1, 0), normals, tris);
     }
@@ -252,9 +249,9 @@ public class Mesher : Node
         verts.Add(origin + new Vector3(0, 0, 1));
 
         uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMax.x, info.UVMin.y));
+        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
         uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMin.x, info.UVMax.y));
+        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
 
         finishFace(info, new Vector3(0, -1, 0), normals, tris);
     }

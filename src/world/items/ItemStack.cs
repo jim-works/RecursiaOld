@@ -1,4 +1,4 @@
-public struct ItemStack
+public struct ItemStack : ISerializable
 {
     public int Size;
     public Item Item;
@@ -21,5 +21,16 @@ public struct ItemStack
     {
         Size = 0;
         Item = null;
+    }
+
+    public void Serialize(System.IO.BinaryWriter bw) {
+        Item.Serialize(bw);
+        bw.Write(Size);
+    }
+    public static ItemStack Deserialize(System.IO.BinaryReader br) {
+        return new ItemStack {
+            Item=Item.Deserialize(br),
+            Size = br.ReadInt32()
+        };
     }
 }

@@ -1,9 +1,9 @@
 using Godot;
 
-public class BlockFactoryItem : Item
+public partial class BlockFactoryItem : Item
 {
-    public string BlockName;
-    public float Reach = 10;
+    [Export] public string BlockName;
+    [Export] public float Reach = 10;
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {

@@ -1,4 +1,6 @@
-public abstract class WeaponItem : Item
+using Godot;
+
+public abstract partial class WeaponItem : Item
 {
-    public int Damage;
+    [Export] public int Damage;
 }

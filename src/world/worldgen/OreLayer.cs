@@ -1,6 +1,6 @@
 using Godot;
 
-public class OreLayer : IChunkGenLayer
+public partial class OreLayer : IChunkGenLayer
 {
     public Block Ore;
     public int RollsPerChunk;
@@ -27,8 +27,8 @@ public class OreLayer : IChunkGenLayer
     {
         for (int i = 0; i < RollsPerChunk; i++)
         {
-            float sample = 0.5f*(1+noise.GetNoise(seed*12.12345f*i+seed*(float)chunk.Position.x,i+seed*(float)chunk.Position.y,i+seed*(float)chunk.Position.z)); //0..1
-            float threshold = Mathf.Lerp(0,VeinProb, Mathf.Clamp((StartDepth-((BlockCoord)chunk.Position).y)/(StartDepth-MaxProbDepth),0,1));
+            float sample = 0.5f*(1+noise.GetNoise(seed*12.12345f*i+seed*(float)chunk.Position.X,i+seed*(float)chunk.Position.Y,i+seed*(float)chunk.Position.Z)); //0..1
+            float threshold = Mathf.Lerp(0,VeinProb, Mathf.Clamp((StartDepth-((BlockCoord)chunk.Position).Y)/(StartDepth-MaxProbDepth),0,1));
             if (sample < threshold)
             {
                 spawnVein(world,chunk, i+1);
@@ -39,9 +39,9 @@ public class OreLayer : IChunkGenLayer
     private void spawnVein(World world, Chunk chunk, int vein)
     {
         //0..ChunkSize-1
-        int x = (int)(Chunk.CHUNK_SIZE*0.5f*(1+noise.GetNoise(7.123f*seed*-3*vein+seed*(float)chunk.Position.x,7.123f*seed*-3*vein+seed*(float)chunk.Position.y,7.123f*seed*-3*vein+seed*(float)chunk.Position.z)));
-        int y = (int)(Chunk.CHUNK_SIZE*0.5f*(1+noise.GetNoise(2.12398f*seed*(-1-3*vein)+seed*(float)chunk.Position.x,2.12398f*seed*(-1-3)*vein+seed*(float)chunk.Position.y,2.12398f*seed*(-1-3)*vein+seed*(float)chunk.Position.z)));
-        int z = (int)(Chunk.CHUNK_SIZE*0.5f*(1+noise.GetNoise(3.7398f*seed*(-2-3*vein)+seed*(float)chunk.Position.x,3.7398f*seed*(-2-3*vein)+seed*(float)chunk.Position.y,3.7398f*seed*(-2-3)*vein+seed*(float)chunk.Position.z)));
+        int x = (int)(Chunk.CHUNK_SIZE*0.5f*(1+noise.GetNoise(7.123f*seed*-3*vein+seed*(float)chunk.Position.X,7.123f*seed*-3*vein+seed*(float)chunk.Position.Y,7.123f*seed*-3*vein+seed*(float)chunk.Position.Z)));
+        int y = (int)(Chunk.CHUNK_SIZE*0.5f*(1+noise.GetNoise(2.12398f*seed*(-1-3*vein)+seed*(float)chunk.Position.X,2.12398f*seed*(-1-3)*vein+seed*(float)chunk.Position.Y,2.12398f*seed*(-1-3)*vein+seed*(float)chunk.Position.Z)));
+        int z = (int)(Chunk.CHUNK_SIZE*0.5f*(1+noise.GetNoise(3.7398f*seed*(-2-3*vein)+seed*(float)chunk.Position.X,3.7398f*seed*(-2-3*vein)+seed*(float)chunk.Position.Y,3.7398f*seed*(-2-3)*vein+seed*(float)chunk.Position.Z)));
 
         for (int i = 0; i < VeinSize; i++)
         {

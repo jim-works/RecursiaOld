@@ -1,7 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
-public class InventoryUI : Control
+public partial class InventoryUI : Control
 {
     [Export]
     public PackedScene ItemSlotUI;
@@ -41,15 +41,15 @@ public class InventoryUI : Control
             slot.QueueFree();
         }
         slots.Clear();
-        int slotsPerRow = Mathf.Max((int)RectSize.x/(SlotSizePx+Padding),1);
+        int slotsPerRow = Mathf.Max((int)Size.X/(SlotSizePx+Padding),1);
         int row = -1;
         for (int i = 0; i < inv.Size; i++)
         {
             int column = i % slotsPerRow;
             if (column == 0) row++;
-            ItemSlotUI slot = ItemSlotUI.Instance<ItemSlotUI>();
+            ItemSlotUI slot = ItemSlotUI.Instantiate<ItemSlotUI>();
             AddChild(slot);
-            slot.RectPosition = new Vector2(column*SlotSizePx+(column+1)*Padding, row*SlotSizePx+(row+1)*Padding);
+            slot.Position = new Vector2(column*SlotSizePx+(column+1)*Padding, row*SlotSizePx+(row+1)*Padding);
             int idx = i;
             slot.OnClick += (b) => slotClicked(b, idx, inv);
             slots.Add(slot);
@@ -65,11 +65,11 @@ public class InventoryUI : Control
         }
     }
 
-    private void slotClicked(int button, int slot, Inventory inv)
+    private void slotClicked(MouseButton button, int slot, Inventory inv)
     {
         if (inv != tracking) return; //not sure this is necessary but IDC
-        if (button == (int)ButtonList.Left) slotLeftClicked(slot, inv);
-        else if (button == (int)ButtonList.Right) slotRightClicked(slot, inv);
+        if (button == MouseButton.Left) slotLeftClicked(slot, inv);
+        else if (button == MouseButton.Right) slotRightClicked(slot, inv);
         else return; //no need to update
         player.MouseInventory.TriggerUpdate();
     }

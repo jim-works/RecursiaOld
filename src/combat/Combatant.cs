@@ -1,21 +1,21 @@
 using Godot;
 
-public class Combatant : PhysicsObject
+public partial class Combatant : PhysicsObject
 {
     private float health;
     private float maxHealth;
     public Team Team = null;
     [Export] public string InitialTeamName;
     [Export] public float InitialHealth;
-    [Export] public float InvincibilitySeconds = 0.001f; //should be 1 frame
+    [Export] public double InvincibilitySeconds = 0.001f; //should be 1 frame
     [Export] public float ContactDamage = 1;
 
     [Export] public NodePath AudioPlayer = "AudioStreamPlayer3D";
 
     public Inventory Inventory;
-    public float ItemCooldown;
+    public double ItemCooldown;
 
-    private float invicinibilityTimer = 0;
+    private double invicinibilityTimer = 0;
     private AudioStreamPlayer3D audioStreamPlayer;
 
     public override void _Ready()
@@ -32,7 +32,7 @@ public class Combatant : PhysicsObject
         GD.Print($"Added combatant {Name} on team {Team}");
     }
 
-    public override void _Process(float delta)
+    public override void _Process(double delta)
     {
         invicinibilityTimer += delta;
         ItemCooldown -= delta;
@@ -43,7 +43,7 @@ public class Combatant : PhysicsObject
             {
                 for (int z = -1; z <= 1; z++)
                 {
-                    Block b = World.Singleton.GetBlock((BlockCoord)Position+new BlockCoord(x,y,z));
+                    Block b = World.Singleton.GetBlock((BlockCoord)GlobalPosition+new BlockCoord(x,y,z));
                     if (b != null && b.Name == "lava")
                     {
                         TakeDamage(new Damage{

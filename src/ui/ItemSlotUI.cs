@@ -1,11 +1,11 @@
 using Godot;
 
-public class ItemSlotUI : Control
+public partial class ItemSlotUI : Control
 {
     private TextureRect itemTex;
     private Label countLabel;
     //argument is button index
-    public event System.Action<int> OnClick;
+    public event System.Action<MouseButton> OnClick;
 
     public override void _Ready()
     {
@@ -15,7 +15,7 @@ public class ItemSlotUI : Control
     }
     public void DisplayItem(ItemStack stack)
     {
-        itemTex.Texture = stack.Item?.Texture;
+        itemTex.Texture = stack.Item?.Texture2D;
         countLabel.Text = stack.Item == null ? "" : stack.Size.ToString();
     }
 

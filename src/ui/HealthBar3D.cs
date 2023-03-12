@@ -1,11 +1,15 @@
 using Godot;
 using System;
 
-public class HealthBar3D : Spatial
+public partial class HealthBar3D : Node3D
 {
+    [Export] public HealthBar SubBar;
+    [Export] public SubViewport subViewport;
+    [Export] public Sprite3D sprite;
     public override void _Ready()
     {
+        SubBar.Tracking = GetParent<Combatant>();
+        sprite.Texture = subViewport.GetTexture();
         base._Ready();
-        GetNode<HealthBar>("Viewport/HealthBar").Tracking = GetParent<Combatant>();
     }
 }

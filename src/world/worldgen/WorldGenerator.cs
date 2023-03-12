@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 
-public class WorldGenerator
+public partial class WorldGenerator
 {
     private const int POLL_INTERVAL = 10;
     public int WorldgenThreads {get; private set;} = Godot.Mathf.Max(1,System.Environment.ProcessorCount-4); //seems reasonable
@@ -66,7 +66,7 @@ public class WorldGenerator
     private int getThreadIndex(ChunkCoord c) {
         //positive mod of chunk's position to find which thread to assign it to
         //this gives a disjoint set of chunks to each thread, so we don't have to worry about them modifying the same chunk.
-        int tid = (c.x+c.y+c.z) % WorldgenThreads;
+        int tid = (c.X+c.Y+c.Z) % WorldgenThreads;
         return tid < 0 ? tid + WorldgenThreads : tid;
     }
 
@@ -82,7 +82,11 @@ public class WorldGenerator
         {
             shaping[tid].Add(c);
         }
+    }
 
+    public void GenerateArea(ChunkCoord origin, ChunkCoord radius)
+    {
+        
     }
     //runs on multiple generationThreads
     private void generationLoop(int id)
@@ -141,11 +145,11 @@ public class WorldGenerator
     {
         ChunkCollection result = new ChunkCollection();
         List<ChunkCoord> waitingForExpansion = new List<ChunkCoord>();
-        for (int x = corner.x; x < corner.x + size.x; x++)
+        for (int x = corner.X; x < corner.X + size.X; x++)
         {
-            for (int y = corner.y; y < corner.y + size.y; y++)
+            for (int y = corner.Y; y < corner.Y + size.Y; y++)
             {
-                for (int z = corner.z; z < corner.z + size.z; z++)
+                for (int z = corner.Z; z < corner.Z + size.Z; z++)
                 {
                     ChunkCoord coord = new ChunkCoord(x,y,z);
                     if (world.Chunks.Contains(coord)) continue; //won't shape if already exists
@@ -207,7 +211,7 @@ public class WorldGenerator
                 Structure result = await provider.PlaceStructure(world.Chunks, origin);
                 if (result != null && provider.Record)
                 {
-                    chunk.AddStructure(result);
+                    chunk.Structures.Add(result);
                 }
                 lock (done)
                 {

@@ -1,9 +1,9 @@
 using Godot;
 
-public class Projectile : PhysicsObject
+public partial class Projectile : PhysicsObject
 {
     [Export]
-    public float Lifetime = 10;
+    public double Lifetime = 10;
     [Export]
     public float Damage = 5;
     protected Team team;
@@ -16,10 +16,10 @@ public class Projectile : PhysicsObject
         Velocity = velocity;
         launchVelocity = velocity;
         launchSpeed = velocity.Length();
-        LookAt(Position + velocity, Vector3.Up);
+        LookAt(GlobalPosition + velocity, Vector3.Up);
     }
 
-    public override void _PhysicsProcess(float delta)
+    public override void _PhysicsProcess(double delta)
     {
         base._PhysicsProcess(delta);
         if (World.Singleton.CollidesWithEnemy(GetBox(), team) is Combatant hit)
