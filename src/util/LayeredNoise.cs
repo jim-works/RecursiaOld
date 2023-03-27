@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Godot;
 
-public partial class LayeredNoise
+public class LayeredNoise
 {
     private struct Layer
     {
@@ -11,7 +11,11 @@ public partial class LayeredNoise
     }
     private List<Layer> sumLayer = new List<Layer>();
     private List<Layer> prodLayer = new List<Layer>();
+    private float sumNoiseMagnitude = 0;
+    private float prodNoiseMagnitude = 1;
     public float Seed;
+
+    public float Scale => sumNoiseMagnitude*prodNoiseMagnitude;
     public void AddLayer(FastNoiseLite layer, Vector3 freq, float amp)
     {
         sumLayer.Add(new Layer{
@@ -19,6 +23,7 @@ public partial class LayeredNoise
             freq=freq,
             amp=amp
         });
+        sumNoiseMagnitude += amp;
     }
 
     public void AddLayers(FastNoiseLite layer, int n, Vector3 baseFreq, float freqMult, float baseAmp, float ampMult)
@@ -40,6 +45,7 @@ public partial class LayeredNoise
             freq=freq,
             amp=amp
         });
+        prodNoiseMagnitude *= amp;
     }
 
     public float Sample(float x, float y)
@@ -56,6 +62,8 @@ public partial class LayeredNoise
         return res;
     }
 
+    public float SampleNorm(float x, float y) => Sample(x,y)/Scale;
+
     public float Sample(float x, float y, float z)
     {
         float res = 0;
@@ -69,4 +77,6 @@ public partial class LayeredNoise
         }
         return res;
     }
+
+    public float SampleNorm(float x, float y, float z) => Sample(x,y,z)/Scale;
 }

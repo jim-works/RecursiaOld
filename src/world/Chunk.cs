@@ -4,8 +4,8 @@ using System;
 
 public enum ChunkState
 {
-    Loaded,
-    Unloaded
+    Unloaded,
+    Loaded
 }
 public partial class Chunk : ISerializable
 {
@@ -15,30 +15,40 @@ public partial class Chunk : ISerializable
     private Block[,,] Blocks;
     public ChunkMesh Mesh;
     public ChunkGenerationState GenerationState;
-    public ChunkState State {get; private set;}
+    public ChunkState State { get; private set; }
     public List<Structure> Structures = new List<Structure>();
     public bool SaveDirtyFlag = true;
+    //if the chunk is made of only one type of block, we don't allocate the block array
+    private Block uniformBlock = null;
 
     public Chunk(ChunkCoord chunkCoords, ChunkGroup group)
     {
-        //TODO: don't allocate unless block has been set in chunk, return null blocks if not allocated
-        Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
         Position = chunkCoords;
         group.AddChunk(this);
     }
-    
+
     public void ChunkTick(float dt)
     {
 
     }
 
-    public Block this[BlockCoord index] {
-        get {return Blocks[index.X,index.Y,index.Z];}
-        set {Blocks[index.X,index.Y,index.Z] = value; SaveDirtyFlag = true; }
+    public Block this[BlockCoord index]
+    {
+        get { return this[index.X,index.Y,index.Z]; }
+        set { this[index.X,index.Y,index.Z]=value; }
     }
-    public Block this[int x, int y, int z] {
-        get {return Blocks[x,y,z];}
-        set {Blocks[x,y,z] = value; SaveDirtyFlag=true; }
+    public Block this[int x, int y, int z]
+    {
+        get { return Blocks != null ? Blocks[x, y, z] : uniformBlock; }
+        set
+        {
+            if (value != uniformBlock)
+            {
+                if (Blocks == null) Blocks = new Block[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
+                Blocks[x, y, z] = value;
+                SaveDirtyFlag = true;
+            }
+        }
     }
 
     public void Load()
@@ -53,7 +63,8 @@ public partial class Chunk : ISerializable
         State = ChunkState.Unloaded;
     }
 
-    public BlockCoord LocalToWorld(BlockCoord local) {
+    public BlockCoord LocalToWorld(BlockCoord local)
+    {
         return (BlockCoord)Position + local;
     }
 
@@ -65,31 +76,42 @@ public partial class Chunk : ISerializable
     public void Serialize(BinaryWriter bw)
     {
         Position.Serialize(bw);
-        Block curr = Blocks[0,0,0];
-        int run = 0;
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+        if (Blocks == null)
         {
-            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            //this case doesn't need to exist, but should be faster than the other
+            bw.Write(Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE);
+            if (uniformBlock == null) bw.Write(0);
+            else { bw.Write(1); uniformBlock.Serialize(bw); }
+        }
+        else
+        {
+            Block curr = Blocks[0, 0, 0];
+            int run = 0;
+            for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
-                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
                 {
-                    Block b = Blocks[x,y,z];
-                    if (curr == b)
+                    for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {
-                        run++;
-                        continue;
+                        Block b = Blocks[x, y, z];
+                        if (curr == b)
+                        {
+                            run++;
+                            continue;
+                        }
+                        bw.Write(run);
+                        if (curr == null) bw.Write(0);
+                        else { bw.Write(1); curr.Serialize(bw); }
+                        run = 1;
+                        curr = b;
                     }
-                    bw.Write(run);
-                    if (curr == null) bw.Write(0);
-                    else { bw.Write(1); curr.Serialize(bw); }
-                    run = 1;
-                    curr = b;
                 }
             }
+
+            bw.Write(run);
+            if (curr == null) bw.Write(0);
+            else { bw.Write(1); curr.Serialize(bw); }
         }
-        bw.Write(run);
-        if (curr == null) bw.Write(0);
-        else {bw.Write(1); curr.Serialize(bw);}
     }
 
     public static void Deserialize(BinaryReader br, ChunkGroup into)
@@ -99,17 +121,21 @@ public partial class Chunk : ISerializable
         int run = 0;
         Block read = null;
         c.SaveDirtyFlag = false;
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++) {
-            for (int y = 0; y < Chunk.CHUNK_SIZE; y++) {
-                for (int z = 0; z < Chunk.CHUNK_SIZE; z++) {
-                    if (run == 0) {
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+        {
+            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            {
+                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                {
+                    if (run == 0)
+                    {
                         run = br.ReadInt32();
                         bool nullBlock = br.ReadInt32() == 0;
                         if (nullBlock) read = null;
                         else { read = BlockTypes.Get(br.ReadString()); read.Deserialize(br); }
                     }
-                    c.Blocks[x,y,z] = read;
-                    run --;
+                    c[x, y, z] = read;
+                    run--;
                 }
             }
         }

@@ -203,19 +203,11 @@ public partial class World : Node
             }
         }
     }
-    private void saveChunkGroup(ChunkGroupCoord coord)
-    {
-        lock (chunkGroups)
-        {
-            ChunkGroup cg = chunkGroups[coord];
-            saver.Save(cg);
-            chunkGroups.Remove(coord);
-        }
-    }
     private void unloadChunk(ChunkCoord coord) {
         if (!Chunks.Contains(coord)) return;//already unloaded
         Chunk c = Chunks[coord];
         c.Unload();
+        Chunks.Remove(coord);
         if (c.Group.ChunksLoaded == 0)
         {
             for (int x = 0; x < ChunkGroup.GROUP_SIZE; x++)
@@ -229,7 +221,10 @@ public partial class World : Node
                     }
                 }
             }
-            Task.Run(() => saveChunkGroup(c.Group.Position));
+            ChunkGroup cg = c.Group;
+            Task.Run(() => saver.Save(cg));
+            chunkGroups.Remove(cg.Position);
+            GD.Print("Saved chunk group " + cg.Position.ToString() + " to disk");
         }
 
         Mesher.Singleton.Unload(c);

@@ -7,6 +7,12 @@ public static class Math
     {
         return botLeft * (1 - pos.X) * (1 - pos.Y) + botRight * pos.X * (1 - pos.Y) + topLeft * (1 - pos.X) * pos.Y + topRight * pos.X * pos.Y;
     }
+
+    public static float Trilerp(Vector3 pos, float botLeft, float topLeft, float topRight, float botRight, float botLeftBack, float topLeftBack, float topRightBack, float botRightBack)
+    {
+        return botLeft * (1-pos.X)*(1-pos.Y)*(1-pos.Z) + botRight * pos.X*(1-pos.Y)*(1-pos.Z) + topLeft * (1-pos.X)*pos.Y*(1-pos.Z) + topRight * pos.X*pos.Y*(1-pos.Z) +
+            botLeftBack * (1-pos.X)*(1-pos.Y)*pos.Z + botRightBack * pos.X*(1-pos.Y)*pos.Z + topLeftBack * (1-pos.X)*pos.Y*pos.Z + topRightBack * pos.X*pos.Y*pos.Z;
+    }
     
     //returns the max magnitude component of the vector with the other two components zeroed
     //if multple components are equal, the first one is set the others are zeroed

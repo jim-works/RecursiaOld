@@ -1,7 +1,7 @@
 public class ChunkGroup
 {
     //each group is a cube of side length GROUP_SIZE
-    public const byte GROUP_SIZE = 64;
+    public const byte GROUP_SIZE = 4;
     public Chunk[,,] Chunks = new Chunk[GROUP_SIZE,GROUP_SIZE,GROUP_SIZE];
 
     public int ChunksLoaded = 0;
