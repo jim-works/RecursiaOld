@@ -23,6 +23,7 @@ Current Features:
 Download the latest release from the releases page, or...
 
 Download the project and open in Godot 4.0-mono.
+run `dotnet restore`
 Run in the editor.
 
 Controls:

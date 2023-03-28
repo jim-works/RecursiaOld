@@ -11,12 +11,12 @@ public partial class ShapingLayer : IChunkGenLayer
     private Spline densityByHeight = new Spline(new Vector2[]{new Vector2(-50,-0.5f), new Vector2(0,0), new Vector2(25,0.5f), new Vector2(100,1)});
 
     //reduces density for (flattens) above ground terrain. low frequency
-    private const float scaleFreq = 0.5f, scaleFreqMult = 1.5f, scaleScaleMult = 0.7f;
+    private const float scaleFreq = 0.2f, scaleFreqMult = 1.5f, scaleScaleMult = 0.5f;
     private const int scaleOctaves = 3;
     private SplineNoise scaleNoise;
 
     //noise that can create wacky effects by multiplying the density by a high value rarely
-    private const float wackyFreq = 0.7f, wackyFreqMult = 1.5f, wackyScaleMult = 0.5f;
+    private const float wackyFreq = 0.7f, wackyFreqMult = 1.5f, wackyScaleMult = 0.7f;
     private const int wackyOctaves = 3;
     private SplineNoise wackyNoise;
 
@@ -35,11 +35,11 @@ public partial class ShapingLayer : IChunkGenLayer
 
         LayeredNoise scaleLayers = new LayeredNoise(seeds());
         scaleLayers.AddSumLayers(scaleFreq, scaleFreqMult, scaleScaleMult, scaleOctaves);
-        scaleNoise = new SplineNoise(scaleLayers, new Spline(new Vector2[]{new Vector2(-1,2), new Vector2(-0.8f, 1), new Vector2(0.5f, 0.8f), new Vector2(0.75f,0.5f), new Vector2(1,0)}));
+        scaleNoise = new SplineNoise(scaleLayers, new Spline(new Vector2[]{new Vector2(-1,2), new Vector2(scaleLayers.Quantile(0.1f), 1), new Vector2(scaleLayers.Quantile(0.5f), 0.8f), new Vector2(scaleLayers.Quantile(0.8f),0.5f), new Vector2(1,0)}));
 
         LayeredNoise wackyLayers = new LayeredNoise(seeds());
         wackyLayers.AddSumLayers(wackyFreq, wackyFreqMult, wackyScaleMult, wackyOctaves);
-        wackyNoise = new SplineNoise(wackyLayers, new Spline(new Vector2[]{new Vector2(-1,1), new Vector2(0.8f, 1), new Vector2(1f, 3)}));
+        wackyNoise = new SplineNoise(wackyLayers, new Spline(new Vector2[]{new Vector2(-1,1), new Vector2(wackyLayers.Quantile(0.9f), 1), new Vector2(1f, 3)}));
     }
 
     private float sample(float x, float y, float z) {
