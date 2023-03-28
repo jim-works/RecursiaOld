@@ -19,6 +19,9 @@ public partial class World : Node
     public Player LocalPlayer;
     public HashSet<Node3D> ChunkLoaders = new HashSet<Node3D>();
     public WorldGenerator WorldGen;
+    public event System.Action<Chunk> OnChunkUpdate;
+    public event System.Action<Chunk> OnChunkReady;
+    public event System.Action<Chunk> OnChunkUnload;
     
     private Dictionary<ChunkGroupCoord, ChunkGroup> chunkGroups = new Dictionary<ChunkGroupCoord, ChunkGroup>();
     private List<Chunk> fromWorldGen = new List<Chunk>();
@@ -51,7 +54,7 @@ public partial class World : Node
         WorldGen.GetFinishedChunks(fromWorldGen);
         foreach (var item in fromWorldGen)
         {
-            Mesher.Singleton.MeshDeferred(item, checkMeshed: true);
+            OnChunkReady?.Invoke(item);
         }
 
         fromWorldGen.Clear();
@@ -135,9 +138,6 @@ public partial class World : Node
         foreach (var kvp in Chunks) {
             if (!loadedChunks.Contains(kvp.Key)) {
                 toUnload.Add(kvp.Key);
-            } else {
-                //loaded, check if needs mesh
-                Mesher.Singleton.MeshDeferred(kvp.Value, checkMeshed: true);
             }
         }
         foreach (var c in toUnload) {
@@ -152,6 +152,7 @@ public partial class World : Node
     private void loadChunk(ChunkCoord coord) {
         
         if (Chunks.TryGetValue(coord, out Chunk chunk)){
+            if (chunk.State == ChunkState.Unloaded) OnChunkReady?.Invoke(chunk);
             chunk.Load();
             return; //already loaded
         }
@@ -169,6 +170,7 @@ public partial class World : Node
             Chunk inGroup = cg.GetChunk(coord);
             if (inGroup != null)
             {
+                if (inGroup.State == ChunkState.Unloaded) OnChunkReady?.Invoke(inGroup);
                 inGroup.Load();
                 return;
             }
@@ -196,6 +198,7 @@ public partial class World : Node
                             if (cgc != null) {
                                 AddChunk(cgc);
                                 cgc.Load();
+                                OnChunkReady?.Invoke(cgc);
                             }
                             
                         }
@@ -227,8 +230,8 @@ public partial class World : Node
             chunkGroups.Remove(cg.Position);
             GD.Print("Saved chunk group " + cg.Position.ToString() + " to disk");
         }
-
-        Mesher.Singleton.Unload(c);
+        OnChunkUnload?.Invoke(c);
+        //Mesher.Singleton.Unload(c);
     }
     public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -275,38 +278,28 @@ public partial class World : Node
         SetBlock(coords, null);
         return dt?.GetDrop() ?? new ItemStack();
     }
-    public void SetBlock(BlockCoord coords, Block block, bool meshChunk=true) {
+    //only updates chunks at the end of the batch
+    //call batch(coord, block) to set the blocks
+    public void BatchSetBlock(System.Action<System.Action<BlockCoord, Block>> batch) {
+        List<Chunk> chunksToUpdate = new List<Chunk>();
+        batch((coords, block) => {
+            ChunkCoord chunkCoords = (ChunkCoord)coords;
+            BlockCoord blockCoords = Chunk.WorldToLocal(coords);
+            Chunk c = GetOrCreateChunk(chunkCoords);
+            c[blockCoords] = block;
+            if (!chunksToUpdate.Contains(c)) chunksToUpdate.Add(c);
+        });
+        foreach (Chunk c in chunksToUpdate) {
+            OnChunkUpdate?.Invoke(c);
+        }
+    }
+    public void SetBlock(BlockCoord coords, Block block, bool updateChunk=true) {
         ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = GetOrCreateChunk(chunkCoords);
         c[blockCoords] = block;
-        if (meshChunk && c.State == ChunkState.Loaded) {
-            Mesher.Singleton.MeshDeferred(c);
-            //mesh neighbors if needed
-            if (blockCoords.X == 0 && GetChunk(chunkCoords+new ChunkCoord(-1,0,0)) is Chunk nx)
-            {
-                Mesher.Singleton.MeshDeferred(nx);
-            }
-            if (blockCoords.Y == 0 && GetChunk(chunkCoords+new ChunkCoord(0,-1,0)) is Chunk ny)
-            {
-                Mesher.Singleton.MeshDeferred(ny);
-            }
-            if (blockCoords.Z == 0 && GetChunk(chunkCoords+new ChunkCoord(0,0,-1)) is Chunk nz)
-            {
-                Mesher.Singleton.MeshDeferred(nz);
-            }
-            if (blockCoords.X == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(1,0,0)) is Chunk px)
-            {
-                Mesher.Singleton.MeshDeferred(px);
-            }
-            if (blockCoords.Y == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,1,0)) is Chunk py)
-            {
-                Mesher.Singleton.MeshDeferred(py);
-            }
-            if (blockCoords.Z == Chunk.CHUNK_SIZE-1 && GetChunk(chunkCoords+new ChunkCoord(0,0,1)) is Chunk pz)
-            {
-                Mesher.Singleton.MeshDeferred(pz);
-            }
+        if (updateChunk && c.State == ChunkState.Loaded) {
+            OnChunkUpdate?.Invoke(c);
         }
     }
     //returns the block closest to origin that intersects the line segment from origin to (origin + line)

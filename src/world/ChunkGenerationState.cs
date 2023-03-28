@@ -4,6 +4,5 @@ public enum ChunkGenerationState
     SHAPING,
     SHAPED,
     PLACING_STRUCTURES,
-    GENERATED,
-    MESHED
+    GENERATED
 }

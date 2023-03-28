@@ -1,5 +1,4 @@
 using Godot;
-using Godot.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
@@ -14,6 +13,7 @@ public partial class Mesher : Node
     public float MaxMeshTime = 0.1f;
     public static Mesher Singleton;
     private HashSet<Chunk> toMesh = new HashSet<Chunk>();
+    private Dictionary<ChunkCoord, Chunk> waitingToMesh = new();
     private ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new ConcurrentBag<(ChunkMesh, ChunkCoord)>();
     //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
     // Called when the node enters the scene tree for the first time.
@@ -22,6 +22,14 @@ public partial class Mesher : Node
         Singleton = this;
         GD.Print("Mesher initialized!");
         base._EnterTree();
+    }
+    public override void _Ready()
+    {
+        World.Singleton.OnChunkUnload += Unload;
+        World.Singleton.OnChunkUpdate += OnChunkUpdate;
+        World.Singleton.OnChunkReady += OnChunkReady;
+        GD.Print("Mesher initialized!");
+        base._Ready();
     }
     public override void _Process(double delta)
     {
@@ -48,11 +56,64 @@ public partial class Mesher : Node
         chunk.GenerationState = ChunkGenerationState.GENERATED;
         chunk.Mesh = null;
     }
+    public void OnChunkReady(Chunk c)
+    {
+        if (canMesh(c)) {
+            MeshDeferred(c);
+            waitingToMesh.Remove(c.Position);
+        }
+        else waitingToMesh[c.Position] = c;
+        
+
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1) && canMesh(c1)) {
+            MeshDeferred(c1);
+            waitingToMesh.Remove(c1.Position);
+        }
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk c2) && canMesh(c2)) {
+            MeshDeferred(c2);
+            waitingToMesh.Remove(c2.Position);
+        }
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,1,0), out Chunk c3) && canMesh(c3)) {
+            MeshDeferred(c3);
+            waitingToMesh.Remove(c3.Position);
+        }
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,-1,0), out Chunk c4) && canMesh(c4)) {
+            MeshDeferred(c4);
+            waitingToMesh.Remove(c4.Position);
+        }
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk c5) && canMesh(c5)) {
+            MeshDeferred(c5);
+            waitingToMesh.Remove(c5.Position);
+        }
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk c6) && canMesh(c6)) {
+            MeshDeferred(c6);
+            waitingToMesh.Remove(c6.Position);
+        }
+    }
+    public void OnChunkUpdate(Chunk c)
+    {
+        GD.Print("Chunk update");
+        MeshDeferred(c);
+        if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1)) MeshDeferred(c1);
+        if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk c2)) MeshDeferred(c2);
+        if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(0,1,0), out Chunk c3)) MeshDeferred(c3);
+        if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(0,-1,0), out Chunk c4)) MeshDeferred(c4);
+        if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk c5)) MeshDeferred(c5);
+        if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk c6)) MeshDeferred(c6);
+    }
+    private bool canMesh(Chunk c)
+    {
+        //only mesh if all adjacent chunks are generated
+        return c != null && World.Singleton.GetChunk(c.Position + new ChunkCoord(1,0,0))?.GenerationState == ChunkGenerationState.GENERATED 
+        && World.Singleton.GetChunk(c.Position + new ChunkCoord(-1,0,0))?.GenerationState == ChunkGenerationState.GENERATED 
+        && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,1,0))?.GenerationState == ChunkGenerationState.GENERATED 
+        && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,-1,0))?.GenerationState == ChunkGenerationState.GENERATED 
+        && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,0,1))?.GenerationState == ChunkGenerationState.GENERATED 
+        && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,0,-1))?.GenerationState == ChunkGenerationState.GENERATED ;
+    }
     //queues a chunk to be meshed
-    //checkMeshed: we only update the mesh of this chunk if it hasn't already been meshed (useful for loading/worldgeneration)
-    public void MeshDeferred(Chunk chunk, bool checkMeshed=false) {
-        if (!checkMeshed || chunk.GenerationState != ChunkGenerationState.MESHED) toMesh.Add(chunk);
-        chunk.GenerationState = ChunkGenerationState.MESHED;
+    public void MeshDeferred(Chunk chunk) {
+        toMesh.Add(chunk);
     }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
     private void spawnChunk(ChunkMesh mesh, ChunkCoord coord)

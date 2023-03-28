@@ -8,18 +8,22 @@ public static class SphereShaper
         BlockCoord minBounds = new BlockCoord((int)(origin.X-strength),(int)(origin.Y-strength),(int)(origin.Z-strength));
         BlockCoord maxBounds = new BlockCoord((int)(origin.X + strength), (int)(origin.Y + strength), (int)(origin.Z + strength));
         BlockCoord originInt = (BlockCoord)origin;
-        for (int x = minBounds.X; x < maxBounds.X; x++)
+        world.BatchSetBlock((setter) =>
         {
-            for (int y = minBounds.Y; y < maxBounds.Y; y++)
+            for (int x = minBounds.X; x < maxBounds.X; x++)
             {
-                for (int z = minBounds.Z; z < maxBounds.Z; z++)
+                for (int y = minBounds.Y; y < maxBounds.Y; y++)
                 {
-                    BlockCoord p = new BlockCoord(x,y,z);
-                    float sqrDist = (p-originInt).sqrMag();
-                    if (sqrDist > strength*strength) continue; //outside of blast radius 
-                    world.SetBlock(p, null);
+                    for (int z = minBounds.Z; z < maxBounds.Z; z++)
+                    {
+                        BlockCoord p = new BlockCoord(x, y, z);
+                        float sqrDist = (p - originInt).sqrMag();
+                        if (sqrDist > strength * strength) continue; //outside of blast radius 
+                        setter(p, null);
+                    }
                 }
             }
-        }
+        });
+
     }
 }
