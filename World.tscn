@@ -87,7 +87,6 @@ JumpHeight = 25.0
 InitialTeamName = "player"
 InitialHealth = 10.0
 InvincibilitySeconds = 0.1
-ContactDamage = 0.0
 Size = Vector3(0.7, 1.8, 0.7)
 InitialPosition = Vector3(0, 25, 0)
 

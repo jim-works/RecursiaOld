@@ -1,12 +1,12 @@
 using System.Threading;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
 
 public partial class WorldGenerator
 {
-    private const int POLL_INTERVAL = 10;
+    private const int POLL_INTERVAL_MS = 100;
     public int WorldgenThreads {get; private set;} = Godot.Mathf.Max(1,System.Environment.ProcessorCount-4); //seems reasonable
     public int StructuresPerChunk = 10; //seems reasonable
         
@@ -20,7 +20,7 @@ public partial class WorldGenerator
     //next step: done
     private volatile Queue<Chunk> placingStructures = new Queue<Chunk>();
     //finished chunks that are ready to be send to the mesher
-    private volatile List<Chunk> done = new List<Chunk>();
+    private volatile ConcurrentBag<Chunk> done = new ConcurrentBag<Chunk>();
 
     //we have a big pool of threads for shaping
     private Thread[] generationThreads;
@@ -42,6 +42,7 @@ public partial class WorldGenerator
         chunkGenLayers.Add(initLayer(new DetailLayer()));
         //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
         structureProviders.Add(new TreeStructureProvider());
+        //structureProviders.Add(new BoxStructureProvider());
         shaping = new HashSet<Chunk>[WorldgenThreads];
         expanding = new Dictionary<ChunkCoord, Chunk>[WorldgenThreads];
         generationThreads = new Thread[WorldgenThreads];
@@ -109,7 +110,7 @@ public partial class WorldGenerator
         List<Chunk> myExpandingQueue = new List<Chunk>();
         while (true)
         {
-            Thread.Sleep(POLL_INTERVAL);
+            Thread.Sleep(POLL_INTERVAL_MS);
             lock (shaping)
             {
                 foreach(Chunk c in shaping[id]) myQueue.Add(c);
@@ -150,7 +151,7 @@ public partial class WorldGenerator
             {
                 await placeStructures(World.Singleton, c);
             }
-            await Task.Delay(POLL_INTERVAL);
+            await Task.Delay(POLL_INTERVAL_MS);
         }
     }
 
@@ -181,7 +182,7 @@ public partial class WorldGenerator
         //wait until all chunks are done
         while (waitingForExpansion.Count > 0)
         {
-            await Task.Delay(POLL_INTERVAL);
+            await Task.Delay(POLL_INTERVAL_MS);
             waitingForExpansion.RemoveAll(coord => {
                 if (expanded.TryGetValue(coord, out Chunk ex) && ex.GenerationState == ChunkGenerationState.SHAPED && expanded.TryRemove(coord, out Chunk c)) {
                     result.Add(c);
@@ -196,11 +197,8 @@ public partial class WorldGenerator
     //a valid chunk is loaded in the world
     public void GetFinishedChunks(List<Chunk> dest)
     {
-        lock (done)
-        {
-            dest.AddRange(done);
-            done.Clear();
-        }
+        dest.AddRange(done);
+        done.Clear();
     }
     public void ShapeChunk(World world, Chunk chunk) {
         foreach (var genLayer in chunkGenLayers)
@@ -214,7 +212,7 @@ public partial class WorldGenerator
         foreach (var provider in structureProviders)
         {
             //TODO: use regions for restrictions
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < provider.RollsPerChunk; i++)
             {
                 int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
                 int dy = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
@@ -227,20 +225,15 @@ public partial class WorldGenerator
                 {
                     chunk.Structures.Add(result);
                 }
-                lock (done)
+                foreach (var c in area)
                 {
-                    foreach (var c in area)
-                    {
-                        c.Value.GenerationState = ChunkGenerationState.GENERATED;
-                        done.Add(c.Value);
-                    }
+                    if (c.Value == chunk) continue;
+                    c.Value.GenerationState = ChunkGenerationState.GENERATED;
+                    done.Add(c.Value);
                 }
             }
         }
-        lock (done)
-        {
-            chunk.GenerationState = ChunkGenerationState.GENERATED;
-            done.Add(chunk);
-        }
+        chunk.GenerationState = ChunkGenerationState.GENERATED;
+        done.Add(chunk);
     }
 }

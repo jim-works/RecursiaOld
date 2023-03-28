@@ -92,7 +92,6 @@ public partial class Mesher : Node
     }
     public void OnChunkUpdate(Chunk c)
     {
-        GD.Print("Chunk update");
         MeshDeferred(c);
         if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1)) MeshDeferred(c1);
         if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk c2)) MeshDeferred(c2);
@@ -138,8 +137,6 @@ public partial class Mesher : Node
             ChunkMesh mesh = GenerateMesh(c);
             finishedMeshes.Add((mesh, c.Position));
         });
-        
-        
     }
     private ChunkMesh getMesh()
     {

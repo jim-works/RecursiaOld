@@ -13,8 +13,8 @@ public partial class World : Node
     [Export] public int LoadChunkRegionLevel = 1;
     public ChunkCollection Chunks = new ChunkCollection();
     //todo: optimize these
-    public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
-    public List<Combatant> Combatants = new List<Combatant>();
+    public Dictionary<ChunkCoord, List<PhysicsObject>> PhysicsObjects = new();
+    public Dictionary<ChunkCoord, List<Combatant>> Combatants = new ();
     public List<Player> Players = new List<Player>();
     public Player LocalPlayer;
     public HashSet<Node3D> ChunkLoaders = new HashSet<Node3D>();
@@ -31,7 +31,7 @@ public partial class World : Node
     private double chunkLoadingInterval = 0.5f; //seconds per chunk loading update
     private double _chunkLoadingTimer = 0;
     private WorldSaver saver;
-    
+
     [Export] private int loadDistance = 10;
 
     public override void _EnterTree()
@@ -77,37 +77,49 @@ public partial class World : Node
         chunkGroups[c] = newGroup;
         return newGroup;
     }
-    public Player ClosestPlayer(Vector3 pos)
-    {
-        float minSqrDist = float.PositiveInfinity;
-        Player minPlayer = null;
-        foreach(var Player in Players)
-        {
-            float sqrDist = (pos-Player.GlobalPosition).LengthSquared();
-            if (sqrDist < minSqrDist) {
-                minSqrDist = sqrDist;
-                minPlayer = Player;
-            }
-        }
-        return minPlayer;
-    }
-    public bool ClosestEnemy(Vector3 pos, Team team, out Combatant enemy)
+    public bool ClosestEnemy(Vector3 pos, Team team, float maxDist, out Combatant enemy)
     {
         float minSqrDist = float.PositiveInfinity;
         enemy = null;
-        foreach(var c in Combatants)
+        //TODO: only check chunks in range
+        foreach (var l in Combatants.Values)
+        foreach(var c in l)
         {
             float sqrDist = (pos-c.GlobalPosition).LengthSquared();
-            if (sqrDist < minSqrDist && c.Team != team) {
+            if (sqrDist < minSqrDist && sqrDist < maxDist*maxDist && c.Team != team) {
                 minSqrDist = sqrDist;
                 enemy = c;
             }
         }
         return enemy != null;
     }
+    public IEnumerable<Combatant> GetEnemiesInRange(Vector3 pos, float range, Team team)
+    {
+        //TODO: only check chunks in range
+        foreach (var l in Combatants.Values)
+        {
+            foreach (var c in l)
+            {
+                if (c.Team != team && (c.GlobalPosition - pos).LengthSquared() < range * range) yield return c;
+            }
+        }
+    }
+    public IEnumerable<PhysicsObject> GetPhysicsObjectsInRange(Vector3 pos, float range)
+    {
+        //TODO: only check chunks in range
+        foreach (var kvp in PhysicsObjects)
+        {
+            foreach (var obj in kvp.Value)
+            {
+                if ((obj.GlobalPosition - pos).LengthSquared() < range * range) yield return obj;
+            }
+        }
+    }
     public Combatant CollidesWithEnemy(Box box, Team team)
     {
-        foreach (var c in Combatants)
+        //TODO: only check chunks in range
+        foreach (var l in Combatants.Values)
+        foreach (var c in l)
         {
             if (c.Team == team) continue;
             if (c.GetBox().IntersectsBox(box)) return c;
@@ -197,8 +209,8 @@ public partial class World : Node
                             Chunk cgc = cg.Chunks[x, y, z];
                             if (cgc != null) {
                                 AddChunk(cgc);
-                                cgc.Load();
                                 OnChunkReady?.Invoke(cgc);
+                                cgc.Load();
                             }
                             
                         }
@@ -363,5 +375,58 @@ public partial class World : Node
                 Normal = Math.MaxComponent((Vector3)oldCoords+new Vector3(0.5f,0.5f,0.5f)-testPoint).Normalized()
             });
         }
+    }
+    private void physicsObjectCrossChunkBoundary(PhysicsObject p, ChunkCoord oldChunk)
+    {
+        GD.Print("PhysicsObject " + p + " crossed chunk boundary from " + oldChunk + " to " + (ChunkCoord)p.GlobalPosition);
+        //remove from old list, then add to new one
+        //keep combatant list updated if applicable
+        if (PhysicsObjects.TryGetValue(oldChunk, out List<PhysicsObject> oldList))
+        {
+            oldList.Remove(p);
+            if (oldList.Count == 0) PhysicsObjects.Remove(oldChunk);
+        }
+        if (PhysicsObjects.TryGetValue((ChunkCoord)p.GlobalPosition, out List<PhysicsObject> list))
+        {
+            list.Add(p);
+        }
+        else
+        {
+            PhysicsObjects[(ChunkCoord)p.GlobalPosition] = new List<PhysicsObject> { p };
+        }
+        if (p is Combatant c)
+        {
+            if (Combatants.TryGetValue(oldChunk, out List<Combatant> oldList2))
+            {
+                oldList2.Remove(c);
+                if (oldList2.Count == 0) Combatants.Remove(oldChunk);
+            }
+            if (Combatants.TryGetValue((ChunkCoord)c.GlobalPosition, out List<Combatant> list2))
+            {
+                list2.Add(c);
+            }
+            else
+            {
+                Combatants[(ChunkCoord)c.GlobalPosition] = new List<Combatant> { c };
+            }
+        }
+    }
+    //init runs before object is added to scene tree
+    public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T> init=null) where T :PhysicsObject
+    {
+        T c = prefab.Instantiate<T>();
+        c.Registered = true;
+        init?.Invoke(c);
+        AddChild(c);
+        c.OnCrossChunkBoundary += physicsObjectCrossChunkBoundary;
+        c.GlobalPosition = position;
+        physicsObjectCrossChunkBoundary(c, (ChunkCoord)position);
+        return c;
+    }
+
+    public void RegisterObject(PhysicsObject obj)
+    {
+        obj.OnCrossChunkBoundary += physicsObjectCrossChunkBoundary;
+        physicsObjectCrossChunkBoundary(obj, (ChunkCoord)obj.GlobalPosition);
     }
 }

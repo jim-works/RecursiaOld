@@ -29,7 +29,8 @@ public partial class DebugDraw : Node
         {
             drawBox(b, geometry);
         }
-        foreach (var c in World.Singleton.PhysicsObjects)
+        foreach (var l in World.Singleton.PhysicsObjects.Values)
+        foreach (var c in l)
         {
             drawBox(c.GetBox(), geometry);
         }

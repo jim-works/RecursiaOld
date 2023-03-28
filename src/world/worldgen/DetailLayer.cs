@@ -5,7 +5,7 @@ public partial class DetailLayer : IChunkGenLayer
     private Block stone;
     private Block grass;
     private Block dirt;
-    private const int dirtDepth = 1;
+    private const int dirtDepth = 2;
 
     public DetailLayer()
     {
@@ -28,7 +28,7 @@ public partial class DetailLayer : IChunkGenLayer
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
                     if (chunk[x,y,z] == grass) {
-                        for (int c = y; c > 0 && c > y-dirtDepth; c--) {
+                        for (int c = y; c > 0 && c >= y-dirtDepth; c--) {
                             if (chunk[x,c,z] == stone) {
                                 chunk[x,c,z] = dirt;
                             }

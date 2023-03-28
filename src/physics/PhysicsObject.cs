@@ -20,21 +20,15 @@ public partial class PhysicsObject : Node3D
     public float AirResistance = 0.1f;
     [Export]
     public float MaxSpeed = 100f;
-    [Export] public bool InitPhysicsActive = true;
+    [Export] public bool PhysicsActive = true;
     [Export] public Vector3 InitialPosition;
+    public bool Registered = false;
+
+    public event System.Action<PhysicsObject, ChunkCoord> OnCrossChunkBoundary;
 
     private int _updatesSinceCollision = 0;
+    private ChunkCoord oldCoord;
 
-    //automatically updates World.Singleton.PhysicsObjects
-    public bool PhysicsActive {get => _physicsActive; protected set {
-        if (value != _physicsActive) {
-            if (value) World.Singleton.PhysicsObjects.Add(this);
-            else World.Singleton.PhysicsObjects.Remove(this);
-            _physicsActive = value;
-        }
-    }}
-    //doesn't update the World PhysicsObjects
-    protected bool _physicsActive = true;
     public bool Collides = true;
 
     protected Vector3 currentForce; //zeroed each physics update
@@ -45,19 +39,19 @@ public partial class PhysicsObject : Node3D
 
     public override void _EnterTree()
     {
-        _physicsActive = InitPhysicsActive;
         GlobalPosition = InitialPosition;
+        oldCoord = (ChunkCoord)GlobalPosition;
+        if (!Registered) World.Singleton.RegisterObject(this);
         base._EnterTree();
-    }
-
-    public override void _Ready()
-    {
-        base._Ready();
-        if (PhysicsActive) World.Singleton.PhysicsObjects.Add(this);
     }
 
     public override void _PhysicsProcess(double dt)
     {
+        if (oldCoord != (ChunkCoord)GlobalPosition)
+        {
+            OnCrossChunkBoundary?.Invoke(this, oldCoord);
+            oldCoord = (ChunkCoord)GlobalPosition;
+        }
         if (!PhysicsActive) return;
         AddConstantForce(-AirResistance*Velocity);
         Velocity += currentForce*(float)dt/Mass;
@@ -71,7 +65,7 @@ public partial class PhysicsObject : Node3D
 
     public override void _ExitTree()
     {
-        if (PhysicsActive) World.Singleton.PhysicsObjects.Remove(this);
+        World.Singleton.PhysicsObjects[(ChunkCoord)GlobalPosition].Remove(this);
         base._ExitTree();
     }
 

@@ -5,6 +5,7 @@ public abstract class StructureProvider
 {
     public Structure Kind;
     public readonly ChunkCoord MaxArea;
+    public int RollsPerChunk = 1;
     protected readonly BlockCoord maxSize;
     //keep a record of this structure in region tree
     public bool Record = false;

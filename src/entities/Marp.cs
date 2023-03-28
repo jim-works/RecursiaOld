@@ -10,6 +10,7 @@ public partial class Marp : BipedalCombatant
     [Export] public float Smackitude = 100;
     [Export] public float SmackHeight = 10;
     [Export] public float SmackDamage = 1;
+    [Export] public float AggroRange = 50;
 
     [Export] public Node3D CarryTarget;
 
@@ -53,7 +54,7 @@ public partial class Marp : BipedalCombatant
             return;
         }
         
-        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, out Combatant closest)) return;
+        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest)) return;
         if (closest == null) return;
         Vector3 dv = (closest.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.X, Velocity.Y, dv.Z);

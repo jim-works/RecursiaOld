@@ -11,7 +11,6 @@ public partial class SummoningItem : Item
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
-        Combatant c = ToSummon.Instantiate<Combatant>();
         //summon randomly in a circle distance away from position
         float angle = GD.Randf()*2*Mathf.Pi;
         Vector3 offset = new Vector3(Mathf.Cos(angle)*Distance,0,Mathf.Sin(angle)*Distance);
@@ -23,8 +22,7 @@ public partial class SummoningItem : Item
             summonY=y;
             if (World.Singleton.GetBlock(new BlockCoord(summonPos.X,y,summonPos.Z)) == null) break; //open space found
         }
-        World.Singleton.AddChild(c);
-        c.GlobalPosition = new Vector3(position.X+offset.X,summonY,position.Z+offset.Z);
+        Combatant c = World.Singleton.SpawnObject<Combatant>(ToSummon, new Vector3(position.X+offset.X,summonY,position.Z+offset.Z));
         if (SetToUserTeam) c.Team = user.Team;
 
         if (ConsumeOnUse) source.Size--;

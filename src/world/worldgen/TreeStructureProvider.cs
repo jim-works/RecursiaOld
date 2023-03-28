@@ -15,6 +15,7 @@ public partial class TreeStructureProvider : StructureProvider
 
     public TreeStructureProvider() : base(new BlockCoord(LEAF_SIZE*2+1,TRUNK_HEIGHT+LEAF_SIZE,LEAF_SIZE*2+1))
     {
+        RollsPerChunk = 5;
         Kind = new Structure();
         Kind.Name = "Tree";
         Kind.Mutex = false;

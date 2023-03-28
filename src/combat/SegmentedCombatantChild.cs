@@ -8,7 +8,7 @@ public partial class SegmentedCombatantChild : Combatant
     public override void _Ready()
     {
         if (ParentPath != null) Parent = GetNode<Combatant>(ParentPath);
-        _physicsActive = Parent.PhysicsActive;
+        PhysicsActive = Parent.PhysicsActive;
         Team = Parent.Team;
         base._Ready();
     }

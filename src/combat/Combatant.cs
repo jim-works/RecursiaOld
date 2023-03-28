@@ -8,7 +8,6 @@ public partial class Combatant : PhysicsObject
     [Export] public string InitialTeamName;
     [Export] public float InitialHealth;
     [Export] public double InvincibilitySeconds = 0.001f; //should be 1 frame
-    [Export] public float ContactDamage = 1;
 
     [Export] public NodePath AudioPlayer = "AudioStreamPlayer3D";
 
@@ -21,7 +20,6 @@ public partial class Combatant : PhysicsObject
     public override void _Ready()
     {
         base._Ready();
-        World.Singleton.Combatants.Add(this);
         audioStreamPlayer = GetNodeOrNull<AudioStreamPlayer3D>(AudioPlayer);
         
         if (Team == null && !string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
@@ -36,7 +34,6 @@ public partial class Combatant : PhysicsObject
     {
         invicinibilityTimer += delta;
         ItemCooldown -= delta;
-        if (ContactDamage != 0)  DoContactDamage();
         for (int x = -1; x <= 1; x++)
         {
             for (int y = -1; y <= 1; y++)
@@ -58,7 +55,7 @@ public partial class Combatant : PhysicsObject
 
     public override void _ExitTree()
     {
-        World.Singleton.Combatants.Remove(this);
+        World.Singleton.Combatants[(ChunkCoord)GlobalPosition].Remove(this);
         base._ExitTree();
     }
 
@@ -78,15 +75,6 @@ public partial class Combatant : PhysicsObject
             GD.Print("played sound on " + Name);
             audioStreamPlayer.Stream = clip;
             audioStreamPlayer.Play();
-        }
-    }
-
-    public virtual void DoContactDamage()
-    {
-        foreach (var combatant in World.Singleton.Combatants)
-        {
-            if (combatant == this) continue;
-            if (combatant.GetBox().IntersectsBox(GetBox())) combatant.TakeDamage(new Damage{Team=Team,Amount=ContactDamage});
         }
     }
 

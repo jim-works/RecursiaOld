@@ -50,15 +50,14 @@ public partial class ExplosiveProjectile : Projectile
         TrailParticles.Emitting = false;
         PhysicsActive = false;
         dying = true;
-        foreach(PhysicsObject obj in World.Singleton.PhysicsObjects)
+        foreach(PhysicsObject obj in World.Singleton.GetPhysicsObjectsInRange(GlobalPosition,ExplosionSize))
         {
             if (obj == this) continue;
-            float mag = (obj.GlobalPosition-GlobalPosition).LengthSquared()+1;
-            obj.AddImpulse((obj.GlobalPosition-GlobalPosition)/mag*ExplosionSize*FlingFactor);
+            obj.AddImpulse((Vector3.Up+(obj.GlobalPosition-GlobalPosition).Normalized())*FlingFactor);
         }
-        foreach(Combatant obj in World.Singleton.Combatants)
+        foreach(Combatant obj in World.Singleton.GetEnemiesInRange(GlobalPosition,ExplosionSize,team))
         {
-            if ((obj.GlobalPosition-GlobalPosition).LengthSquared() <= ExplosionSize*ExplosionSize) obj.TakeDamage(new Damage{Team=team,Amount=Damage});
+            obj.TakeDamage(new Damage{Team=team,Amount=Damage});
         }
     }
 }

@@ -18,6 +18,7 @@ public partial class PatrickQuack : BipedalCombatant
 
     [Export] public AudioStream SummonSound;
     [Export] public AudioStream ShootSound;
+    [Export] public float AggroRange = 512;
 
     private AnimationNodeStateMachinePlayback stateMachine;
     private double stateSwitchTimer = 0;
@@ -70,18 +71,15 @@ public partial class PatrickQuack : BipedalCombatant
     }
     private void doWalk(float dt)
     {
-        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, out Combatant closest)) return;
+        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest)) return;
         if ((closest.GlobalPosition-GlobalPosition).LengthSquared() < MaxDistFromTarget*MaxDistFromTarget) return; // close enough to target, skip walking
         Vector3 dv = (closest.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.X, Velocity.Y, dv.Z);
         if (shootTimer >= ShootInterval)
         {
             PlaySound(ShootSound);
-            Projectile proj = Projectile.Instantiate<Projectile>();
-            World.Singleton.AddChild(proj);
-            Vector3 origin = summonPoint.GlobalPosition;
-            proj.GlobalPosition = origin;
-            proj.Launch((closest.GlobalPosition-origin).Normalized()*ProjectileVelocity, Team);
+            Projectile proj = World.Singleton.SpawnObject<Projectile>(Projectile, summonPoint.GlobalPosition);
+            proj.Launch((closest.GlobalPosition-summonPoint.GlobalPosition).Normalized()*ProjectileVelocity, Team);
             shootTimer = 0;
         }
         shootTimer += dt;
@@ -92,7 +90,7 @@ public partial class PatrickQuack : BipedalCombatant
         if (summonTimer >= SummonInterval)
         {
             PlaySound(SummonSound);
-            Combatant c = EnemiesToSummon[spawnIdx].Instantiate<Combatant>();
+            Combatant c = World.Singleton.SpawnObject<Combatant>(EnemiesToSummon[spawnIdx], summonPoint.GlobalPosition);
             if (c is Marp m) m.CarryTarget = this;
             spawnIdx = (spawnIdx+1)%EnemiesToSummon.Length;
             c.Team = Team;

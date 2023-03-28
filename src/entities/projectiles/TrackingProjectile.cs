@@ -4,6 +4,7 @@ public partial class TrackingProjectile : Projectile
 {
     [Export] public double TrackingDelay;
     [Export] public float TrackSpeedMult = 1.5f;
+    [Export] public float AggroRange = 50;
     private Combatant target;
 
     public override void _PhysicsProcess(double delta)
@@ -11,7 +12,7 @@ public partial class TrackingProjectile : Projectile
         TrackingDelay -= delta;
         if (target == null && TrackingDelay <= 0)
         {
-            World.Singleton.ClosestEnemy(GlobalPosition, team, out target);
+            World.Singleton.ClosestEnemy(GlobalPosition, team, AggroRange, out target);
         }
         if (target != null)
         {

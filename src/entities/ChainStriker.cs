@@ -11,6 +11,7 @@ public partial class ChainStriker : Combatant
     public float StrikeImpulse = 5;
     [Export]
     public double AttackInterval = 3;
+    [Export] public float AggroRange = 50;
 
     private double attackTimer = 0;
     private List<Combatant> links = new List<Combatant>();
@@ -49,7 +50,7 @@ public partial class ChainStriker : Combatant
     private void attack()
     {
         attackTimer = 0;
-        if (World.Singleton.ClosestEnemy(GlobalPosition, Team, out Combatant closest))
+        if (World.Singleton.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest))
         {
             if (GlobalPosition.Y < closest.GlobalPosition.Y) AddImpulse(new Vector3(0, 10, 0)); //little hop
             AddImpulse((closest.GlobalPosition - GlobalPosition).Normalized() * StrikeImpulse);
@@ -58,11 +59,8 @@ public partial class ChainStriker : Combatant
 
     private Combatant spawnLink(Combatant prev, float maxSpeed)
     {
-        ChainLink link = ChainLink.Instantiate<ChainLink>();
-        link.Parent = prev;
-        link.InitialPosition = GlobalPosition;
+        ChainLink link = World.Singleton.SpawnObject<ChainLink>(ChainLink, GlobalPosition, link => link.Parent = prev);
         link.MaxSpeed = maxSpeed;
-        World.Singleton.AddChild(link);
         links.Add(link);
         return link;
     }
