@@ -23,6 +23,7 @@ public partial class Player : Combatant
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.GetBlockItem("lava"), Size = 1 });
         World.Singleton.ChunkLoaders.Add(this);
+        World.Singleton.LocalPlayer = this;
         World.Singleton.Players.Add(this);
         jumpsLeft = JumpCount;
         base._Ready();
@@ -30,6 +31,7 @@ public partial class Player : Combatant
 
     public override void _ExitTree()
     {
+        World.Singleton.LocalPlayer = null;
         World.Singleton.Players.Remove(this);
         World.Singleton.ChunkLoaders.Remove(this);
         base._ExitTree();

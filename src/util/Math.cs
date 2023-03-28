@@ -13,6 +13,13 @@ public static class Math
         return botLeft * (1-pos.X)*(1-pos.Y)*(1-pos.Z) + botRight * pos.X*(1-pos.Y)*(1-pos.Z) + topLeft * (1-pos.X)*pos.Y*(1-pos.Z) + topRight * pos.X*pos.Y*(1-pos.Z) +
             botLeftBack * (1-pos.X)*(1-pos.Y)*pos.Z + botRightBack * pos.X*(1-pos.Y)*pos.Z + topLeftBack * (1-pos.X)*pos.Y*pos.Z + topRightBack * pos.X*pos.Y*pos.Z;
     }
+
+    public static float Trilerp(float[,,] samples, int x, int y, int z, int sampleInterval)
+    {
+        return Math.Trilerp(new Vector3((float)(x % sampleInterval) / sampleInterval, (float)(y % sampleInterval) / sampleInterval, (float)(z % sampleInterval) / sampleInterval),
+                        samples[x / sampleInterval, y / sampleInterval, z / sampleInterval], samples[x / sampleInterval, y / sampleInterval + 1, z / sampleInterval], samples[x / sampleInterval + 1, y / sampleInterval + 1, z / sampleInterval], samples[x / sampleInterval + 1, y / sampleInterval, z / sampleInterval],
+                        samples[x / sampleInterval, y / sampleInterval, z / sampleInterval + 1], samples[x / sampleInterval, y / sampleInterval + 1, z / sampleInterval + 1], samples[x / sampleInterval + 1, y / sampleInterval + 1, z / sampleInterval + 1], samples[x / sampleInterval + 1, y / sampleInterval, z / sampleInterval + 1]);
+    }
     
     //returns the max magnitude component of the vector with the other two components zeroed
     //if multple components are equal, the first one is set the others are zeroed

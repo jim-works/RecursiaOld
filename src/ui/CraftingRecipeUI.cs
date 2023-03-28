@@ -19,7 +19,7 @@ public partial class CraftingRecipeUI : Control
     //TODO: pooling
     public float DisplayRecipe(Recipe r)
     {
-        player = World.Singleton.Players[0];
+        player = World.Singleton.LocalPlayer;
         displaying = r;
         foreach (var slot in slots)
         {

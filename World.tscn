@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://dyc42ayat11tg"]
+[gd_scene load_steps=34 format=3 uid="uid://dyc42ayat11tg"]
 
 [ext_resource type="Script" path="res://src/world/Mesher.cs" id="1"]
 [ext_resource type="Script" path="res://src/entities/Player.cs" id="2"]
@@ -22,6 +22,7 @@
 [ext_resource type="Script" path="res://src/ui/RecipeListUI.cs" id="19"]
 [ext_resource type="PackedScene" path="res://objects/CraftingRecipeUI.tscn" id="20"]
 [ext_resource type="Texture2D" uid="uid://cm5wkgqfxe6nt" path="res://textures/tracking_bullet.png" id="21"]
+[ext_resource type="Theme" uid="uid://cmjgio7pj8b06" path="res://themes/gametheme.tres" id="21_k7nsf"]
 [ext_resource type="Texture2D" uid="uid://du7h2h005hxt8" path="res://textures/explosive_bullet.png" id="22"]
 [ext_resource type="Texture2D" uid="uid://c1lnml1sb02dy" path="res://textures/shotgun.png" id="23"]
 [ext_resource type="Script" path="res://src/ui/CoordinateTextUI.cs" id="25"]
@@ -30,18 +31,18 @@
 [ext_resource type="AudioStream" uid="uid://d0govxdavin7y" path="res://sounds/summon.wav" id="28"]
 [ext_resource type="Script" path="res://src/ui/BossUI.cs" id="28_utktg"]
 [ext_resource type="AudioStream" uid="uid://bnfk403lewvry" path="res://sounds/pistol.wav" id="29"]
+[ext_resource type="Script" path="res://DebugInfoLabel.cs" id="32_wwron"]
 
-[sub_resource type="Environment" id="Environment_a61qj"]
-ambient_light_source = 2
-ambient_light_color = Color(1, 1, 1, 1)
-ambient_light_energy = 0.25
-fog_density = 0.02
+[sub_resource type="Environment" id="Environment_mk13w"]
+background_mode = 1
+background_color = Color(0.729412, 0.909804, 1, 1)
+ambient_light_energy = 0.5
+ssao_enabled = true
+ssao_intensity = 1.0
+fog_density = 0.0005
 
 [node name="World" type="Node3D"]
 script = ExtResource("5")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_a61qj")
 
 [node name="Mesher" type="Node" parent="."]
 script = ExtResource("1")
@@ -92,6 +93,7 @@ InitialPosition = Vector3(0, 25, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+environment = SubResource("Environment_mk13w")
 fov = 90.0
 far = 5000.0
 script = ExtResource("6")
@@ -117,6 +119,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("21_k7nsf")
 script = ExtResource("13")
 HealthBar = NodePath("HealthBar")
 Inventory = NodePath("InventoryUI")
@@ -209,11 +212,31 @@ anchor_right = 1.0
 anchor_bottom = 0.25
 
 [node name="CoordinateLabel" type="Label" parent="UI/DebugArea"]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 0.5
+offset_left = -268.0
+offset_top = 3.0
+offset_right = -5.20007
+offset_bottom = -52.0
 text = "(-12, 12, 12)"
+horizontal_alignment = 2
 script = ExtResource("25")
+
+[node name="DebugInfoLabel" type="Label" parent="UI/DebugArea"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -257.8
+offset_top = 100.0
+offset_right = -5.0
+offset_bottom = 100.0
+text = "asdfasdf"
+horizontal_alignment = 2
+autowrap_mode = 2
+script = ExtResource("32_wwron")
 
 [connection signal="on_pause" from="Settings" to="UI/InventoryUI" method="OnPause"]
 [connection signal="on_pause" from="Settings" to="UI/ScrollContainer/RecipeList" method="OnPause"]

@@ -16,6 +16,7 @@ public partial class World : Node
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public List<Combatant> Combatants = new List<Combatant>();
     public List<Player> Players = new List<Player>();
+    public Player LocalPlayer;
     public HashSet<Node3D> ChunkLoaders = new HashSet<Node3D>();
     public WorldGenerator WorldGen;
     
@@ -207,7 +208,7 @@ public partial class World : Node
         if (!Chunks.Contains(coord)) return;//already unloaded
         Chunk c = Chunks[coord];
         c.Unload();
-        Chunks.Remove(coord);
+        //don't remove chunk from dict unless the group can be unloaded
         if (c.Group.ChunksLoaded == 0)
         {
             for (int x = 0; x < ChunkGroup.GROUP_SIZE; x++)

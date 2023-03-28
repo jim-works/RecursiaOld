@@ -13,7 +13,12 @@ public class LayeredNoise
     private List<Layer> prodLayer = new List<Layer>();
     private float sumNoiseMagnitude = 0;
     private float prodNoiseMagnitude = 1;
-    public float Seed;
+    public int Seed {get; private set;}
+
+    public LayeredNoise(int seed = 1337)
+    {
+        Seed = seed;
+    }
 
     public float Scale => sumNoiseMagnitude*prodNoiseMagnitude;
     public void AddLayer(FastNoiseLite layer, Vector3 freq, float amp)
@@ -24,6 +29,12 @@ public class LayeredNoise
             amp=amp
         });
         sumNoiseMagnitude += amp;
+    }
+    public void AddSumLayers(float baseFreq, float freqMult, float scaleMult, int octaves)
+    {
+        FastNoiseLite fn = new FastNoiseLite(Seed);
+        fn.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+        AddLayers(fn, octaves, baseFreq*Vector3.One, freqMult, 1, scaleMult);
     }
 
     public void AddLayers(FastNoiseLite layer, int n, Vector3 baseFreq, float freqMult, float baseAmp, float ampMult)
@@ -53,11 +64,11 @@ public class LayeredNoise
         float res = 0;
         foreach (var layer in sumLayer)
         {
-            res += layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed);
+            res += layer.amp*layer.noise.GetNoise(layer.freq.X*x,layer.freq.Y*y);
         }
         foreach (var layer in prodLayer)
         {
-            res *= layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed);
+            res *= layer.amp*layer.noise.GetNoise(layer.freq.X*x,layer.freq.Y*y);
         }
         return res;
     }
@@ -69,11 +80,11 @@ public class LayeredNoise
         float res = 0;
         foreach (var layer in sumLayer)
         {
-            res += layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed+layer.freq.Z*z);
+            res += layer.amp*layer.noise.GetNoise(layer.freq.X*x,layer.freq.Y*y,layer.freq.Z*z);
         }
         foreach (var layer in prodLayer)
         {
-            res *= layer.amp*layer.noise.GetNoise(Seed+layer.freq.X*x,Seed+layer.freq.Y*y,Seed+layer.freq.Z*z);
+            res *= layer.amp*layer.noise.GetNoise(layer.freq.X*x,layer.freq.Y*y,layer.freq.Z*z);
         }
         return res;
     }

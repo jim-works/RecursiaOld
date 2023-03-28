@@ -17,9 +17,6 @@ public partial class Chunk : ISerializable
     public ChunkGenerationState GenerationState;
     public ChunkState State { get; private set; }
     public List<Structure> Structures = new List<Structure>();
-    public bool SaveDirtyFlag = true;
-    //if the chunk is made of only one type of block, we don't allocate the block array
-    private Block uniformBlock = null;
 
     public Chunk(ChunkCoord chunkCoords, ChunkGroup group)
     {
@@ -39,14 +36,13 @@ public partial class Chunk : ISerializable
     }
     public Block this[int x, int y, int z]
     {
-        get { return Blocks != null ? Blocks[x, y, z] : uniformBlock; }
+        get { return Blocks != null ? Blocks[x, y, z] : null; }
         set
         {
-            if (value != uniformBlock)
+            if (Blocks != null || value != null)
             {
                 if (Blocks == null) Blocks = new Block[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
                 Blocks[x, y, z] = value;
-                SaveDirtyFlag = true;
             }
         }
     }
@@ -80,8 +76,7 @@ public partial class Chunk : ISerializable
         {
             //this case doesn't need to exist, but should be faster than the other
             bw.Write(Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE);
-            if (uniformBlock == null) bw.Write(0);
-            else { bw.Write(1); uniformBlock.Serialize(bw); }
+            bw.Write(0);
         }
         else
         {
@@ -120,7 +115,6 @@ public partial class Chunk : ISerializable
         Chunk c = new Chunk(pos, into);
         int run = 0;
         Block read = null;
-        c.SaveDirtyFlag = false;
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
         {
             for (int y = 0; y < Chunk.CHUNK_SIZE; y++)

@@ -1,0 +1,9 @@
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://cmjgio7pj8b06"]
+
+[ext_resource type="FontFile" uid="uid://hlc5sd56q67q" path="res://fonts/pixel-operator/PixelOperator8.ttf" id="1_lhwf4"]
+
+[sub_resource type="FontVariation" id="FontVariation_6pg1p"]
+base_font = ExtResource("1_lhwf4")
+
+[resource]
+default_font = SubResource("FontVariation_6pg1p")

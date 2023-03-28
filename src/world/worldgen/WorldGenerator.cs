@@ -30,14 +30,17 @@ public partial class WorldGenerator
     private List<IChunkGenLayer> chunkGenLayers = new List<IChunkGenLayer>();
     private List<StructureProvider> structureProviders = new List<StructureProvider>();
 
-    private float currSeed=1000.875f;
+    public int Seed {get; private set;} = 1127;
+    private int currSeed;
 
     public WorldGenerator()
     {
+        currSeed = Seed;
         //initialize worldgen threads
         Godot.GD.Print($"Starting world generator with {WorldgenThreads} threads!");
         chunkGenLayers.Add(initLayer(new ShapingLayer()));
-        chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
+        chunkGenLayers.Add(initLayer(new DetailLayer()));
+        //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
         structureProviders.Add(new TreeStructureProvider());
         shaping = new HashSet<Chunk>[WorldgenThreads];
         expanding = new Dictionary<ChunkCoord, Chunk>[WorldgenThreads];
@@ -54,12 +57,23 @@ public partial class WorldGenerator
         structureThread.Start();
     }
 
+    private int getNextSeed()
+    {
+        unchecked
+        {
+            //"randomize" seeds for next layer
+            //numbers chosen by fair dice roll
+            currSeed ^= currSeed << 13;
+            currSeed ^= currSeed >> 17;
+            currSeed ^= currSeed << 5;
+            currSeed *= 0x8001AD;    
+        }
+        return currSeed;
+    }
 
     private IChunkGenLayer initLayer(IChunkGenLayer layer)
     {
-        layer.InitRandom(currSeed);
-        currSeed *= 1.5987f;
-        currSeed += 7.983f;
+        layer.InitRandom(getNextSeed);
         return layer;
     }
 
