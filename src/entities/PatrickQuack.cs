@@ -94,8 +94,6 @@ public partial class PatrickQuack : BipedalCombatant
             if (c is Marp m) m.CarryTarget = this;
             spawnIdx = (spawnIdx+1)%EnemiesToSummon.Length;
             c.Team = Team;
-            c.InitialPosition = summonPoint.GlobalPosition;
-            World.Singleton.AddChild(c);
             summonTimer = 0;
         }
         summonTimer += dt;

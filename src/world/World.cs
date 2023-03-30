@@ -378,36 +378,42 @@ public partial class World : Node
     }
     private void physicsObjectCrossChunkBoundary(PhysicsObject p, ChunkCoord oldChunk)
     {
-        GD.Print("PhysicsObject " + p + " crossed chunk boundary from " + oldChunk + " to " + (ChunkCoord)p.GlobalPosition);
-        //remove from old list, then add to new one
-        //keep combatant list updated if applicable
-        if (PhysicsObjects.TryGetValue(oldChunk, out List<PhysicsObject> oldList))
+        removePhysicsObject(p,oldChunk);
+        addPhysicsObject(p);
+    }
+    private void removePhysicsObject(PhysicsObject p, ChunkCoord from)
+    {
+        if (PhysicsObjects.TryGetValue(from, out List<PhysicsObject> physics))
         {
-            oldList.Remove(p);
-            if (oldList.Count == 0) PhysicsObjects.Remove(oldChunk);
+            physics.Remove(p);
+            if (physics.Count == 0) PhysicsObjects.Remove(from);
         }
-        if (PhysicsObjects.TryGetValue((ChunkCoord)p.GlobalPosition, out List<PhysicsObject> list))
+        if (p is Combatant c && Combatants.TryGetValue(from, out List<Combatant> combatants))
+        {
+            combatants.Remove(c);
+            if (combatants.Count == 0) Combatants.Remove(from);
+        }
+    }
+    private void addPhysicsObject(PhysicsObject p)
+    {
+        ChunkCoord to = (ChunkCoord)p.GlobalPosition;
+        if (PhysicsObjects.TryGetValue(to, out List<PhysicsObject> list))
         {
             list.Add(p);
         }
         else
         {
-            PhysicsObjects[(ChunkCoord)p.GlobalPosition] = new List<PhysicsObject> { p };
+            PhysicsObjects[to] = new List<PhysicsObject> { p };
         }
         if (p is Combatant c)
         {
-            if (Combatants.TryGetValue(oldChunk, out List<Combatant> oldList2))
-            {
-                oldList2.Remove(c);
-                if (oldList2.Count == 0) Combatants.Remove(oldChunk);
-            }
-            if (Combatants.TryGetValue((ChunkCoord)c.GlobalPosition, out List<Combatant> list2))
+            if (Combatants.TryGetValue(to, out List<Combatant> list2))
             {
                 list2.Add(c);
             }
             else
             {
-                Combatants[(ChunkCoord)c.GlobalPosition] = new List<Combatant> { c };
+                Combatants[to] = new List<Combatant> { c };
             }
         }
     }
@@ -415,18 +421,27 @@ public partial class World : Node
     public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T> init=null) where T :PhysicsObject
     {
         T c = prefab.Instantiate<T>();
-        c.Registered = true;
+        c.OldCoord = (ChunkCoord)position; //this way, if we spawn outside of (0,0,0), we won't add the object twice.
+        c.InitialPosition = position;
         init?.Invoke(c);
         AddChild(c);
-        c.OnCrossChunkBoundary += physicsObjectCrossChunkBoundary;
-        c.GlobalPosition = position;
-        physicsObjectCrossChunkBoundary(c, (ChunkCoord)position);
+        RegisterObject(c);
         return c;
     }
 
+    public void RemoveObject(PhysicsObject p)
+    {
+        removePhysicsObject(p, (ChunkCoord)p.GlobalPosition);
+    }
+
+    //will not register an object twice
     public void RegisterObject(PhysicsObject obj)
     {
+        if (obj.Registered) return;
+        obj.Registered = true;
+        GD.Print("Registering object " + obj.Name);
         obj.OnCrossChunkBoundary += physicsObjectCrossChunkBoundary;
-        physicsObjectCrossChunkBoundary(obj, (ChunkCoord)obj.GlobalPosition);
+        obj.OnExitTree += RemoveObject;
+        addPhysicsObject(obj);
     }
 }

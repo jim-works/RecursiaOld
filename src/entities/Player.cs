@@ -16,6 +16,7 @@ public partial class Player : Combatant
 
     public override void _Ready()
     {
+        World.Singleton.RegisterObject(this); //necessary for now since player is added in editor instead of created using World.SpawnObject
         Inventory = new Inventory(InitialInventorySize);
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("gun"), Size = 1 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("explosive_bullet"), Size = 100 });
