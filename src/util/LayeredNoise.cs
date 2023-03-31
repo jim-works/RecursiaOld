@@ -90,7 +90,6 @@ public class LayeredNoise
     public float Quantile(double q)
     {
         float res = (float)Normal.InvCDF(0,Mathf.Sqrt(variance)/Scale,q);
-        GD.Print($"Quantile of ({q}): {res} Cdf: {Cdf(res)}");
         return res;
     }
 }

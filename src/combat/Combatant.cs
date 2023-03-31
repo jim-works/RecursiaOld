@@ -53,12 +53,6 @@ public partial class Combatant : PhysicsObject
         base._Process(delta);
     }
 
-    public override void _ExitTree()
-    {
-        World.Singleton.Combatants[(ChunkCoord)GlobalPosition].Remove(this);
-        base._ExitTree();
-    }
-
     public void UseItem(int slot, Vector3 offset, Vector3 direction)
     {
         if (ItemCooldown > 0) return;

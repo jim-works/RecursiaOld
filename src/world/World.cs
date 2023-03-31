@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 //Faces of blocks are on integral coordinates
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
-//TODO: fix unloading, there's a memory leak
 public partial class World : Node
 {
     public static World Singleton;
@@ -12,8 +11,6 @@ public partial class World : Node
     [Export] public int LoadChunkRegionLevel = 1;
     public ChunkCollection Chunks = new ChunkCollection();
     //todo: optimize these
-    public Dictionary<ChunkCoord, List<PhysicsObject>> PhysicsObjects = new();
-    public Dictionary<ChunkCoord, List<Combatant>> Combatants = new ();
     public List<Player> Players = new List<Player>();
     public Player LocalPlayer;
     public HashSet<Node3D> ChunkLoaders = new HashSet<Node3D>();
@@ -25,6 +22,10 @@ public partial class World : Node
     private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
+
+
+    private Dictionary<ChunkCoord, List<PhysicsObject>> physicsObjects = new();
+    private Dictionary<ChunkCoord, List<Combatant>> combatants = new ();
 
     private double chunkLoadingInterval = 0.5f; //seconds per chunk loading update
     private double _chunkLoadingTimer = 0;
@@ -69,7 +70,7 @@ public partial class World : Node
         float minSqrDist = float.PositiveInfinity;
         enemy = null;
         //TODO: only check chunks in range
-        foreach (var l in Combatants.Values)
+        foreach (var l in combatants.Values)
         foreach(var c in l)
         {
             float sqrDist = (pos-c.GlobalPosition).LengthSquared();
@@ -83,7 +84,7 @@ public partial class World : Node
     public IEnumerable<Combatant> GetEnemiesInRange(Vector3 pos, float range, Team team)
     {
         //TODO: only check chunks in range
-        foreach (var l in Combatants.Values)
+        foreach (var l in combatants.Values)
         {
             foreach (var c in l)
             {
@@ -94,7 +95,7 @@ public partial class World : Node
     public IEnumerable<PhysicsObject> GetPhysicsObjectsInRange(Vector3 pos, float range)
     {
         //TODO: only check chunks in range
-        foreach (var kvp in PhysicsObjects)
+        foreach (var kvp in physicsObjects)
         {
             foreach (var obj in kvp.Value)
             {
@@ -105,7 +106,7 @@ public partial class World : Node
     public Combatant CollidesWithEnemy(Box box, Team team)
     {
         //TODO: only check chunks in range
-        foreach (var l in Combatants.Values)
+        foreach (var l in combatants.Values)
         foreach (var c in l)
         {
             if (c.Team == team) continue;
@@ -306,50 +307,63 @@ public partial class World : Node
     }
     private void removePhysicsObject(PhysicsObject p, ChunkCoord from)
     {
-        if (PhysicsObjects.TryGetValue(from, out List<PhysicsObject> physics))
+        if (physicsObjects.TryGetValue(from, out List<PhysicsObject> physics))
         {
             physics.Remove(p);
-            if (physics.Count == 0) PhysicsObjects.Remove(from);
+            if (physics.Count == 0) physicsObjects.Remove(from);
         }
-        if (p is Combatant c && Combatants.TryGetValue(from, out List<Combatant> combatants))
+        if (GetChunk(from) is Chunk chunk)
         {
-            combatants.Remove(c);
-            if (combatants.Count == 0) Combatants.Remove(from);
+            chunk.PhysicsObjects.Remove(p);
+        }
+        if (p is Combatant c && combatants.TryGetValue(from, out List<Combatant> comb))
+        {
+            comb.Remove(c);
+            if (combatants.Count == 0) combatants.Remove(from);
         }
     }
     private void addPhysicsObject(PhysicsObject p)
     {
         ChunkCoord to = (ChunkCoord)p.GlobalPosition;
-        if (PhysicsObjects.TryGetValue(to, out List<PhysicsObject> list))
+        if (GetChunk(to) is Chunk chunk)
+        {
+            chunk.PhysicsObjects.Add(p);
+        }
+        if (physicsObjects.TryGetValue(to, out List<PhysicsObject> list))
         {
             list.Add(p);
         }
         else
         {
-            PhysicsObjects[to] = new List<PhysicsObject> { p };
+            physicsObjects[to] = new List<PhysicsObject> { p };
         }
         if (p is Combatant c)
         {
-            if (Combatants.TryGetValue(to, out List<Combatant> list2))
+            if (combatants.TryGetValue(to, out List<Combatant> list2))
             {
                 list2.Add(c);
             }
             else
             {
-                Combatants[to] = new List<Combatant> { c };
+                combatants[to] = new List<Combatant> { c };
             }
         }
     }
     //init runs before object is added to scene tree
-    public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T> init=null) where T :PhysicsObject
+    //if will handle registering if T : PhysicsObject/Combatant
+    public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T> init=null) where T : Node3D
     {
-        T c = prefab.Instantiate<T>();
-        c.OldCoord = (ChunkCoord)position; //this way, if we spawn outside of (0,0,0), we won't add the object twice.
-        c.InitialPosition = position;
-        init?.Invoke(c);
-        AddChild(c);
-        RegisterObject(c);
-        return c;
+        T obj = prefab.Instantiate<T>();
+        var c = obj as PhysicsObject;
+        if (c != null)
+        {
+            c.OldCoord = (ChunkCoord)position; //this way, if we spawn outside of (0,0,0), we won't add the object twice.
+            c.InitialPosition = position;
+        }
+        init?.Invoke(obj);
+        AddChild(obj);
+        if (c != null) RegisterObject(c);
+        return obj;
     }
 
     public void RemoveObject(PhysicsObject p)

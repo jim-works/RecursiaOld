@@ -29,10 +29,9 @@ public partial class DebugDraw : Node
         {
             drawBox(b, geometry);
         }
-        foreach (var l in World.Singleton.PhysicsObjects.Values)
-        foreach (var c in l)
+        foreach (var p in World.Singleton.GetPhysicsObjectsInRange(World.Singleton.LocalPlayer.Position, 1000))
         {
-            drawBox(c.GetBox(), geometry);
+            drawBox(p.GetBox(), geometry);
         }
         drawing.Clear();
     }

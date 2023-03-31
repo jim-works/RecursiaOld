@@ -50,6 +50,7 @@ public partial class WorldSaver : Node
             {
                 Task.Delay(TimeSpan.FromSeconds(SaveIntervalSeconds)).Wait();
                 emptySaveQueue();
+                GC.Collect();
             }
         });
     }

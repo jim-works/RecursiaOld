@@ -31,6 +31,7 @@ public partial class PhysicsObject : Node3D, ISerializable
     public bool Registered = false;
 
     public bool Collides = true;
+    public string ObjectType;
 
     protected Vector3 currentForce; //zeroed each physics update
     protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
@@ -165,7 +166,7 @@ public partial class PhysicsObject : Node3D, ISerializable
                 }
             }
         }
-        //z azis
+        //z axis
         if (frameVelocity.Z < 0)
         {
             //moving forward

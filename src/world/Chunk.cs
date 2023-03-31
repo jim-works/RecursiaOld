@@ -16,6 +16,7 @@ public partial class Chunk : ISerializable
     public ChunkGenerationState GenerationState;
     public ChunkState State { get; private set; }
     public List<Structure> Structures = new List<Structure>();
+    public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public bool SaveDirtyFlag = true;
 
     public Chunk(ChunkCoord chunkCoords)
@@ -69,6 +70,7 @@ public partial class Chunk : ISerializable
     public void Serialize(BinaryWriter bw)
     {
         Position.Serialize(bw);
+        //serialize blocks
         if (Blocks == null)
         {
             //this case doesn't need to exist, but should be faster than the other
@@ -104,6 +106,12 @@ public partial class Chunk : ISerializable
             if (curr == null) bw.Write(0);
             else { bw.Write(1); curr.Serialize(bw); }
         }
+        //serialize physics objects
+        // bw.Write(PhysicsObjects.Count);
+        // foreach (var p in PhysicsObjects)
+        // {
+        //     p.Serialize(bw);
+        // }
     }
 
     public static Chunk Deserialize(BinaryReader br)
@@ -111,6 +119,7 @@ public partial class Chunk : ISerializable
         var pos = ChunkCoord.Deserialize(br);
         Chunk c = new Chunk(pos);
         int run = 0;
+        //deserialize blocks
         Block read = null;
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
         {
@@ -130,6 +139,14 @@ public partial class Chunk : ISerializable
                 }
             }
         }
+        //deserialize physics objects
+        // int count = br.ReadInt32();
+        // for (int i = 0; i < count; i++)
+        // {
+        //     var name = br.ReadString();
+        //     var p = ObjectTypes.GetInstance<PhysicsObject>(name);
+        //     c.PhysicsObjects.Add(p);
+        // }
         c.GenerationState = ChunkGenerationState.GENERATED;
         return c;
     }

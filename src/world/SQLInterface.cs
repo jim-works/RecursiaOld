@@ -2,6 +2,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Collections.Generic;
 using System.IO.Compression;
+using System.Threading.Tasks;
 
 public class SQLInterface
 {
@@ -22,6 +23,10 @@ public class SQLInterface
             PRIMARY KEY (key)
         ) STRICT";
     private const string worldFormatVersion = "1";
+
+    private SQLiteCommand saveChunkCommand;
+    private SQLiteCommand loadChunkCommand;
+
     public SQLInterface(string dbpath)
     {
         Godot.GD.Print("Opening database at " + dbpath);
@@ -31,8 +36,9 @@ public class SQLInterface
             SQLiteConnection.CreateFile(dbpath);
             init = true;
         }
-        
-        var connectionString = new SQLiteConnectionStringBuilder() {
+
+        var connectionString = new SQLiteConnectionStringBuilder()
+        {
             DataSource = dbpath
         }.ToString();
         conn = new SQLiteConnection(connectionString);
@@ -41,11 +47,42 @@ public class SQLInterface
         if (init)
         {
             initializeTables();
-        } 
+        }
         else if (!verifyDB())
         {
             Godot.GD.PushError("Database format version mismatch!!");
             conn = null;
+            return;
+        }
+
+        //prepare save/load commands
+        saveChunkCommand = conn.CreateCommand();
+        saveChunkCommand.CommandText = @"
+            INSERT OR REPLACE INTO chunks (x, y, z, terrainData)
+            VALUES (@x, @y, @z, @terrainData)";
+        saveChunkCommand.Parameters.Add("@x", System.Data.DbType.Int32);
+        saveChunkCommand.Parameters.Add("@y", System.Data.DbType.Int32);
+        saveChunkCommand.Parameters.Add("@z", System.Data.DbType.Int32);
+        saveChunkCommand.Parameters.Add("@terrainData", System.Data.DbType.Binary);
+        loadChunkCommand = conn.CreateCommand();
+        loadChunkCommand.CommandText = @"
+            SELECT terrainData FROM chunks
+            WHERE x = @x AND y = @y AND z = @z";
+        loadChunkCommand.Parameters.Add("@x", System.Data.DbType.Int32);
+        loadChunkCommand.Parameters.Add("@y", System.Data.DbType.Int32);
+        loadChunkCommand.Parameters.Add("@z", System.Data.DbType.Int32);
+
+        //print number of chunks in database
+        using (SQLiteCommand command = conn.CreateCommand())
+        {
+            command.CommandText = "SELECT COUNT(*) FROM chunks";
+            using (SQLiteDataReader reader = command.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    Godot.GD.Print("Database contains " + reader.GetInt32(0) + " chunks");
+                }
+            }
         }
     }
 
@@ -95,6 +132,8 @@ public class SQLInterface
 
     public void Close()
     {
+        saveChunkCommand.Dispose();
+        loadChunkCommand.Dispose();
         conn.Close();
     }
 
@@ -102,26 +141,19 @@ public class SQLInterface
     {
         using (SQLiteTransaction transaction = conn.BeginTransaction())
         {
-            using (SQLiteCommand command = conn.CreateCommand())
+            foreach (Chunk chunk in chunks)
             {
-                command.CommandText = @"
-                    INSERT OR REPLACE INTO chunks (x, y, z, terrainData)
-                    VALUES (@x, @y, @z, @terrainData)
-                ";
-                foreach (Chunk chunk in chunks)
+                saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
+                saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;
+                saveChunkCommand.Parameters["@z"].Value = chunk.Position.Z;
+                using (MemoryStream ms = new MemoryStream())
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                using (GZipStream gz = new GZipStream(ms, CompressionLevel.Fastest))
                 {
-                    command.Parameters.AddWithValue("@x", chunk.Position.X);
-                    command.Parameters.AddWithValue("@y", chunk.Position.Y);
-                    command.Parameters.AddWithValue("@z", chunk.Position.Z);
-                    using (MemoryStream ms = new MemoryStream())
-                    using (BinaryWriter bw = new BinaryWriter(ms))
-                    using (GZipStream gz = new GZipStream(ms, CompressionLevel.Fastest))
-                    {
-                        chunk.Serialize(bw);
-                        command.Parameters.AddWithValue("@terrainData", ms.ToArray());
-                    }
-                    command.ExecuteNonQuery();
+                    chunk.Serialize(bw);
+                    saveChunkCommand.Parameters["@terrainData"].Value = ms.ToArray();
                 }
+                saveChunkCommand.ExecuteNonQuery();
             }
             transaction.Commit();
         }
@@ -129,34 +161,23 @@ public class SQLInterface
 
     public void LoadChunks(IEnumerable<ChunkCoord> chunks, List<Chunk> placeInto)
     {
-        using (SQLiteCommand command = conn.CreateCommand())
+        foreach (ChunkCoord coord in chunks)
         {
-            command.CommandText = @"
-                SELECT terrainData FROM chunks
-                WHERE x = @x AND y = @y AND z = @z
-            ";
-            foreach (ChunkCoord coord in chunks)
+            loadChunkCommand.Parameters["@x"].Value = coord.X;
+            loadChunkCommand.Parameters["@y"].Value = coord.Y;
+            loadChunkCommand.Parameters["@z"].Value = coord.Z;
+            object result = loadChunkCommand.ExecuteScalar();
+            if (result == null)
             {
-                command.Parameters.AddWithValue("@x", coord.X);
-                command.Parameters.AddWithValue("@y", coord.Y);
-                command.Parameters.AddWithValue("@z", coord.Z);
-                using (SQLiteDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        using (MemoryStream ms = new MemoryStream((byte[])reader["terrainData"]))
-                        using (GZipStream gz = new GZipStream(ms, CompressionMode.Decompress))
-                        using (BinaryReader br = new BinaryReader(ms))
-                        {
-                            Chunk chunk = Chunk.Deserialize(br);
-                            placeInto.Add(chunk);
-                        }
-                    }
-                    else
-                    {
-                        placeInto.Add(null);
-                    }
-                }
+                placeInto.Add(null);
+                continue;
+            }
+            using (MemoryStream ms = new MemoryStream((byte[])result))
+            using (GZipStream gz = new GZipStream(ms, CompressionMode.Decompress))
+            using (BinaryReader br = new BinaryReader(ms))
+            {
+                Chunk chunk = Chunk.Deserialize(br);
+                placeInto.Add(chunk);
             }
         }
     }
