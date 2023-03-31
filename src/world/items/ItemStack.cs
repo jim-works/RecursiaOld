@@ -24,13 +24,25 @@ public struct ItemStack : ISerializable
     }
 
     public void Serialize(System.IO.BinaryWriter bw) {
+        if (Item == null) {
+            bw.Write("");
+            return;
+        }
+        bw.Write(Item.TypeName);
         Item.Serialize(bw);
         bw.Write(Size);
     }
     public static ItemStack Deserialize(System.IO.BinaryReader br) {
+        string name = br.ReadString();
+        if (name == "") {
+            return new ItemStack();
+        }
+        int size = br.ReadInt32();
+        Item item = ItemTypes.Get(name);
+        item.Deserialize(br);
         return new ItemStack {
-            Item=Item.Deserialize(br),
-            Size = br.ReadInt32()
+            Item= item,
+            Size = size
         };
     }
 }

@@ -16,7 +16,7 @@ public static class ItemTypes
         if (b == null) return null; //invalid block
         return new BlockFactoryItem {
             BlockName = blockName,
-            Name = blockName,
+            DisplayName = blockName,
             Texture2D = b.ItemTexture
         };
     }
@@ -25,7 +25,7 @@ public static class ItemTypes
     //should only be used for picking up blocks with data you want to keep
     //the string overload will automatically create a factory/use the cached block pointer as required
     public static BlockItem GetBlockItem(Block b) => new BlockItem {
-            Name=b.Name,
+            DisplayName=b.Name,
             Placing=b,
             Texture2D = b.ItemTexture
         };
@@ -34,7 +34,8 @@ public static class ItemTypes
         if (items.ContainsKey(name)) {
             Godot.GD.PushWarning($"Item {name} already exists, replacing!");
         }
-        Godot.GD.Print($"Created item type {name} with item name {item.Name}");
+        Godot.GD.Print($"Created item type {name} with item name {item.DisplayName}");
+        item.TypeName = name;
         items[name] = item;
     }
 }

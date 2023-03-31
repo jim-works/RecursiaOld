@@ -23,6 +23,11 @@ public partial class Player : Combatant
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("cursed_idol"), Size = 3 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.GetBlockItem("lava"), Size = 1 });
+        BlockFactoryItem lootBlockItem = ItemTypes.GetBlockItem("loot");
+        lootBlockItem.InitPlaced = (Block b) => {
+            (b as LootBlock).Drops = new ItemStack[] { new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 } };
+        };
+        Inventory.CopyItem(new ItemStack {Item = lootBlockItem, Size = 1});
         World.Singleton.ChunkLoaders.Add(this);
         World.Singleton.LocalPlayer = this;
         World.Singleton.Players.Add(this);

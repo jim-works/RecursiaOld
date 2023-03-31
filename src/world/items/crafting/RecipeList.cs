@@ -28,7 +28,7 @@ public static class RecpieList
             bool add = false;
             foreach (var ingredient in recipe.Ingredients)
             {
-                if (ingredient.Item.Name.Contains(query)) {
+                if (ingredient.Item.DisplayName.Contains(query)) {
                     add = true;
                     result.Add(recipe);
                     break;
@@ -37,7 +37,7 @@ public static class RecpieList
             if (add) continue;
             foreach (var product in recipe.Product)
             {
-                if (product.Item.Name.Contains(query)) {
+                if (product.Item.DisplayName.Contains(query)) {
                     add = true;
                     result.Add(recipe);
                     break;

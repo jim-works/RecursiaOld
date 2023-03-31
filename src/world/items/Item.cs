@@ -6,25 +6,21 @@ using System.IO;
 //[MonoCustomResourceRegistry.RegisteredType(nameof(Item), "", nameof(Resource))]
 public partial class Item : Resource, ISerializable
 {
-    [Export] public string Name;
+    [Export] public string DisplayName;
     [Export] public int MaxStack = 999;
     [Export] public float Cooldown = 0;
     [Export] public Texture2D Texture2D;
     [Export] public AudioStream UseSound;
+
+    public string TypeName;
     
     public virtual void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         user.ItemCooldown = Cooldown;
     }
 
-    public virtual void Serialize(BinaryWriter bw)
-    {
-        bw.Write(Name);
-    }
-    public static Item Deserialize(BinaryReader br)
-    {
-        throw new System.NotImplementedException();
-    }
+    public virtual void Serialize(BinaryWriter bw) {}
+    public virtual void Deserialize(BinaryReader br){}
 
     //allows subclasses to override .Equals, keeping == and != consistent with that
     public static bool operator ==(Item a, Item b)

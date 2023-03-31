@@ -27,7 +27,7 @@ public partial class ItemLoader : Node
         ItemTypes.CreateType("gun", new GunItem {
             Texture2D = GunTexture,
             MaxStack=1,
-            Name="gun",
+            DisplayName="gun",
             Damage=2,
             Cooldown=0.25f,
             UseSound = GunSound,
@@ -35,26 +35,26 @@ public partial class ItemLoader : Node
         ItemTypes.CreateType("shotgun", new ShotgunItem {
             Texture2D = ShotgunTexture,
             MaxStack=1,
-            Name="shotgun",
+            DisplayName="shotgun",
             Damage=0,
             Cooldown=1,
             UseSound = ShotgunSound,
         });
         ItemTypes.CreateType("explosive_bullet", new BulletItem {
             Texture2D=ExplosiveBulletTexture,
-            Name="explosive bullet",
+            DisplayName="explosive bullet",
             Damage=5,
             ProjectileScene = GD.Load<PackedScene>("res://objects/ExplosiveBullet.tscn")
         });
         ItemTypes.CreateType("tracking_bullet", new BulletItem {
             Texture2D=TrackingBulletTexture,
-            Name="tracking bullet",
+            DisplayName="tracking bullet",
             Damage=1,
             ProjectileScene = GD.Load<PackedScene>("res://objects/TrackingBullet.tscn")
         });
         ItemTypes.CreateType("marp_rod", new SummoningItem {
             Texture2D=MarpRodTexture,
-            Name="marp rod",
+            DisplayName="marp rod",
             ToSummon = GD.Load<PackedScene>("res://objects/enemies/Marp.tscn"),
             SetToUserTeam = true,
             Distance = 5,
@@ -62,7 +62,7 @@ public partial class ItemLoader : Node
         });
         ItemTypes.CreateType("cursed_idol", new SummoningItem {
             Texture2D=CursedIdolTexture,
-            Name="cursed idol",
+            DisplayName="cursed idol",
             ToSummon = GD.Load<PackedScene>("res://objects/enemies/PatrickQuack.tscn"),
             SetToUserTeam = false,
             Distance = 75,

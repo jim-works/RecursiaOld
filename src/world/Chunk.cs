@@ -95,7 +95,7 @@ public partial class Chunk : ISerializable
                         }
                         bw.Write(run);
                         if (curr == null) bw.Write(0);
-                        else { bw.Write(1); curr.Serialize(bw); }
+                        else { bw.Write(1); bw.Write(curr.Name); curr.Serialize(bw); }
                         run = 1;
                         curr = b;
                     }
@@ -104,7 +104,7 @@ public partial class Chunk : ISerializable
 
             bw.Write(run);
             if (curr == null) bw.Write(0);
-            else { bw.Write(1); curr.Serialize(bw); }
+            else { bw.Write(1); bw.Write(curr.Name); curr.Serialize(bw); }
         }
         //serialize physics objects
         // bw.Write(PhysicsObjects.Count);
@@ -132,7 +132,15 @@ public partial class Chunk : ISerializable
                         run = br.ReadInt32();
                         bool nullBlock = br.ReadInt32() == 0;
                         if (nullBlock) read = null;
-                        else { read = BlockTypes.Get(br.ReadString()); read.Deserialize(br); }
+                        else { 
+                            string blockName = br.ReadString();
+                            try {
+                                read = BlockTypes.Get(blockName); read.Deserialize(br);
+                            } catch (Exception e) {
+                                Godot.GD.PushError($"Error deserializing block {blockName} at {pos} {x} {y} {z}: {e.ToString()}");
+                                read = null;
+                            }
+                        }
                     }
                     c[x, y, z] = read;
                     run--;
