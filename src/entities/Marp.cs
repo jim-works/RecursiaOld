@@ -10,7 +10,7 @@ public partial class Marp : BipedalCombatant
     [Export] public float Smackitude = 100;
     [Export] public float SmackHeight = 10;
     [Export] public float SmackDamage = 1;
-    [Export] public float AggroRange = 50;
+    [Export] public float AggroRange = 250;
 
     [Export] public Node3D CarryTarget;
 

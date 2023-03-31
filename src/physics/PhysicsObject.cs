@@ -1,7 +1,8 @@
 using Godot;
+using System.IO;
 using System.Runtime.CompilerServices;
 
-public partial class PhysicsObject : Node3D
+public partial class PhysicsObject : Node3D, ISerializable
 {
     private const int COLLISION_INTERVAL = 5; //physics updates per collision check
     [Export]
@@ -195,5 +196,12 @@ public partial class PhysicsObject : Node3D
         }
 
         GlobalPosition = postPosition;
+    }
+
+    public virtual void Serialize(BinaryWriter writer)
+    {
+        GlobalPosition.Serialize(writer);
+        Velocity.Serialize(writer);
+        
     }
 }

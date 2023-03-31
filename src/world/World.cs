@@ -8,7 +8,6 @@ using System.Collections.Generic;
 public partial class World : Node
 {
     public static World Singleton;
-    [Export] public string WorldName = "World1"; 
     //loads a parent region of this level when we try to load a chunk (reduces # of times we read the file)
     [Export] public int LoadChunkRegionLevel = 1;
     public ChunkCollection Chunks = new ChunkCollection();
@@ -23,7 +22,6 @@ public partial class World : Node
     public event System.Action<Chunk> OnChunkReady;
     public event System.Action<Chunk> OnChunkUnload;
     
-    private Dictionary<ChunkGroupCoord, ChunkGroup> chunkGroups = new Dictionary<ChunkGroupCoord, ChunkGroup>();
     private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
@@ -66,17 +64,6 @@ public partial class World : Node
         base._Process(delta);
     }
 
-    public ChunkGroup GetChunkGroup(ChunkCoord c)
-    {
-        return GetChunkGroup((ChunkGroupCoord)c);
-    }
-    public ChunkGroup GetChunkGroup(ChunkGroupCoord c)
-    {
-        if (chunkGroups.TryGetValue(c, out var g)) return g;
-        ChunkGroup newGroup = new ChunkGroup(c);
-        chunkGroups[c] = newGroup;
-        return newGroup;
-    }
     public bool ClosestEnemy(Vector3 pos, Team team, float maxDist, out Combatant enemy)
     {
         float minSqrDist = float.PositiveInfinity;
@@ -168,82 +155,23 @@ public partial class World : Node
             chunk.Load();
             return; //already loaded
         }
-        ChunkGroupCoord cgcoord = (ChunkGroupCoord)coord;
-        //we only load/unload whole chunk groups at once
-        if (!chunkGroups.TryGetValue(cgcoord, out ChunkGroup cg) && saver.PathToChunkGroupExists(cgcoord))
-        {
-            //TODO: multithread this part (Task.Run doesn't work immediately)
-            loadChunkGroup(cgcoord);
-            return;
-        } 
-        else if (cg != null)
-        {
-            //ChunkGroup is loaded, see if it contains the chunk we want
-            Chunk inGroup = cg.GetChunk(coord);
-            if (inGroup != null)
-            {
-                if (inGroup.State == ChunkState.Unloaded) OnChunkReady?.Invoke(inGroup);
-                inGroup.Load();
-                return;
+        saver.Load(coord, c => {
+            if (c == null) {
+                c = CreateChunk(coord);
+                WorldGen.GenerateDeferred(c);
+            } else {
+                AddChunk(c);
+                OnChunkReady?.Invoke(c);
+                c.Load();
             }
-        }
-        //need to generate the chunk
-        Chunk c = CreateChunk(coord);
-        c.Load();
-        WorldGen.GenerateDeferred(c);
-    }
-    private void loadChunkGroup(ChunkGroupCoord coord)
-    {
-        lock (chunkGroups)
-        {
-            ChunkGroup cg = saver.Load(coord);
-            if (cg != null)
-            {
-                chunkGroups[cg.Position] = cg;
-                for (int x = 0; x < ChunkGroup.GROUP_SIZE; x++)
-                {
-                    for (int y = 0; y < ChunkGroup.GROUP_SIZE; y++)
-                    {
-                        for (int z = 0; z < ChunkGroup.GROUP_SIZE; z++)
-                        {
-                            Chunk cgc = cg.Chunks[x, y, z];
-                            if (cgc != null) {
-                                AddChunk(cgc);
-                                OnChunkReady?.Invoke(cgc);
-                                cgc.Load();
-                            }
-                            
-                        }
-                    }
-                }
-            }
-        }
+        });
     }
     private void unloadChunk(ChunkCoord coord) {
         if (!Chunks.Contains(coord)) return;//already unloaded
         Chunk c = Chunks[coord];
         c.Unload();
-        //don't remove chunk from dict unless the group can be unloaded
-        if (c.Group.ChunksLoaded == 0)
-        {
-            for (int x = 0; x < ChunkGroup.GROUP_SIZE; x++)
-            {
-                for (int y = 0; y < ChunkGroup.GROUP_SIZE; y++)
-                {
-                    for (int z = 0; z < ChunkGroup.GROUP_SIZE; z++)
-                    {
-                        Chunk cgc = c.Group.Chunks[x, y, z];
-                        if (cgc != null) Chunks.Remove(cgc.Position);
-                    }
-                }
-            }
-            ChunkGroup cg = c.Group;
-            Task.Run(() => saver.Save(cg));
-            chunkGroups.Remove(cg.Position);
-            GD.Print("Saved chunk group " + cg.Position.ToString() + " to disk");
-        }
+        saver.Save(c);
         OnChunkUnload?.Invoke(c);
-        //Mesher.Singleton.Unload(c);
     }
     public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -253,16 +181,11 @@ public partial class World : Node
         return CreateChunk(chunkCoords);
     }
     public Chunk CreateChunk(ChunkCoord chunkCoords) {
-        Chunk c = new Chunk(chunkCoords, GetChunkGroup(chunkCoords));
+        Chunk c = new Chunk(chunkCoords);
         AddChunk(c);
         return c;
     }
     public void AddChunk(Chunk c) {
-        if (!chunkGroups.TryGetValue((ChunkGroupCoord)c.Position, out ChunkGroup cg)) {
-            cg = new ChunkGroup((ChunkGroupCoord)c.Position);
-            chunkGroups.Add(cg.Position, cg);
-        }
-        cg.AddChunk(c);
         Chunks[c.Position] = c;
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {

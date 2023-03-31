@@ -35,7 +35,7 @@
 
 [sub_resource type="Environment" id="Environment_mk13w"]
 background_mode = 1
-background_color = Color(0.729412, 0.909804, 1, 1)
+background_color = Color(0.768627, 0.917647, 1, 1)
 ambient_light_energy = 0.5
 ssao_enabled = true
 ssao_intensity = 1.0

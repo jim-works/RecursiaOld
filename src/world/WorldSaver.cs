@@ -1,11 +1,14 @@
 //saves annoyance
-#define NO_SAVING
+//#define NO_SAVING
 
 using Godot;
 using System.IO;
 using System.IO.Compression;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using System;
+using System.Linq;
 
 
 
@@ -16,49 +19,79 @@ using System.Threading.Tasks;
 public partial class WorldSaver : Node
 {
     [Export] public double SaveIntervalSeconds = 5;
-    [Export] public string WorldsFolder = Path.Join(Godot.OS.GetUserDataDir(),"worlds");
+    [Export] public double LoadIntervalSeconds = 0.100f;
+    [Export] public string WorldsFolder = Path.Join(Godot.OS.GetUserDataDir(), "worlds");
     private double saveTimer;
-    private const string FILE_EXT = "cgroup";
-    private const int GROUP_MAGIC_NUMBER = 0x5348001;
+    private double loadTimer;
+    private const string DB_FILE_EXT = "db";
 
-    private Stack<int> pathCache = new Stack<int>();
-    private List<int> targetCache = new List<int>();
+    private SQLInterface sql;
+    private ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
+    private ConcurrentDictionary<ChunkCoord, Action<Chunk>> loadQueue = new();
+    private volatile List<(Chunk, Action<Chunk>)> callbackQueue = new();
 
     public override void _Ready()
     {
         string folder = Path.Join(WorldsFolder, World.Singleton.Name);
         Directory.CreateDirectory(folder);
+        sql = new SQLInterface(Path.Join(folder, "world.db"));
         GD.Print("World save folder is " + folder);
+        Task.Run(() =>
+        {
+            while (true)
+            {
+                Task.Delay(TimeSpan.FromSeconds(LoadIntervalSeconds)).Wait();
+                emptyLoadQueue();
+            }
+        });
+        Task.Run(() =>
+        {
+            while (true)
+            {
+                Task.Delay(TimeSpan.FromSeconds(SaveIntervalSeconds)).Wait();
+                emptySaveQueue();
+            }
+        });
     }
 
     public override void _Process(double delta)
     {
         saveTimer += delta;
+        loadTimer += delta;
         if (saveTimer > SaveIntervalSeconds)
         {
             saveTimer = 0;
-            Task.Run( () => Save(World.Singleton) );
+            Save(World.Singleton);
+
+        }
+        if (loadTimer > LoadIntervalSeconds)
+        {
+            loadTimer = 0;
+            lock (callbackQueue)
+            {
+                foreach (var (chunk, callback) in callbackQueue)
+                {
+                    callback?.Invoke(chunk);
+                }
+                callbackQueue.Clear();
+            }
         }
     }
 
     public override void _ExitTree()
     {
         Save(World.Singleton);
+        emptySaveQueue();
+        sql.Close();
     }
 
-    //gets path to data file for region
-    public string GetPath(ChunkGroupCoord group)
+    public void Load(ChunkCoord coord, Action<Chunk> callback)
     {
-        return Path.Join(WorldsFolder, World.Singleton.Name, $"{group.X}.{group.Y}.{group.Z}.{FILE_EXT}");
-    }
-
-    public bool PathToChunkGroupExists(ChunkGroupCoord group)
-    {
-        #if NO_SAVING
-            return false;
-        #else
-            return File.Exists(GetPath(group));
-        #endif
+#if NO_SAVING
+        callback(null);
+#else
+        loadQueue[coord] = callback;
+#endif
     }
 
     public void Save(World world)
@@ -66,94 +99,51 @@ public partial class WorldSaver : Node
 #if NO_SAVING
         return;
 #else
-        Dictionary<ChunkGroupCoord, ChunkGroup> toSave = new Dictionary<ChunkGroupCoord, ChunkGroup>();
         foreach (var kvp in world.Chunks)
         {
-            if (kvp.Value.SaveDirtyFlag) toSave[kvp.Value.Group.Position] = kvp.Value.Group;
+            if (!kvp.Value.SaveDirtyFlag) continue;
+            saveQueue[kvp.Key] = kvp.Value;
+            kvp.Value.SaveDirtyFlag = false;
         }
-        Godot.GD.Print($"Saving {toSave.Count} groups...");
-        //foreach(var kvp in toSave) Save(kvp.Value);
-        Parallel.ForEach(toSave, kvp => Save(kvp.Value));
 #endif
     }
-    public void Save(ChunkGroup g)
+    public void Save(Chunk c)
     {
-#if NO_SAVING
-        return;
-#else
+        if (!c.SaveDirtyFlag) return;
+        saveQueue[c.Position] = c;
+    }
+    private void emptySaveQueue()
+    {
+        Godot.GD.Print($"Saving {saveQueue.Count} groups...");
+        sql.SaveChunks(saveQueue.Values);
+        saveQueue.Clear();
+        Godot.GD.Print("Saved");
+    }
+    private void emptyLoadQueue()
+    {
+        //copy to avoid race
         try {
-        Godot.GD.Print("saving " + g.Position.ToString());
-        using (FileStream fs = File.Open(GetPath(g.Position), FileMode.Create))
-        using (GZipStream gz = new GZipStream(fs, CompressionLevel.Fastest))
-        using (BinaryWriter bw = new BinaryWriter(fs))
+        KeyValuePair<ChunkCoord, Action<Chunk>>[] coords = loadQueue.ToArray();
+        List<Chunk> results = new List<Chunk>();
+        sql.LoadChunks(coords.Select(kvp => kvp.Key), results);
+        for (int i = 0; i < coords.Length; i++)
         {
-            bw.Write(GROUP_MAGIC_NUMBER);
-            int writingCount = 0;
-            for (byte y = 0; y < ChunkGroup.GROUP_SIZE; y++)
+            Chunk c = results[i];
+            if (c != null)
             {
-                for (byte x = 0; x < ChunkGroup.GROUP_SIZE; x++)
-                {
-                    for (byte z = 0; z < ChunkGroup.GROUP_SIZE; z++)
-                    {
-                        if (g.Chunks[x, y, z] != null) writingCount++;
-                    }
-                }
+                c.SaveDirtyFlag = false;
             }
-            bw.Write(writingCount);
-            for (byte y = 0; y < ChunkGroup.GROUP_SIZE; y++)
+            loadQueue.TryRemove(coords[i].Key, out _);
+        }
+        lock (callbackQueue)
+        {
+            for (int i = 0; i < coords.Length; i++)
             {
-                for (byte x = 0; x < ChunkGroup.GROUP_SIZE; x++)
-                {
-                    for (byte z = 0; z < ChunkGroup.GROUP_SIZE; z++)
-                    {
-                        if (g.Chunks[x,y,z] == null) continue;
-                        g.Chunks[x,y,z].SaveDirtyFlag = false;
-                        g.Chunks[x,y,z].Serialize(bw);
-                    }
-                }
+                callbackQueue.Add((results[i], coords[i].Value));
             }
         }
-        Godot.GD.Print("saved " + g.Position.ToString());
-        } catch (System.Exception e) {
-            Godot.GD.Print("error saving: " + e);
+        } catch (Exception e) {
+            Godot.GD.Print(e);
         }
-#endif
     }
-    public ChunkGroup Load(ChunkGroupCoord gc)
-    {
-#if NO_SAVING
-        return null;
-#else
-        Godot.GD.Print("loading " + gc.ToString());
-        try
-        {
-            using (FileStream fs = File.Open(GetPath(gc), FileMode.Open))
-            using (GZipStream gz = new GZipStream(fs, CompressionMode.Decompress))
-            using (BinaryReader br = new BinaryReader(fs))
-            {
-                int magnum = br.ReadInt32();
-                if (magnum != GROUP_MAGIC_NUMBER) throw new System.IO.InvalidDataException("Invalid group magic number: {magnum}. Should be {GROUP_MAGIC_NUMBER}");
-                ChunkGroup g = new ChunkGroup(gc);
-                int readingCount = br.ReadInt32();
-                Godot.GD.Print("reading " + readingCount);
-                for (int i = 0; i < readingCount; i++)
-                {
-                    Chunk.Deserialize(br, g);
-                }
-                Godot.GD.Print("loaded " + gc.ToString());
-                return g;
-            }
-        }
-        catch (FileNotFoundException)
-        {
-            Godot.GD.Print("file not found " + gc.ToString());
-            return null;
-        }
-        catch (System.Exception e)
-        {
-            Godot.GD.PrintErr("Error loading chunkgroup " + e);
-            return null;
-        }
-#endif
-    }
-}
+} 

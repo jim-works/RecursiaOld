@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 public partial class ChunkCollection
 {
-    private Dictionary<ChunkCoord, Chunk> chunks = new Dictionary<ChunkCoord, Chunk>();
+    private ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
 
     //returns true if successful, false if destination chunk isn't present in the collection
     //doesn't trigger any events like meshing
@@ -46,7 +46,7 @@ public partial class ChunkCollection
 
     public bool Contains(ChunkCoord c) => chunks.ContainsKey(c);
     public bool TryGetValue(ChunkCoord c, out Chunk chunk) => chunks.TryGetValue(c, out chunk);
-    public void Remove(ChunkCoord c) => chunks.Remove(c);
+    public void TryRemove(ChunkCoord c, out Chunk chunk) => chunks.TryRemove(c,out chunk);
     public void Add(Chunk c) => chunks[c.Position] = c;
 
     public System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<ChunkCoord, Chunk>> GetEnumerator() => chunks.GetEnumerator();

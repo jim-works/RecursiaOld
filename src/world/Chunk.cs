@@ -10,18 +10,17 @@ public enum ChunkState
 public partial class Chunk : ISerializable
 {
     public const int CHUNK_SIZE = 16;
-    public ChunkGroup Group;
     public ChunkCoord Position;
     private Block[,,] Blocks;
     public ChunkMesh Mesh;
     public ChunkGenerationState GenerationState;
     public ChunkState State { get; private set; }
     public List<Structure> Structures = new List<Structure>();
+    public bool SaveDirtyFlag = true;
 
-    public Chunk(ChunkCoord chunkCoords, ChunkGroup group)
+    public Chunk(ChunkCoord chunkCoords)
     {
         Position = chunkCoords;
-        group.AddChunk(this);
     }
 
     public void ChunkTick(float dt)
@@ -32,7 +31,7 @@ public partial class Chunk : ISerializable
     public Block this[BlockCoord index]
     {
         get { return this[index.X,index.Y,index.Z]; }
-        set { this[index.X,index.Y,index.Z]=value; }
+        set { this[index.X,index.Y,index.Z]=value; SaveDirtyFlag = true;}
     }
     public Block this[int x, int y, int z]
     {
@@ -49,13 +48,11 @@ public partial class Chunk : ISerializable
 
     public void Load()
     {
-        if (State != ChunkState.Loaded) Group.ChunksLoaded++;
         State = ChunkState.Loaded;
     }
 
     public void Unload()
     {
-        if (State != ChunkState.Unloaded) Group.ChunksLoaded--;
         State = ChunkState.Unloaded;
     }
 
@@ -109,10 +106,10 @@ public partial class Chunk : ISerializable
         }
     }
 
-    public static void Deserialize(BinaryReader br, ChunkGroup into)
+    public static Chunk Deserialize(BinaryReader br)
     {
         var pos = ChunkCoord.Deserialize(br);
-        Chunk c = new Chunk(pos, into);
+        Chunk c = new Chunk(pos);
         int run = 0;
         Block read = null;
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -133,6 +130,8 @@ public partial class Chunk : ISerializable
                 }
             }
         }
+        c.GenerationState = ChunkGenerationState.GENERATED;
+        return c;
     }
 
     public override string ToString()

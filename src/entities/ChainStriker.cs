@@ -11,7 +11,7 @@ public partial class ChainStriker : Combatant
     public float StrikeImpulse = 5;
     [Export]
     public double AttackInterval = 3;
-    [Export] public float AggroRange = 50;
+    [Export] public float AggroRange = 250;
 
     private double attackTimer = 0;
     private List<Combatant> links = new List<Combatant>();

@@ -28,7 +28,6 @@ public partial class ShapingLayer : IChunkGenLayer
     private const float heightFreq = 0.2f, heightFreqMult = 2f, heightScaleMult = 0.5f;
     private const int heightOctaves = 2;
     private SplineNoise heightNoise;
-    private const float oceanCutoff = 0.6f;
 
     public ShapingLayer()
     {
@@ -112,7 +111,6 @@ public partial class ShapingLayer : IChunkGenLayer
         float densitySample = Math.Trilerp(samples, x, y, z,noiseSampleInterval);
         if (getBlendedDensityCutoff(worldCoords.Y + y, heightSample) < densitySample)
         {
-            if (oceanness > oceanCutoff) return dirt;
             return getBlendedDensityCutoff(worldCoords.Y + y+1, heightSample) < Math.Trilerp(samples, x, y+1, z,noiseSampleInterval) ? stone : grass;
         }
         return null;
