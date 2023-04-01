@@ -1,5 +1,5 @@
 //saves annoyance
-//#define NO_SAVING
+#define NO_SAVING
 
 using Godot;
 using System.IO;
@@ -110,15 +110,23 @@ public partial class WorldSaver : Node
     }
     public void Save(Chunk c)
     {
+#if NO_SAVING
+        return;
+#else
         if (!c.SaveDirtyFlag) return;
         saveQueue[c.Position] = c;
+#endif
     }
     private void emptySaveQueue()
     {
+#if NO_SAVING
+        return;
+#else
         Godot.GD.Print($"Saving {saveQueue.Count} groups...");
         sql.SaveChunks(saveQueue.Values);
         saveQueue.Clear();
         Godot.GD.Print("Saved");
+#endif
     }
     private void emptyLoadQueue()
     {

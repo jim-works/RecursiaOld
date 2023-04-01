@@ -15,7 +15,7 @@ public partial class TreeStructureProvider : StructureProvider
 
     public TreeStructureProvider() : base(new BlockCoord(LEAF_SIZE*2+1,TRUNK_HEIGHT+LEAF_SIZE,LEAF_SIZE*2+1))
     {
-        RollsPerChunk = 5;
+        RollsPerChunk = 1;
         Kind = new Structure();
         Kind.Name = "Tree";
         Kind.Mutex = false;
@@ -31,7 +31,7 @@ public partial class TreeStructureProvider : StructureProvider
     {
         return world.GetBlock(coord) == grass; //tree must be planted on grass
     }
-    public override Task<Structure> PlaceStructure(ChunkCollection c, BlockCoord position)
+    public override Task<Structure> PlaceStructure(AtomicChunkCollection c, BlockCoord position)
     {
         for (int dy = 1; dy < TRUNK_HEIGHT; dy++)
         {

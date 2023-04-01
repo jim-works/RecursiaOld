@@ -135,14 +135,14 @@ public partial class World : Node
                 }
             }
         }
-        foreach (var kvp in Chunks) {
-            if (!loadedChunks.Contains(kvp.Key)) {
-                toUnload.Add(kvp.Key);
-            }
-        }
-        foreach (var c in toUnload) {
-            unloadChunk(c);
-        }
+        // foreach (var kvp in Chunks) {
+        //     if (!loadedChunks.Contains(kvp.Key)) {
+        //         toUnload.Add(kvp.Key);
+        //     }
+        // }
+        // foreach (var c in toUnload) {
+        //     unloadChunk(c);
+        // }
         foreach (var c in loadedChunks) {
             loadChunk(c);
         }
@@ -150,20 +150,9 @@ public partial class World : Node
     }
     
     private void loadChunk(ChunkCoord coord) {
-        
-        if (Chunks.TryGetValue(coord, out Chunk chunk)){
-            if (chunk.State == ChunkState.Unloaded) OnChunkReady?.Invoke(chunk);
-            chunk.Load();
-            return; //already loaded
-        }
-        saver.Load(coord, c => {
+        GetOrLoadChunkCheckDisk(coord, (Chunk c) => {
             if (c == null) {
-                c = CreateChunk(coord);
-                WorldGen.GenerateDeferred(c);
-            } else {
-                AddChunk(c);
-                OnChunkReady?.Invoke(c);
-                c.Load();
+                WorldGen.GenerateDeferred(createChunk(coord));
             }
         });
     }
@@ -174,20 +163,49 @@ public partial class World : Node
         saver.Save(c);
         OnChunkUnload?.Invoke(c);
     }
-    public Chunk GetOrCreateChunk(ChunkCoord chunkCoords) {
+    private Chunk getOrCreateChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             //chunk already exists
             return c;
         }
-        return CreateChunk(chunkCoords);
+        return createChunk(chunkCoords);
     }
-    public Chunk CreateChunk(ChunkCoord chunkCoords) {
+    private Chunk createChunk(ChunkCoord chunkCoords) {
         Chunk c = new Chunk(chunkCoords);
-        AddChunk(c);
+        Chunks[chunkCoords] = c;
         return c;
     }
-    public void AddChunk(Chunk c) {
-        Chunks[c.Position] = c;
+    //gets a chunk from memory, or loads it from disk if it's not in memory
+    //calls callback when load is completed
+    //doesn't generate a new chunk, callback is invoked with null if it doesn't exist
+    public void GetOrLoadChunkCheckDisk(ChunkCoord coord, System.Action<Chunk> callback)
+    {
+        if (GetChunk(coord) is Chunk c)
+        {
+            //chunk already exists
+            if (c.State == ChunkState.Unloaded)
+            {
+                c.Load();
+            }
+            callback?.Invoke(c);
+            return;
+        }
+        saver.Load(coord, c => {
+            if (c == null) {
+                callback?.Invoke(null);
+                return;
+            }
+            Chunks[c.Position] = c;
+            OnChunkReady?.Invoke(c);
+            c.Load();
+            callback?.Invoke(c);
+        });
+    }
+    //generates a chunk, doesn't check if it already exists
+    public void GenerateChunkDeferred(ChunkCoord coord)
+    {
+        Chunk c = getOrCreateChunk(coord);
+        WorldGen.GenerateDeferred(c);
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -221,18 +239,19 @@ public partial class World : Node
         batch((coords, block) => {
             ChunkCoord chunkCoords = (ChunkCoord)coords;
             BlockCoord blockCoords = Chunk.WorldToLocal(coords);
-            Chunk c = GetOrCreateChunk(chunkCoords);
+            Chunk c = getOrCreateChunk(chunkCoords);
             c[blockCoords] = block;
             if (!chunksToUpdate.Contains(c)) chunksToUpdate.Add(c);
         });
         foreach (Chunk c in chunksToUpdate) {
+            GD.Print($"Updating chunk {c.Position}");
             OnChunkUpdate?.Invoke(c);
         }
     }
     public void SetBlock(BlockCoord coords, Block block, bool updateChunk=true) {
         ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
-        Chunk c = GetOrCreateChunk(chunkCoords);
+        Chunk c = getOrCreateChunk(chunkCoords);
         c[blockCoords] = block;
         if (updateChunk && c.State == ChunkState.Loaded) {
             OnChunkUpdate?.Invoke(c);

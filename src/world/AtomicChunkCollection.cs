@@ -1,29 +1,35 @@
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
-public class ChunkCollection
+//Chunk collection where we either write all changes at once or none at all
+//Must call Commit() to apply changes. Will use World.BatchSetBlock()
+public class AtomicChunkCollection
 {
-    private ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
+    private Dictionary<ChunkCoord, Chunk> chunks = new ();
+    private Dictionary<BlockCoord, Block> changes = new();
+    private World world;
+    public AtomicChunkCollection(World world)
+    {
+        this.world = world;
+    }
 
     //returns true if successful, false if destination chunk isn't present in the collection
-    //doesn't trigger any events like meshing
     public bool SetBlock(BlockCoord coord, Block to)
     {
         if (TryGetValue((ChunkCoord)coord, out Chunk c))
         {
-            c[Chunk.WorldToLocal(coord)] = to;
+            changes.Add(coord, to);
             return true;
         }
         return false;
     }
 
     //returns true if successful (block placed), false if destination chunk isn't present in the collection or the dest block isn't null
-    //doesn't trigger any events like meshing
     public bool SetIfNull(BlockCoord coord, Block to)
     {
         if (TryGetValue((ChunkCoord)coord, out Chunk c))
         {
             BlockCoord pos = Chunk.WorldToLocal(coord);
-            if (c[pos] == null) c[pos] = to; else return false;
+            if (c[pos] == null) changes.Add(coord, to); else return false;
             return true;
         }
         return false;
@@ -46,8 +52,19 @@ public class ChunkCollection
 
     public bool Contains(ChunkCoord c) => chunks.ContainsKey(c);
     public bool TryGetValue(ChunkCoord c, out Chunk chunk) => chunks.TryGetValue(c, out chunk);
-    public void TryRemove(ChunkCoord c, out Chunk chunk) => chunks.TryRemove(c,out chunk);
+    public void Remove(ChunkCoord c) => chunks.Remove(c);
     public void Add(Chunk c) => chunks[c.Position] = c;
+
+    public void Commit()
+    {
+        world.BatchSetBlock(setBlock => {
+            foreach (var kvp in changes)
+            {
+                setBlock(kvp.Key, kvp.Value);
+            }
+        });
+        changes.Clear();
+    }
 
     public System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<ChunkCoord, Chunk>> GetEnumerator() => chunks.GetEnumerator();
 }

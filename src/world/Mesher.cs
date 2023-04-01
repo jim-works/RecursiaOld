@@ -66,28 +66,22 @@ public partial class Mesher : Node
         
 
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1) && canMesh(c1)) {
-            MeshDeferred(c1);
-            waitingToMesh.Remove(c1.Position);
+            OnChunkReady(c1);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk c2) && canMesh(c2)) {
-            MeshDeferred(c2);
-            waitingToMesh.Remove(c2.Position);
+            OnChunkReady(c2);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,1,0), out Chunk c3) && canMesh(c3)) {
-            MeshDeferred(c3);
-            waitingToMesh.Remove(c3.Position);
+            OnChunkReady(c3);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,-1,0), out Chunk c4) && canMesh(c4)) {
-            MeshDeferred(c4);
-            waitingToMesh.Remove(c4.Position);
+            OnChunkReady(c4);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk c5) && canMesh(c5)) {
-            MeshDeferred(c5);
-            waitingToMesh.Remove(c5.Position);
+            OnChunkReady(c5);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk c6) && canMesh(c6)) {
-            MeshDeferred(c6);
-            waitingToMesh.Remove(c6.Position);
+            OnChunkReady(c6);
         }
     }
     public void OnChunkUpdate(Chunk c)

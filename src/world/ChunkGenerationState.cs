@@ -1,8 +1,8 @@
 public enum ChunkGenerationState
 {
-    UNGENERATED,
-    SHAPING,
-    SHAPED,
-    PLACING_STRUCTURES,
-    GENERATED
+    UNGENERATED = 0,
+    SHAPING = 1,
+    SHAPED = 2,
+    PLACING_STRUCTURES = 3,
+    GENERATED = 4
 }

@@ -18,5 +18,5 @@ public abstract class StructureProvider
 
     //return true if spot is good for the structure
     public abstract bool SuitableLocation(World world, BlockCoord coord);
-    public abstract Task<Structure> PlaceStructure(ChunkCollection c, BlockCoord position);
+    public abstract Task<Structure> PlaceStructure(AtomicChunkCollection c, BlockCoord position);
 }
