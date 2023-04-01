@@ -197,7 +197,8 @@ public partial class WorldGenerator
     //a valid chunk is loaded in the world
     public void GetFinishedChunks(List<Chunk> dest)
     {
-        dest.AddRange(done);
+        foreach (var c in done)
+            dest.Add(c);
         done.Clear();
     }
     public void ShapeChunk(World world, Chunk chunk) {
