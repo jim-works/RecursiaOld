@@ -9,7 +9,7 @@ public struct ChunkCoord
         this.Y = Y;
         this.Z = Z;
     }
-    public int sqrMag() { return X * X + Y * Y + Z*Z; }
+    public int SqrMag() { return X * X + Y * Y + Z*Z; }
     public void Serialize(BinaryWriter bw)
     {
         bw.Write(X);

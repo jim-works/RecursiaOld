@@ -1,11 +1,14 @@
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 using System;
 
 public enum ChunkState
 {
-    Unloaded,
-    Loaded
+    Unloaded = 0,
+    Loaded = 1,
+    //Sticky chunks will not be unloaded. They are used for structures in worldgen that require neighboring chunks to be loaded
+    Sticky = 2,
 }
 public partial class Chunk : ISerializable
 {
@@ -13,15 +16,49 @@ public partial class Chunk : ISerializable
     public ChunkCoord Position;
     private Block[,,] Blocks;
     public ChunkMesh Mesh;
-    public ChunkGenerationState GenerationState;
+    public bool Meshed {get {
+        return !(meshedHistory.Count == 0) && meshedHistory.Peek();
+    } set {
+        meshedHistory.Enqueue(value);
+    }}
+    public ChunkGenerationState GenerationState {get; set;}
     public ChunkState State { get; private set; }
     public List<Structure> Structures = new List<Structure>();
     public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
     public bool SaveDirtyFlag = true;
+    public int stickyCount = 0;
+    private object _stickyLock = new Object();
+    private Queue<bool> meshedHistory = new();
+    private System.Collections.Concurrent.ConcurrentQueue<string> eventHistory = new();
 
     public Chunk(ChunkCoord chunkCoords)
     {
         Position = chunkCoords;
+    }
+
+    public string GetMeshedHistory()
+    {
+        string res = "false ";
+        foreach (var b in meshedHistory)
+        {
+            res += b;
+        }
+        return res;
+    }
+
+    public void AddEvent(string e)
+    {
+        eventHistory.Enqueue(e);
+    }
+
+    public string GetEventHistory()
+    {
+        string res = "created ";
+        foreach (var b in eventHistory)
+        {
+            res += $"{b} ";
+        }
+        return res;
     }
 
     public void ChunkTick(float dt)
@@ -47,14 +84,37 @@ public partial class Chunk : ISerializable
         }
     }
 
+    //sets chunk.state to max(state, chunk.state)
     public void Load()
     {
-        State = ChunkState.Loaded;
+        this.State = (ChunkState)System.Math.Max((int)ChunkState.Loaded, (int)this.State);
     }
-
+    //sets chunk.state to min(state, chunk.state)
     public void Unload()
     {
-        State = ChunkState.Unloaded;
+        if (State != ChunkState.Sticky)
+            this.State = ChunkState.Unloaded;
+    }
+
+    //make chunk in sticky state, add 1 to the sticky count
+    public void Stick()
+    {
+        lock (_stickyLock)
+        {
+            this.State = ChunkState.Sticky;
+            stickyCount++;
+            AddEvent($"sticky {stickyCount}");
+        }
+    }
+    //stickyCount = max(0,stickCount-1). After, if sticky count is 0 and chunk was in sticky state, change to loaded state.
+    public void Unstick()
+    {
+        lock (_stickyLock)
+        {
+            stickyCount = System.Math.Max(0,stickyCount-1);
+            AddEvent($"unsticky {stickyCount}");
+            if (stickyCount == 0 && State == ChunkState.Sticky) State = ChunkState.Loaded;
+        }
     }
 
     public BlockCoord LocalToWorld(BlockCoord local)

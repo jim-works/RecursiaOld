@@ -123,6 +123,7 @@ public partial class WorldSaver : Node
         return;
 #else
         Godot.GD.Print($"Saving {saveQueue.Count} groups...");
+        //TODO THIS IS NOT SAFE
         sql.SaveChunks(saveQueue.Values);
         saveQueue.Clear();
         Godot.GD.Print("Saved");

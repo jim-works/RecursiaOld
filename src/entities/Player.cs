@@ -61,6 +61,8 @@ public partial class Player : Combatant
                 LootBlock b = (LootBlock)BlockTypes.Get("loot");
                 b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=1}};
                 World.Singleton.SetBlock((BlockCoord)GlobalPosition, b);
+            } else if ((Key)key.Keycode == Key.T) {
+                Collides = !Collides;
             }
         base._Input(@event);
     }

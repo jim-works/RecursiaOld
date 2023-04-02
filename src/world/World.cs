@@ -19,7 +19,6 @@ public partial class World : Node
     public event System.Action<Chunk> OnChunkReady;
     public event System.Action<Chunk> OnChunkUnload;
     
-    private List<Chunk> fromWorldGen = new List<Chunk>();
     private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
     private List<ChunkCoord> toUnload = new List<ChunkCoord>();
 
@@ -50,13 +49,16 @@ public partial class World : Node
 
     public override void _Process(double delta)
     {
-        WorldGen.GetFinishedChunks(fromWorldGen);
-        foreach (var item in fromWorldGen)
-        {
-            OnChunkReady?.Invoke(item);
-        }
+        WorldGen.GetFinishedChunks(fromWorldGen => {
+            foreach (var item in fromWorldGen)
+            {
+                if (OnChunkReady == null) GD.PrintErr("no subscriber!");
+                item.AddEvent("on chunk ready");
+                OnChunkReady?.Invoke(item);
+                item.Unstick(); //we keep chunk sticky until it's done generating
+            }
+        });
 
-        fromWorldGen.Clear();
         if (GlobalConfig.UseInfiniteWorlds)
         {
             _chunkLoadingTimer += delta;
@@ -152,41 +154,42 @@ public partial class World : Node
     private void loadChunk(ChunkCoord coord) {
         GetOrLoadChunkCheckDisk(coord, (Chunk c) => {
             if (c == null) {
-                WorldGen.GenerateDeferred(createChunk(coord));
+                GenerateChunkDeferred(coord);
+            } else {
+                c.Unstick();
             }
         });
     }
     private void unloadChunk(ChunkCoord coord) {
-        if (!Chunks.Contains(coord)) return;//already unloaded
-        Chunk c = Chunks[coord];
-        c.Unload();
+        if (!Chunks.TryGetValue(coord, out Chunk c)) return;//already unloaded
+        if (c.State == ChunkState.Sticky) return; //don't unload sticky chunks
         saver.Save(c);
         OnChunkUnload?.Invoke(c);
+        Chunks.TryRemove(coord, out var _);
     }
-    private Chunk getOrCreateChunk(ChunkCoord chunkCoords) {
+    private Chunk getOrCreateChunk(ChunkCoord chunkCoords, bool sticky) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
             //chunk already exists
+            if (sticky) c.Stick();
             return c;
         }
-        return createChunk(chunkCoords);
+        return createChunk(chunkCoords, sticky);
     }
-    private Chunk createChunk(ChunkCoord chunkCoords) {
+    private Chunk createChunk(ChunkCoord chunkCoords, bool sticky) {
         Chunk c = new Chunk(chunkCoords);
+        if (sticky) c.Stick();
         Chunks[chunkCoords] = c;
         return c;
     }
     //gets a chunk from memory, or loads it from disk if it's not in memory
-    //calls callback when load is completed
+    //calls callback when load is completed. returned chunk is sticky, call c.Unstick() when done.
     //doesn't generate a new chunk, callback is invoked with null if it doesn't exist
     public void GetOrLoadChunkCheckDisk(ChunkCoord coord, System.Action<Chunk> callback)
     {
         if (GetChunk(coord) is Chunk c)
         {
             //chunk already exists
-            if (c.State == ChunkState.Unloaded)
-            {
-                c.Load();
-            }
+            c.Stick();
             callback?.Invoke(c);
             return;
         }
@@ -195,17 +198,23 @@ public partial class World : Node
                 callback?.Invoke(null);
                 return;
             }
+            c.Stick();
             Chunks[c.Position] = c;
             OnChunkReady?.Invoke(c);
-            c.Load();
+            c.AddEvent("loaded from disk");
             callback?.Invoke(c);
         });
     }
-    //generates a chunk, doesn't check if it already exists
+    //generates a chunk if it doesn't exist, thread-safe
     public void GenerateChunkDeferred(ChunkCoord coord)
     {
-        Chunk c = getOrCreateChunk(coord);
-        WorldGen.GenerateDeferred(c);
+        //need lock to be thread safe on the condition
+        //don't need to check if worldgen is in the process of generating the chunk since it will already be in World.Chunks before it gets sent to generator
+        lock (Chunks)
+        {
+            if (GetChunk(coord) != null) return;
+            WorldGen.GenerateDeferred(createChunk(coord, true));
+        }
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -239,21 +248,23 @@ public partial class World : Node
         batch((coords, block) => {
             ChunkCoord chunkCoords = (ChunkCoord)coords;
             BlockCoord blockCoords = Chunk.WorldToLocal(coords);
-            Chunk c = getOrCreateChunk(chunkCoords);
+            Chunk c = getOrCreateChunk(chunkCoords, false);
             c[blockCoords] = block;
             if (!chunksToUpdate.Contains(c)) chunksToUpdate.Add(c);
         });
         foreach (Chunk c in chunksToUpdate) {
-            GD.Print($"Updating chunk {c.Position}");
             OnChunkUpdate?.Invoke(c);
+            c.AddEvent("back set block");
+            c.Unstick();
         }
     }
     public void SetBlock(BlockCoord coords, Block block, bool updateChunk=true) {
         ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
-        Chunk c = getOrCreateChunk(chunkCoords);
+        Chunk c = getOrCreateChunk(chunkCoords, false);
         c[blockCoords] = block;
-        if (updateChunk && c.State == ChunkState.Loaded) {
+        c.AddEvent("set block");
+        if (updateChunk && c.State >= ChunkState.Loaded) {
             OnChunkUpdate?.Invoke(c);
         }
     }

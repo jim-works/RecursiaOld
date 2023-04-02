@@ -84,6 +84,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0)
 script = ExtResource("2")
 MoveSpeed = 50.0
 JumpHeight = 25.0
+JumpCount = 5
 InitialTeamName = "player"
 InitialHealth = 10.0
 InvincibilitySeconds = 0.1

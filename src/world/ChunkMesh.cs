@@ -15,6 +15,8 @@ public partial class ChunkMesh
 
     public MeshInstance3D Node {get; private set;}
 
+    public ulong Timestamp = 0;
+
     public ChunkMesh()
     {
         //setup mesh array

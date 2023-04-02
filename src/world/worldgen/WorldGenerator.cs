@@ -17,6 +17,7 @@ public partial class WorldGenerator
 
     private List<IChunkGenLayer> shapingLayers = new List<IChunkGenLayer>();
     private List<StructureProvider> structureProviders = new List<StructureProvider>();
+    private List<Chunk> toSend = new();
 
     public int Seed {get; private set;} = 1127;
     private int currSeed;
@@ -66,24 +67,42 @@ public partial class WorldGenerator
         }
         return false;
     }
+
     
         //empties finishedGenerations and sends all those chunks that are still valid to the mesher
     //a valid chunk is loaded in the world
-    public void GetFinishedChunks(List<Chunk> dest)
+    public void GetFinishedChunks(Action<List<Chunk>> dest)
     {
-        foreach (var c in done) {
-            dest.Add(c.Item1);
-            c.Item2.Commit();
-            generating.TryRemove(c.Item1.Position, out _);
+        while (!done.IsEmpty)
+        {
+            if (done.TryTake(out var item))
+            {
+                Chunk c = item.Item1;
+                AtomicChunkCollection changes = item.Item2;
+                toSend.Add(c);
+                c.AddEvent("sent to dest");
+                changes.Commit();
+                
+            }
         }
-        done.Clear();
+        dest(toSend);
+        foreach (Chunk c in toSend)
+        {
+            generating.TryRemove(c.Position, out _);
+            c.AddEvent("removed from generating");
+        }
+        toSend.Clear();
     }
 
     private async Task doGeneration(Chunk toGenerate)
     {
+        toGenerate.AddEvent("do generation");
         ShapeChunk(World.Singleton, toGenerate);
+        toGenerate.AddEvent("shaped");
         AtomicChunkCollection collection = await GenerateStructures(World.Singleton, toGenerate);
+        toGenerate.AddEvent("structured");
         done.Add((toGenerate, collection));
+        toGenerate.AddEvent("sent to done");
     }
 
     public void ShapeChunk(World world, Chunk chunk) {
@@ -112,6 +131,10 @@ public partial class WorldGenerator
                 {
                     chunk.Structures.Add(result);
                 }
+                foreach (var kvp in area)
+                {
+                    kvp.Value.Unstick();
+                }
         }
         chunk.GenerationState = ChunkGenerationState.GENERATED;
         return area;
@@ -135,6 +158,7 @@ public partial class WorldGenerator
                     world.GetOrLoadChunkCheckDisk(coord, res => {
                         if (res != null && res.GenerationState >= ChunkGenerationState.SHAPED) {
                             collection.Add(res);
+                            res.Stick();
                             neededCount--;
                         }
                         else {
@@ -149,7 +173,6 @@ public partial class WorldGenerator
         while (neededCount > 0)
         {
             await Task.Delay(POLL_INTERVAL_MS);
-            Godot.GD.Print($"Waiting for {neededCount} chunks to be shaped at {center}...");
             try {
                 List<ChunkCoord> toRemove = new List<ChunkCoord>();
                 foreach (var coord in needed)
@@ -165,7 +188,6 @@ public partial class WorldGenerator
                 Godot.GD.PrintErr(e);
             }
         }
-        Godot.GD.Print($"All chunks shaped at {center}!");
         return collection;
     }
 }

@@ -11,8 +11,13 @@ public partial class Mesher : Node
     public Material ChunkMaterial;
     [Export]
     public float MaxMeshTime = 0.1f;
+    [Export]
+    public int MeshIntervalMs = 1000;
+    private float meshTimer = 0;
     public static Mesher Singleton;
-    private HashSet<Chunk> toMesh = new HashSet<Chunk>();
+    private ConcurrentDictionary<ChunkCoord, Chunk> toMesh = new();
+    private Dictionary<ChunkCoord, int> meshing = new();
+    private Dictionary<ChunkCoord, ChunkMesh> done = new();
     private Dictionary<ChunkCoord, Chunk> waitingToMesh = new();
     private ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new ConcurrentBag<(ChunkMesh, ChunkCoord)>();
     //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
@@ -27,61 +32,98 @@ public partial class Mesher : Node
     {
         World.Singleton.OnChunkUnload += Unload;
         World.Singleton.OnChunkUpdate += OnChunkUpdate;
-        World.Singleton.OnChunkReady += OnChunkReady;
+        World.Singleton.OnChunkReady += MeshDeferred;
         GD.Print("Mesher initialized!");
         base._Ready();
     }
     public override void _Process(double delta)
     {
         //multithread chunk generation
-        foreach (var mesghin in toMesh)
+        var kvps = toMesh.ToArray();
+        foreach(var kvp in kvps)
         {
-            multithreadGenerateChunk(mesghin);
+            if (toMesh.TryRemove(kvp.Key, out Chunk c))
+                multithreadGenerateChunk(c);
         }
-        toMesh.Clear();
         //spawn all on single thread to avoid a million race conditions
         while (finishedMeshes.Count > 0)
         {
             if (finishedMeshes.TryTake(out (ChunkMesh, ChunkCoord) pair))
             {
-                spawnChunk(pair.Item1, pair.Item2);
+                //keep track of number of times this chunk is being meshed atm
+                meshing[pair.Item2]--;
+                if (meshing[pair.Item2] == 0) meshing.Remove(pair.Item2);
+                //only spawn chunks if they're not being meshed again, and only spawn the most up to date mesh
+                if (!meshing.ContainsKey(pair.Item2) && (!done.TryGetValue(pair.Item2, out ChunkMesh other) || other.Timestamp <= pair.Item1.Timestamp))
+                {
+                    done[pair.Item2] = pair.Item1;
+                }
             }
         }
+        foreach (var kvp in done)
+        {
+            spawnChunk(kvp.Value, kvp.Key);
+        }
+        done.Clear();
         base._Process(delta);
+    }
+    public override void _Input(InputEvent @event)
+    {
+        if (@event is InputEventKey key && key.IsPressed() && key.Keycode == Key.C)
+        {
+            ChunkCoord cpos = (ChunkCoord)World.Singleton.LocalPlayer.Position;
+            Chunk c = World.Singleton.GetChunk(cpos);
+            string info = "null";
+            if (c != null) info = $"Meshed: {c.GetMeshedHistory()}, waiting to be meshed: {waitingToMesh.ContainsKey(cpos)}, state: {c.State}, generation state: {c.GenerationState}\nevent hist: {c.GetEventHistory()}";
+            Godot.GD.Print($"Chunk at {cpos}: {info}");
+            int stickies = 0;
+            int maxSticky = 0;
+            foreach (var kvp in World.Singleton.Chunks)
+            {
+                if (kvp.Value.State == ChunkState.Sticky) {
+                    maxSticky = System.Math.Max(kvp.Value.stickyCount, maxSticky);
+                    stickies ++;
+                }
+            }
+            Godot.GD.Print($"{stickies} sticky chunks in the world, max stick {maxSticky}");
+        }
+        base._Input(@event);
     }
     public void Unload(Chunk chunk)
     {
         if (chunk == null) return;
         chunk.Mesh?.ClearData();
-        chunk.GenerationState = ChunkGenerationState.GENERATED;
+        waitingToMesh.Remove(chunk.Position);
         chunk.Mesh = null;
+        chunk.Meshed = false;
     }
-    public void OnChunkReady(Chunk c)
+    public void MeshDeferred(Chunk c)
     {
+        c.Meshed = false;
         if (canMesh(c)) {
-            MeshDeferred(c);
+            toMesh[c.Position] = c;
             waitingToMesh.Remove(c.Position);
         }
         else waitingToMesh[c.Position] = c;
         
 
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1) && canMesh(c1)) {
-            OnChunkReady(c1);
+            MeshDeferred(c1);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk c2) && canMesh(c2)) {
-            OnChunkReady(c2);
+            MeshDeferred(c2);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,1,0), out Chunk c3) && canMesh(c3)) {
-            OnChunkReady(c3);
+            MeshDeferred(c3);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,-1,0), out Chunk c4) && canMesh(c4)) {
-            OnChunkReady(c4);
+            MeshDeferred(c4);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk c5) && canMesh(c5)) {
-            OnChunkReady(c5);
+            MeshDeferred(c5);
         }
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk c6) && canMesh(c6)) {
-            OnChunkReady(c6);
+            MeshDeferred(c6);
         }
     }
     public void OnChunkUpdate(Chunk c)
@@ -94,27 +136,25 @@ public partial class Mesher : Node
         if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk c5)) MeshDeferred(c5);
         if (World.Singleton.Chunks.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk c6)) MeshDeferred(c6);
     }
-    private bool canMesh(Chunk c)
+    public bool canMesh(Chunk c)
     {
         //only mesh if all adjacent chunks are generated
-        return c != null && World.Singleton.GetChunk(c.Position + new ChunkCoord(1,0,0))?.GenerationState == ChunkGenerationState.GENERATED 
+        return c != null && c.State >= ChunkState.Loaded && World.Singleton.GetChunk(c.Position + new ChunkCoord(1,0,0))?.GenerationState == ChunkGenerationState.GENERATED 
         && World.Singleton.GetChunk(c.Position + new ChunkCoord(-1,0,0))?.GenerationState == ChunkGenerationState.GENERATED 
         && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,1,0))?.GenerationState == ChunkGenerationState.GENERATED 
         && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,-1,0))?.GenerationState == ChunkGenerationState.GENERATED 
         && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,0,1))?.GenerationState == ChunkGenerationState.GENERATED 
         && World.Singleton.GetChunk(c.Position + new ChunkCoord(0,0,-1))?.GenerationState == ChunkGenerationState.GENERATED ;
     }
-    //queues a chunk to be meshed
-    public void MeshDeferred(Chunk chunk) {
-        toMesh.Add(chunk);
-    }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
     private void spawnChunk(ChunkMesh mesh, ChunkCoord coord)
     {
         Chunk chunk = World.Singleton.GetChunk(coord);
         if (chunk == null) return;
+        chunk.Meshed = true;
         chunk.Mesh?.ClearData();
         chunk.Mesh = mesh;
+        chunk.AddEvent("spawned");
         if (mesh == null)
         {
             //no need to spawn in a new MeshInstance3D if the chunk is empty
@@ -126,23 +166,30 @@ public partial class Mesher : Node
     }
     //places finished chunk in finishedMeshes
     private void multithreadGenerateChunk(Chunk chunk) {
+        if (!meshing.TryAdd(chunk.Position, 1)) meshing[chunk.Position]++;
+
         Chunk c = chunk;
         Task.Run(() => {
-            ChunkMesh mesh = GenerateMesh(c);
-            finishedMeshes.Add((mesh, c.Position));
+            generateAndQueueChunk(c);
         });
+    }
+    private void generateAndQueueChunk(Chunk c) {
+        ChunkMesh mesh = generateMesh(c);
+        finishedMeshes.Add((mesh, c.Position));
     }
     private ChunkMesh getMesh()
     {
         return new ChunkMesh();
     }
-    private ChunkMesh GenerateMesh(Chunk chunk)
+    private ChunkMesh generateMesh(Chunk chunk)
     {
         if (chunk == null)
         {
             return null;
         }
+        chunk.AddEvent("mesh generated");
         ChunkMesh chunkMesh = getMesh();
+        chunkMesh.Timestamp = Godot.Time.GetTicksUsec();
         var vertices = chunkMesh.Verts;
         var tris = chunkMesh.Tris;
         var normals = chunkMesh.Norms;
