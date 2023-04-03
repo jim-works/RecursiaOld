@@ -1,4 +1,4 @@
-# Swarmed
+# Recrusia
 In progress voxel adventure game made in Godot, primarly with C#.
 
 Eventually, I plan on publishing it somewhere (Steam and Itch.io) and leaving it open source. Not sure exaclty what I want to include, I might only share the code for a while.
