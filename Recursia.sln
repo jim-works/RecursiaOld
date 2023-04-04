@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Swarmed", "Swarmed.csproj", "{8D61A101-9A67-4607-ABE3-41A3A8771D19}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Recursia", "Recursia.csproj", "{8D61A101-9A67-4607-ABE3-41A3A8771D19}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

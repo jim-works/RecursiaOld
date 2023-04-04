@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://c30p3d05edc3l"]
+[gd_scene load_steps=20 format=3 uid="uid://c30p3d05edc3l"]
 
 [ext_resource type="Script" path="res://src/entities/projectiles/ExplosiveProjectile.cs" id="1"]
 [ext_resource type="AudioStream" uid="uid://dbxtbjubjb2vt" path="res://sounds/explosion2.wav" id="2"]
@@ -20,7 +20,33 @@ spread = 180.0
 scale_curve = SubResource("5")
 color = Color(0.121569, 0.121569, 0.121569, 1)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h7n42"]
+albedo_color = Color(0.192157, 0.0745098, 0.0627451, 1)
+
 [sub_resource type="BoxMesh" id="3"]
+material = SubResource("StandardMaterial3D_h7n42")
+
+[sub_resource type="Gradient" id="Gradient_mf2td"]
+offsets = PackedFloat32Array(0, 0.734082)
+colors = PackedColorArray(1, 0.568551, 0.528588, 1, 0.151276, 0.151276, 0.151276, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_wn3f6"]
+gradient = SubResource("Gradient_mf2td")
+
+[sub_resource type="Gradient" id="Gradient_rg3hc"]
+offsets = PackedFloat32Array(0, 0.625468)
+colors = PackedColorArray(1, 1, 1, 1, 0.151276, 0.151276, 0.151276, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_5v1jj"]
+gradient = SubResource("Gradient_rg3hc")
+
+[sub_resource type="Curve" id="Curve_71dfn"]
+max_value = 0.01
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_bev82"]
+curve = SubResource("Curve_71dfn")
 
 [sub_resource type="Curve" id="6"]
 _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), -3.30143, 0.0, 0, 0]
@@ -31,9 +57,29 @@ curve = SubResource("6")
 
 [sub_resource type="ParticleProcessMaterial" id="10"]
 emission_shape = 1
-emission_sphere_radius = 5.0
+emission_sphere_radius = 0.1
+direction = Vector3(0, 0, 0)
 spread = 180.0
+initial_velocity_min = 15.0
+initial_velocity_max = 30.0
+damping_min = 50.0
+damping_max = 100.0
+damping_curve = SubResource("CurveTexture_bev82")
+angle_min = -720.0
+angle_max = 720.0
+scale_max = 2.0
 scale_curve = SubResource("7")
+color_ramp = SubResource("GradientTexture1D_5v1jj")
+color_initial_ramp = SubResource("GradientTexture1D_wn3f6")
+hue_variation_min = -0.1
+hue_variation_max = 0.1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6eoko"]
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.223529, 0.141176, 0.137255, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_52eyx"]
+material = SubResource("StandardMaterial3D_6eoko")
 
 [node name="Bullet" type="MeshInstance3D"]
 mesh = SubResource("1")
@@ -47,6 +93,7 @@ Epsilon = 0.0
 [node name="Trail" type="GPUParticles3D" parent="."]
 amount = 32
 randomness = 0.11
+fixed_fps = 60
 process_material = SubResource("2")
 draw_pass_1 = SubResource("3")
 
@@ -56,8 +103,9 @@ amount = 100
 one_shot = true
 explosiveness = 1.0
 randomness = 0.11
+fixed_fps = 60
 process_material = SubResource("10")
-draw_pass_1 = SubResource("3")
+draw_pass_1 = SubResource("BoxMesh_52eyx")
 
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
 unit_size = 25.0

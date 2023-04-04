@@ -20,7 +20,7 @@ public static class BlockLoader
         createBasic("log", standard, 4, 1,100);
         createBasic("leaves", standard, 4, 2,100);
         createBasic("water", standard, 0,2);
-        createFactory<LootBlock>("loot", standard, 2, 1, usable: true);
+        createFactory<LootBlock>("loot", standard, new int[]{2,2,2,2,2,2}, new int[]{1,2,1,1,2,1}, usable: true);
     }
 
     private static void createBasic(string name, TextureAtlas atlas, int x, int y, float explosionResistance=0)

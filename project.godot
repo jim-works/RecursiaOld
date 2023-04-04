@@ -23,7 +23,7 @@ config/icon="res://textures/cursed_idol.png"
 
 [dotnet]
 
-project/assembly_name="Swarmed"
+project/assembly_name="Recursia"
 
 [editor_plugins]
 
