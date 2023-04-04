@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Threading.Tasks;
+using System;
 
 public class SQLInterface
 {
@@ -137,11 +138,11 @@ public class SQLInterface
         conn.Close();
     }
 
-    public void SaveChunks(IEnumerable<Chunk> chunks)
+    public void SaveChunks(Func<Chunk> getChunk)
     {
         using (SQLiteTransaction transaction = conn.BeginTransaction())
         {
-            foreach (Chunk chunk in chunks)
+            while (getChunk() is Chunk chunk)
             {
                 saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
                 saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;

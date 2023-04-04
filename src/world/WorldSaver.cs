@@ -1,9 +1,8 @@
 //saves annoyance
-#define NO_SAVING
+//#define NO_SAVING
 
 using Godot;
 using System.IO;
-using System.IO.Compression;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -123,8 +122,13 @@ public partial class WorldSaver : Node
         return;
 #else
         Godot.GD.Print($"Saving {saveQueue.Count} groups...");
-        //TODO THIS IS NOT SAFE
-        sql.SaveChunks(saveQueue.Values);
+        //TODO THIS ISN"T SAFE FOR SOME REASON
+        sql.SaveChunks(() => {
+            foreach (var kvp in saveQueue.ToArray())
+                if (saveQueue.TryRemove(kvp.Key, out Chunk val))
+                    return val;
+            return null;
+        });
         saveQueue.Clear();
         Godot.GD.Print("Saved");
 #endif

@@ -1,4 +1,4 @@
-using System.Threading;
+using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System;
@@ -126,7 +126,7 @@ public partial class WorldGenerator
                 BlockCoord origin = chunk.LocalToWorld(new BlockCoord(dx, dy, dz));
                 if (!provider.SuitableLocation(world, origin)) continue;
                 await requestArea(world, chunk.Position, provider.MaxArea, area);
-                Structure result = await provider.PlaceStructure(area, origin);
+                Structure result = provider.PlaceStructure(area, origin);
                 if (result != null && provider.Record)
                 {
                     chunk.Structures.Add(result);
@@ -144,9 +144,8 @@ public partial class WorldGenerator
     //returns a task that completes when the area is ready (all chunks are shaped)
     private async Task<AtomicChunkCollection> requestArea(World world, ChunkCoord center, ChunkCoord size, AtomicChunkCollection collection)
     {
-        //coord, subscriber
+        //coord, need to stick
         HashSet<ChunkCoord> needed = new ();
-        int neededCount = 0;
         for (int x = center.X-size.X; x < center.X + size.X; x++)
         {
             for (int y = center.Y-size.Y; y < center.Y + size.Y; y++)
@@ -154,39 +153,31 @@ public partial class WorldGenerator
                 for (int z = center.Z-size.Z; z < center.Z + size.Z; z++)
                 {
                     ChunkCoord coord = new ChunkCoord(x,y,z);
-                    neededCount ++;
-                    world.GetOrLoadChunkCheckDisk(coord, res => {
+                    world.GetOrLoadChunkCheckDisk(coord, true, res => {
                         if (res != null && res.GenerationState >= ChunkGenerationState.SHAPED) {
                             collection.Add(res);
-                            res.Stick();
-                            neededCount--;
                         }
                         else {
                             needed.Add(coord);
-                            if (res == null) world.GenerateChunkDeferred(coord);
+                            if (res == null) world.GenerateChunkDeferred(coord, true);
                         }
                     });
                 }
             }
         }
         //wait until all chunks are done
-        while (neededCount > 0)
+        while (needed.Count > 0)
         {
             await Task.Delay(POLL_INTERVAL_MS);
-            try {
-                List<ChunkCoord> toRemove = new List<ChunkCoord>();
-                foreach (var coord in needed)
-                if (world.GetChunk(coord) is Chunk c && c.GenerationState >= ChunkGenerationState.SHAPED) {
+            needed.RemoveWhere(coord =>
+            {
+                if (world.GetChunk(coord) is Chunk c && c.GenerationState >= ChunkGenerationState.SHAPED)
+                {
                     collection.Add(c);
-                    toRemove.Add(coord);
+                    return true;
                 }
-                foreach (var coord in toRemove) {
-                    needed.Remove(coord);
-                    neededCount--;
-                }
-            } catch (Exception e) {
-                Godot.GD.PrintErr(e);
-            }
+                return false;
+            });
         }
         return collection;
     }

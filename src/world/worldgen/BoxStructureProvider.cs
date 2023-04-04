@@ -24,7 +24,7 @@ public partial class BoxStructureProvider : StructureProvider
     {
         return world.GetBlock(coord) == grass; //tree must be planted on grass
     }
-    public override Task<Structure> PlaceStructure(AtomicChunkCollection c, BlockCoord position)
+    public override Structure PlaceStructure(AtomicChunkCollection c, BlockCoord position)
     {
         for (int x = -SIZE; x <= SIZE; x++)
         {
@@ -36,6 +36,6 @@ public partial class BoxStructureProvider : StructureProvider
                 }
             }
         }
-        return Task.FromResult<Structure>(null);
+        return null;
     }
 }

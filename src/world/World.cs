@@ -137,14 +137,14 @@ public partial class World : Node
                 }
             }
         }
-        // foreach (var kvp in Chunks) {
-        //     if (!loadedChunks.Contains(kvp.Key)) {
-        //         toUnload.Add(kvp.Key);
-        //     }
-        // }
-        // foreach (var c in toUnload) {
-        //     unloadChunk(c);
-        // }
+        foreach (var kvp in Chunks) {
+            if (!loadedChunks.Contains(kvp.Key)) {
+                toUnload.Add(kvp.Key);
+            }
+        }
+        foreach (var c in toUnload) {
+            unloadChunk(c);
+        }
         foreach (var c in loadedChunks) {
             loadChunk(c);
         }
@@ -152,20 +152,22 @@ public partial class World : Node
     }
     
     private void loadChunk(ChunkCoord coord) {
-        GetOrLoadChunkCheckDisk(coord, (Chunk c) => {
+        GetOrLoadChunkCheckDisk(coord, false, (Chunk c) => {
             if (c == null) {
-                GenerateChunkDeferred(coord);
-            } else {
-                c.Unstick();
+                GenerateChunkDeferred(coord, false);
             }
         });
     }
     private void unloadChunk(ChunkCoord coord) {
         if (!Chunks.TryGetValue(coord, out Chunk c)) return;//already unloaded
-        if (c.State == ChunkState.Sticky) return; //don't unload sticky chunks
-        saver.Save(c);
-        OnChunkUnload?.Invoke(c);
-        Chunks.TryRemove(coord, out var _);
+        lock (c)
+        {
+            if (c.State == ChunkState.Sticky) return; //don't unload sticky chunks
+            c.ForceUnload();
+            saver.Save(c);
+            OnChunkUnload?.Invoke(c);
+            Chunks.TryRemove(coord, out var _);
+        }
     }
     private Chunk getOrCreateChunk(ChunkCoord chunkCoords, bool sticky) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
@@ -182,39 +184,55 @@ public partial class World : Node
         return c;
     }
     //gets a chunk from memory, or loads it from disk if it's not in memory
-    //calls callback when load is completed. returned chunk is sticky, call c.Unstick() when done.
+    //calls callback when load is completed. returned chunk is if stick=true, call c.Unstick() when done.
     //doesn't generate a new chunk, callback is invoked with null if it doesn't exist
-    public void GetOrLoadChunkCheckDisk(ChunkCoord coord, System.Action<Chunk> callback)
+    public void GetOrLoadChunkCheckDisk(ChunkCoord coord, bool stick, System.Action<Chunk> callback)
     {
         if (GetChunk(coord) is Chunk c)
         {
             //chunk already exists
-            c.Stick();
-            callback?.Invoke(c);
-            return;
+            lock (c)
+            {
+                if (c.State == ChunkState.Unloaded)
+                {
+                    //c may have been unloaded since the getchunk call
+                    //we need to reload it.
+                    loadChunk(c);
+                }
+                if (stick) c.Stick();
+                callback?.Invoke(c);
+                return;
+            }
         }
+        //chunk doesn't exist, load it
         saver.Load(coord, c => {
             if (c == null) {
                 callback?.Invoke(null);
                 return;
             }
-            c.Stick();
-            Chunks[c.Position] = c;
-            OnChunkReady?.Invoke(c);
+            if (stick) c.Stick(); else c.Load();
+            loadChunk(c);
             c.AddEvent("loaded from disk");
             callback?.Invoke(c);
         });
     }
-    //generates a chunk if it doesn't exist, thread-safe
-    public void GenerateChunkDeferred(ChunkCoord coord)
+    //doesn't hold a lock on c, take out a lock on c if needed
+    private void loadChunk(Chunk c)
     {
-        //need lock to be thread safe on the condition
+        Chunks[c.Position] = c;
+        OnChunkReady?.Invoke(c);
+    }
+    //generates a chunk if it doesn't exist, thread-safe
+    //if stick, we sticky the chunk twice. it will get unstickied once when it spawns
+    //IF STICK, YOU HAVE TO UNSTICKY
+    public void GenerateChunkDeferred(ChunkCoord coord, bool stick)
+    {
+        //need lock to be thread safe on the condition - todo verify
         //don't need to check if worldgen is in the process of generating the chunk since it will already be in World.Chunks before it gets sent to generator
-        lock (Chunks)
-        {
-            if (GetChunk(coord) != null) return;
-            WorldGen.GenerateDeferred(createChunk(coord, true));
-        }
+        if (GetChunk(coord) != null) return;
+        Chunk c = createChunk(coord, true);
+        if (stick) c.Stick();
+        WorldGen.GenerateDeferred(c);
     }
     public Chunk GetChunk(ChunkCoord chunkCoords) {
         if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {

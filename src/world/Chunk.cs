@@ -53,10 +53,10 @@ public partial class Chunk : ISerializable
 
     public string GetEventHistory()
     {
-        string res = "created ";
+        string res = "created\n";
         foreach (var b in eventHistory)
         {
-            res += $"{b} ";
+            res += $"'{b}'\n";
         }
         return res;
     }
@@ -84,16 +84,15 @@ public partial class Chunk : ISerializable
         }
     }
 
-    //sets chunk.state to max(state, chunk.state)
+    //sets chunk.state to max(Chunk.Loaded, chunk.state)
     public void Load()
     {
         this.State = (ChunkState)System.Math.Max((int)ChunkState.Loaded, (int)this.State);
     }
-    //sets chunk.state to min(state, chunk.state)
-    public void Unload()
+    //sets state to unloaded, ignores stickiness
+    public void ForceUnload()
     {
-        if (State != ChunkState.Sticky)
-            this.State = ChunkState.Unloaded;
+        this.State = ChunkState.Unloaded;
     }
 
     //make chunk in sticky state, add 1 to the sticky count

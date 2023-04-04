@@ -270,10 +270,10 @@ public partial class Mesher : Node
         verts.Add(origin + new Vector3(1, 0, 0));
         verts.Add(origin + new Vector3(0, 0, 0));
 
-        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
-        uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
-        uvs.Add(info.UVMax);
+        uvs.Add(new Vector2(info.UVMax[(int)Direction.PosZ].X, info.UVMin[(int)Direction.PosZ].Y));
+        uvs.Add(info.UVMin[(int)Direction.PosZ]);
+        uvs.Add(new Vector2(info.UVMin[(int)Direction.PosZ].X, info.UVMax[(int)Direction.PosZ].Y));
+        uvs.Add(info.UVMax[(int)Direction.PosZ]);
 
         finishFace(info, new Vector3(0, 0, 1), normals, tris);
     }
@@ -285,10 +285,10 @@ public partial class Mesher : Node
         verts.Add(origin + new Vector3(1, 1, 1));
         verts.Add(origin + new Vector3(0, 1, 1));
         
-        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
-        uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
-        uvs.Add(info.UVMin);
+        uvs.Add(new Vector2(info.UVMin[(int)Direction.NegZ].X, info.UVMax[(int)Direction.NegZ].Y));
+        uvs.Add(info.UVMax[(int)Direction.NegZ]);
+        uvs.Add(new Vector2(info.UVMax[(int)Direction.NegZ].X, info.UVMin[(int)Direction.NegZ].Y));
+        uvs.Add(info.UVMin[(int)Direction.NegZ]);
         
         finishFace(info, new Vector3(0, 0, -1), normals, tris);
     }
@@ -300,10 +300,10 @@ public partial class Mesher : Node
         verts.Add(origin + new Vector3(0, 1, 0));
         verts.Add(origin + new Vector3(0, 0, 0));
         
-        uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y)); //2
-        uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y)); //3
+        uvs.Add(info.UVMax[(int)Direction.PosX]);
+        uvs.Add(new Vector2(info.UVMax[(int)Direction.PosX].X, info.UVMin[(int)Direction.PosX].Y)); //2
+        uvs.Add(info.UVMin[(int)Direction.PosX]);
+        uvs.Add(new Vector2(info.UVMin[(int)Direction.PosX].X, info.UVMax[(int)Direction.PosX].Y)); //3
 
 
         finishFace(info, new Vector3(1, 0, 0), normals, tris);
@@ -316,10 +316,10 @@ public partial class Mesher : Node
         verts.Add(origin + new Vector3(1, 1, 1));
         verts.Add(origin + new Vector3(1, 0, 1));
         
-        uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
-        uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
+        uvs.Add(info.UVMax[(int)Direction.NegX]);
+        uvs.Add(new Vector2(info.UVMax[(int)Direction.NegX].X, info.UVMin[(int)Direction.NegX].Y));
+        uvs.Add(info.UVMin[(int)Direction.NegX]);
+        uvs.Add(new Vector2(info.UVMin[(int)Direction.NegX].X, info.UVMax[(int)Direction.NegX].Y));
         
 
         finishFace(info, new Vector3(-1, 0, 0), normals, tris);
@@ -332,10 +332,10 @@ public partial class Mesher : Node
         verts.Add(origin + new Vector3(1, 1, 1));
         verts.Add(origin + new Vector3(1, 1, 0));
 
-        uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
-        uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
+        uvs.Add(info.UVMin[(int)Direction.PosY]);
+        uvs.Add(new Vector2(info.UVMin[(int)Direction.PosY].X, info.UVMax[(int)Direction.PosY].Y));
+        uvs.Add(info.UVMax[(int)Direction.PosY]);
+        uvs.Add(new Vector2(info.UVMax[(int)Direction.PosY].X, info.UVMin[(int)Direction.PosY].Y));
 
         finishFace(info, new Vector3(0, 1, 0), normals, tris);
     }
@@ -347,10 +347,10 @@ public partial class Mesher : Node
         verts.Add(origin + new Vector3(1, 0, 1));
         verts.Add(origin + new Vector3(0, 0, 1));
 
-        uvs.Add(info.UVMin);
-        uvs.Add(new Vector2(info.UVMax.X, info.UVMin.Y));
-        uvs.Add(info.UVMax);
-        uvs.Add(new Vector2(info.UVMin.X, info.UVMax.Y));
+        uvs.Add(info.UVMin[(int)Direction.NegY]);
+        uvs.Add(new Vector2(info.UVMax[(int)Direction.NegY].X, info.UVMin[(int)Direction.NegY].Y));
+        uvs.Add(info.UVMax[(int)Direction.NegY]);
+        uvs.Add(new Vector2(info.UVMin[(int)Direction.NegY].X, info.UVMax[(int)Direction.NegY].Y));
 
         finishFace(info, new Vector3(0, -1, 0), normals, tris);
     }

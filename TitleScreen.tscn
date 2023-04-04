@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://dnlpo3ie0yxst"]
+[gd_scene load_steps=4 format=3 uid="uid://dnlpo3ie0yxst"]
 
 [ext_resource type="Script" path="res://src/ui/menu/PlayButton.gd" id="1"]
-[ext_resource type="Script" path="res://src/ui/menu/ToggleInfiniteWorldUI.cs" id="2"]
+[ext_resource type="Theme" uid="uid://cmjgio7pj8b06" path="res://themes/gametheme.tres" id="1_16gun"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_th0bx"]
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
@@ -10,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_16gun")
 
 [node name="TitlePanel" type="Panel" parent="."]
 layout_mode = 0
@@ -22,9 +25,12 @@ anchor_bottom = 0.3
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-text = "Swarmed
-<instert game logo>
-( I know the meshing is broken ignore it pls)"
+text = "Recursia
+
+Now with 100% fewer holy trees!"
+label_settings = SubResource("LabelSettings_th0bx")
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ButtonPanel" type="Panel" parent="."]
 layout_mode = 0
@@ -32,22 +38,6 @@ anchor_left = 0.3
 anchor_top = 0.4
 anchor_right = 0.7
 anchor_bottom = 0.9
-
-[node name="ToggleInfinite" type="CheckButton" parent="ButtonPanel"]
-layout_mode = 0
-anchor_left = 0.05
-anchor_top = 0.3
-anchor_right = 0.1
-anchor_bottom = 0.3
-script = ExtResource("2")
-
-[node name="ToggleInfinteLabel" type="Label" parent="ButtonPanel"]
-layout_mode = 0
-anchor_left = 0.3
-anchor_top = 0.3
-anchor_right = 1.0
-anchor_bottom = 0.4
-text = "Toggle infinite world (turn off to reduce lag)"
 
 [node name="PlayButton" type="Button" parent="ButtonPanel"]
 layout_mode = 0
@@ -63,6 +53,7 @@ layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 text = "Play!"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[connection signal="toggled" from="ButtonPanel/ToggleInfinite" to="ButtonPanel/ToggleInfinite" method="OnToggled"]
 [connection signal="pressed" from="ButtonPanel/PlayButton" to="ButtonPanel/PlayButton" method="_on_Button_pressed"]

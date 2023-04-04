@@ -11,7 +11,7 @@ public static class BlockLoader
         };
 
         createBasic("dirt", standard, 0, 0);
-        createBasic("grass", standard, 1, 0);
+        createBasic("grass", standard, new int[] {1,1,1,1,0,1}, new int[] {2,0,2,2,0,2});
         createBasic("stone", standard, 0, 1,2);
         createBasic("sand", standard, 1, 1,100);
         createBasic("lava", standard, 2, 0,100);
@@ -31,7 +31,21 @@ public static class BlockLoader
             ExplosionResistance=explosionResistance,
         };
         BlockTypes.CreateType(name, () => b);
-        b.ItemTexture = getBlockTexture(atlas.Sample(x,y));
+        b.ItemTexture = getItemTexture(atlas.Sample(x,y));
+        b.DropTable = new DropTable {
+            drop = new ItemStack{Item=ItemTypes.GetBlockItem(name), Size=1}
+        };
+    }
+
+    private static void createBasic(string name, TextureAtlas atlas, int[] x, int[] y, float explosionResistance=0, Direction itemTexDir=Direction.PosX)
+    {
+        Block b = new Block {
+            Name=name,
+            TextureInfo=atlas.Sample(x,y),
+            ExplosionResistance=explosionResistance,
+        };
+        BlockTypes.CreateType(name, () => b);
+        b.ItemTexture = getItemTexture(atlas.Sample(x,y), Direction.PosX);
         b.DropTable = new DropTable {
             drop = new ItemStack{Item=ItemTypes.GetBlockItem(name), Size=1}
         };
@@ -40,7 +54,7 @@ public static class BlockLoader
     private static void createFactory<T>(string name, TextureAtlas atlas, int x, int y, bool usable=false, System.Action<T> init=null) where T : Block, new()
     {
         var texInfo = atlas.Sample(x,y);
-        var itemTex = getBlockTexture(texInfo);
+        var itemTex = getItemTexture(texInfo);
         BlockTypes.CreateType(name, () => {
             T b = new T();
             b.Name = name;
@@ -55,7 +69,25 @@ public static class BlockLoader
         });
     }
 
-    private static AtlasTexture getBlockTexture(AtlasTextureInfo t)
+    private static void createFactory<T>(string name, TextureAtlas atlas, int[] x, int[] y, bool usable=false, System.Action<T> init=null, Direction itemTexDir = Direction.PosX) where T : Block, new()
+    {
+        var texInfo = atlas.Sample(x,y);
+        var itemTex = getItemTexture(texInfo, itemTexDir);
+        BlockTypes.CreateType(name, () => {
+            T b = new T();
+            b.Name = name;
+            b.TextureInfo = texInfo;
+            b.ItemTexture = itemTex;
+            b.Usable = usable;
+            b.DropTable = new DropTable {
+                drop = new ItemStack{Item=ItemTypes.GetBlockItem(b), Size=1}
+            };
+            if (init != null) init(b);
+            return b;
+        });
+    }
+
+    private static AtlasTexture getItemTexture(AtlasTextureInfo t, Direction dir = Direction.PosX)
     {
         if (Mesher.Singleton == null) {
             GD.PrintErr("Cannot get block texture yet, mesher is not initialized");
@@ -64,8 +96,8 @@ public static class BlockLoader
         Texture2D chunkTex = ((StandardMaterial3D)Mesher.Singleton.ChunkMaterial).AlbedoTexture;
         AtlasTexture itemTex = new AtlasTexture();
         itemTex.Atlas = chunkTex;
-        Vector2 min = new Vector2(t.UVMin.X*t.Atlas.TexWidth, t.UVMin.Y*t.Atlas.TexHeight);
-        Vector2 max = new Vector2(t.UVMax.X*t.Atlas.TexWidth, t.UVMax.Y*t.Atlas.TexHeight);
+        Vector2 min = new Vector2(t.UVMin[(int)dir].X*t.Atlas.TexWidth, t.UVMin[(int)dir].Y*t.Atlas.TexHeight);
+        Vector2 max = new Vector2(t.UVMax[(int)dir].X*t.Atlas.TexWidth, t.UVMax[(int)dir].Y*t.Atlas.TexHeight);
         
         itemTex.Region = new Rect2(min,max-min);
         return itemTex;

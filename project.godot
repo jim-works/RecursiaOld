@@ -16,9 +16,9 @@ ResourceScriptDirectories=["res://src/world/items"]
 
 [application]
 
-config/name="Swarmed"
+config/name="Recursia"
 run/main_scene="res://TitleScreen.tscn"
-config/features=PackedStringArray("4.0", "C#")
+config/features=PackedStringArray("4.0")
 config/icon="res://textures/cursed_idol.png"
 
 [dotnet]
