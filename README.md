@@ -3,6 +3,8 @@ In progress voxel adventure game made in Godot, primarly with C#.
 
 Eventually, I plan on publishing it somewhere (Steam and Itch.io) and leaving it open source. Not sure exaclty what I want to include, I might only share the code for a while.
 
+Join the discord for this project for updates/discussion: https://discord.gg/kAT9nHxrN7
+
 Current Features:
   - Rough AABB physics
   - Multithreaded world generation and meshing
