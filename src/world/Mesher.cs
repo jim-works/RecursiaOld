@@ -211,8 +211,7 @@ public partial class Mesher : Node
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
                     if (chunk[x,y,z] == null) continue;
-                    AtlasTextureInfo tex = chunk[x,y,z].TextureInfo;
-                    meshBlock(chunk, neighbors, new BlockCoord(x,y,z), tex, vertices, uvs, normals, tris);
+                    meshBlock(chunk, neighbors, new BlockCoord(x,y,z), chunk[x,y,z], vertices, uvs, normals, tris);
                 }
             }
         }
@@ -223,28 +222,33 @@ public partial class Mesher : Node
         }
         return chunkMesh;
     }
-    private void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, AtlasTextureInfo tex, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, Block block, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
-        bool nonOpaque(Chunk c, int x, int y, int z) => c == null || c[x,y,z] == null || c[x,y,z].Transparent;
+        bool shouldAddFace(Chunk c, bool transparent, int x, int y, int z) => c == null || c[x,y,z] == null || !transparent && c[x,y,z].Transparent;
+        AtlasTextureInfo tex = block.TextureInfo;
+        bool transparent = block.Transparent;
         Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);
 
+        //addFace if block is opaque and other is transparent or null
+        //addFace if block is transparent and other is null
+
         //check if there's no block/a transparent block in each direction. only generate face if so.
-        if (localPos.X == 0 && nonOpaque(neighbors[(int)Direction.NegX], (int)Chunk.CHUNK_SIZE-1,localPos.Y,localPos.Z) || localPos.X != 0 && nonOpaque(chunk,localPos.X-1,localPos.Y,localPos.Z)) {
+        if (localPos.X == 0 && shouldAddFace(neighbors[(int)Direction.NegX], transparent, (int)Chunk.CHUNK_SIZE-1,localPos.Y,localPos.Z) || localPos.X != 0 && shouldAddFace(chunk, transparent,localPos.X-1,localPos.Y,localPos.Z)) {
             addFacePosX(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.Y == 0 && nonOpaque(neighbors[(int)Direction.NegY], localPos.X, (int)Chunk.CHUNK_SIZE-1,localPos.Z) || localPos.Y != 0 && nonOpaque(chunk,localPos.X,localPos.Y-1,localPos.Z)) {
+        if (localPos.Y == 0 && shouldAddFace(neighbors[(int)Direction.NegY], transparent, localPos.X, (int)Chunk.CHUNK_SIZE-1,localPos.Z) || localPos.Y != 0 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y-1,localPos.Z)) {
             addFaceNegY(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.Z == 0 && nonOpaque(neighbors[(int)Direction.NegZ], localPos.X,localPos.Y,(int)Chunk.CHUNK_SIZE-1) || localPos.Z != 0 && nonOpaque(chunk,localPos.X,localPos.Y,localPos.Z-1)) {
+        if (localPos.Z == 0 && shouldAddFace(neighbors[(int)Direction.NegZ], transparent, localPos.X,localPos.Y,(int)Chunk.CHUNK_SIZE-1) || localPos.Z != 0 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y,localPos.Z-1)) {
             addFacePosZ(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.X == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosX], 0,localPos.Y,localPos.Z) || localPos.X != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.X+1,localPos.Y,localPos.Z)) {
+        if (localPos.X == Chunk.CHUNK_SIZE-1 && shouldAddFace(neighbors[(int)Direction.PosX], transparent, 0,localPos.Y,localPos.Z) || localPos.X != Chunk.CHUNK_SIZE-1 && shouldAddFace(chunk, transparent,localPos.X+1,localPos.Y,localPos.Z)) {
             addFaceNegX(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.Y == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosY], localPos.X,0,localPos.Z) || localPos.Y != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.X,localPos.Y+1,localPos.Z)) {
+        if (localPos.Y == Chunk.CHUNK_SIZE-1 && shouldAddFace(neighbors[(int)Direction.PosY], transparent, localPos.X,0,localPos.Z) || localPos.Y != Chunk.CHUNK_SIZE-1 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y+1,localPos.Z)) {
             addFacePosY(pos, tex, verts, uvs, normals, tris);
         }
-        if (localPos.Z == Chunk.CHUNK_SIZE-1 && nonOpaque(neighbors[(int)Direction.PosZ], localPos.X,localPos.Y,0) || localPos.Z != Chunk.CHUNK_SIZE-1 && nonOpaque(chunk,localPos.X,localPos.Y,localPos.Z+1)) {
+        if (localPos.Z == Chunk.CHUNK_SIZE-1 && shouldAddFace(neighbors[(int)Direction.PosZ], transparent, localPos.X,localPos.Y,0) || localPos.Z != Chunk.CHUNK_SIZE-1 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y,localPos.Z+1)) {
             addFaceNegZ(pos, tex, verts, uvs, normals, tris);
         }
     }

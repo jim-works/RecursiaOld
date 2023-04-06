@@ -19,16 +19,17 @@ public static class BlockLoader
         createBasic("silicon_ore", standard, 3, 1,100);
         createBasic("log", standard, 4, 1,100);
         createBasic("leaves", standard, 4, 2,100);
-        createBasic("water", standard, 0,2);
+        createBasic("water", standard, 0,2,transparent:true);
         createFactory<LootBlock>("loot", standard, new int[]{2,2,2,2,2,2}, new int[]{1,2,1,1,2,1}, usable: true);
     }
 
-    private static void createBasic(string name, TextureAtlas atlas, int x, int y, float explosionResistance=0)
+    private static void createBasic(string name, TextureAtlas atlas, int x, int y, float explosionResistance=0, bool transparent=false)
     {
         Block b = new Block {
             Name=name,
             TextureInfo=atlas.Sample(x,y),
             ExplosionResistance=explosionResistance,
+            Transparent=transparent,
         };
         BlockTypes.CreateType(name, () => b);
         b.ItemTexture = getItemTexture(atlas.Sample(x,y));

@@ -18,7 +18,7 @@ ResourceScriptDirectories=["res://src/world/items"]
 
 config/name="Recursia"
 run/main_scene="res://TitleScreen.tscn"
-config/features=PackedStringArray("4.0")
+config/features=PackedStringArray("4.0", "C#")
 config/icon="res://textures/cursed_idol.png"
 
 [dotnet]
