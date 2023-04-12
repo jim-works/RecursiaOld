@@ -1,11 +1,9 @@
-[gd_scene load_steps=34 format=3 uid="uid://dyc42ayat11tg"]
+[gd_scene load_steps=33 format=3 uid="uid://dyc42ayat11tg"]
 
 [ext_resource type="Script" path="res://src/world/Mesher.cs" id="1"]
-[ext_resource type="Script" path="res://src/entities/Player.cs" id="2"]
+[ext_resource type="Texture2D" uid="uid://678tt83wlmqe" path="res://textures/tileset.png" id="2_gf4u7"]
 [ext_resource type="Material" uid="uid://k1gkdkelwcjg" path="res://materials/chunkmaterial.tres" id="3"]
-[ext_resource type="Texture2D" uid="uid://doejm15pynr1e" path="res://textures/crosshair.png" id="4"]
 [ext_resource type="Script" path="res://src/world/World.cs" id="5"]
-[ext_resource type="Script" path="res://src/camera/RotatingCamera.cs" id="6"]
 [ext_resource type="Script" path="res://src/world/items/ItemLoader.cs" id="7"]
 [ext_resource type="Script" path="res://src/settings/Settings.cs" id="8"]
 [ext_resource type="Texture2D" uid="uid://b1hx352bixgap" path="res://textures/marp_rod.png" id="9"]
@@ -16,7 +14,9 @@
 [ext_resource type="Texture2D" uid="uid://cebwpdnbu2fwr" path="res://textures/gun.png" id="14"]
 [ext_resource type="PackedScene" path="res://objects/InventoryUI.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://objects/MouseItemSlot.tscn" id="16"]
+[ext_resource type="Script" path="res://src/entities/ObjectLoader.cs" id="16_v6ely"]
 [ext_resource type="Script" path="res://src/ui/InventoryUI.cs" id="17"]
+[ext_resource type="PackedScene" uid="uid://m4eajxw1sgbj" path="res://objects/player.tscn" id="17_18wex"]
 [ext_resource type="Script" path="res://src/world/WorldSaver.cs" id="17_4534m"]
 [ext_resource type="Script" path="res://src/ui/FollowMouse.gd" id="18"]
 [ext_resource type="Script" path="res://src/ui/RecipeListUI.cs" id="19"]
@@ -33,16 +33,9 @@
 [ext_resource type="AudioStream" uid="uid://bnfk403lewvry" path="res://sounds/pistol.wav" id="29"]
 [ext_resource type="Script" path="res://DebugInfoLabel.cs" id="32_wwron"]
 
-[sub_resource type="Environment" id="Environment_mk13w"]
-background_mode = 1
-background_color = Color(0.768627, 0.917647, 1, 1)
-ambient_light_energy = 0.5
-ssao_enabled = true
-ssao_intensity = 1.0
-fog_density = 0.0005
-
 [node name="World" type="Node3D"]
 script = ExtResource("5")
+BlockTextureAtlas = ExtResource("2_gf4u7")
 
 [node name="Mesher" type="Node" parent="."]
 script = ExtResource("1")
@@ -65,6 +58,11 @@ ShotgunSound = ExtResource("27")
 MarpRodSound = ExtResource("26")
 CursedIdolSound = ExtResource("28")
 
+[node name="EntityLoader" type="Node" parent="."]
+script = ExtResource("16_v6ely")
+ObjectScenes = Array[PackedScene]([ExtResource("17_18wex")])
+ObjectTypeNames = PackedStringArray("player")
+
 [node name="Settings" type="Node" parent="."]
 script = ExtResource("8")
 
@@ -78,39 +76,6 @@ light_energy = 1.5
 shadow_enabled = true
 shadow_bias = 0.05
 directional_shadow_max_distance = 500.0
-
-[node name="Player" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 100, 0)
-script = ExtResource("2")
-MoveSpeed = 50.0
-JumpHeight = 25.0
-JumpCount = 5
-InitialTeamName = "player"
-InitialHealth = 10.0
-InvincibilitySeconds = 0.1
-Size = Vector3(0.7, 1.8, 0.7)
-InitialPosition = Vector3(0, 25, 0)
-
-[node name="Camera3D" type="Camera3D" parent="Player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
-environment = SubResource("Environment_mk13w")
-fov = 90.0
-far = 5000.0
-script = ExtResource("6")
-
-[node name="Crosshair" type="TextureRect" parent="Player/Camera3D"]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 16.0
-offset_bottom = 16.0
-texture = ExtResource("4")
-
-[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="Player"]
 
 [node name="UI" type="Control" parent="."]
 layout_mode = 3

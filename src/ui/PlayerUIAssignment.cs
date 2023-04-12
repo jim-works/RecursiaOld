@@ -8,13 +8,20 @@ public partial class PlayerUIAssignment : Node
     [Export] public NodePath RecipeList;
     [Export] public NodePath CoordinateText;
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
-        GetNode<HealthBar>(HealthBar).Tracking = Player.LocalPlayer;
-        GetNode<InventoryUI>(Inventory).TrackInventory(Player.LocalPlayer.Inventory);
-        GetNode<InventoryUI>(MouseInventory).TrackInventory(Player.LocalPlayer.MouseInventory);
+        Player.OnLocalPlayerAssigned += Assign;
+        if (Player.LocalPlayer != null) Assign(Player.LocalPlayer);
+        base._EnterTree();
+    }
+
+    public void Assign(Player player)
+    {
+        GetNode<HealthBar>(HealthBar).Tracking = player;
+        GetNode<InventoryUI>(Inventory).TrackInventory(player.Inventory);
+        GetNode<InventoryUI>(MouseInventory).TrackInventory(player.MouseInventory);
         GetNode<RecipeListUI>(RecipeList).DisplayList(RecpieList.Search(""));
-        GetNode<CoordinateTextUI>(CoordinateText).Tracking = Player.LocalPlayer;
+        GetNode<CoordinateTextUI>(CoordinateText).Tracking = player;
         base._Ready();
     }
 }

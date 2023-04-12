@@ -3,6 +3,7 @@ using Godot;
 public partial class Player : Combatant
 {
     public static Player LocalPlayer;
+    public static event System.Action<Player> OnLocalPlayerAssigned;
     [Export] public float Reach = 100;
     [Export] public float MoveSpeed = 10;
     [Export] public float JumpHeight = 10;
@@ -30,6 +31,7 @@ public partial class Player : Combatant
         Inventory.CopyItem(new ItemStack {Item = lootBlockItem, Size = 1});
         World.Loader.AddChunkLoader(this);
         LocalPlayer = this;
+        OnLocalPlayerAssigned?.Invoke(this);
         jumpsLeft = JumpCount;
         base._Ready();
     }

@@ -10,6 +10,7 @@ public static class ObjectTypes
             {
                 p.ObjectType = type;
             }
+            return obj;
         }
         Godot.GD.PushWarning($"Object type {type} not found");
         return null;

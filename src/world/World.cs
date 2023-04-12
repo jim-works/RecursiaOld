@@ -5,6 +5,8 @@ using System.Collections.Generic;
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
 public partial class World : Node
 {
+    [Export] public Texture2D BlockTextureAtlas;
+    [Export] public Vector3 SpawnPoint = new Vector3(0,10,0);
     public ChunkCollection Chunks = new ChunkCollection();
     public EntityCollection Entities;
     
@@ -20,6 +22,7 @@ public partial class World : Node
 
     public override void _EnterTree()
     {
+        BlockLoader.Load(BlockTextureAtlas);
         Loader = new(this);
         Entities = new(this);
         WorldGen = new(this);
@@ -30,6 +33,7 @@ public partial class World : Node
     public override void _Ready()
     {
         saver = GetNode<WorldSaver>("WorldSaver");
+        ObjectTypes.GetInstance<Player>(this, "player", SpawnPoint);
         _chunkLoadingTimer = 9999;
         Loader.UpdateChunkLoading();
         base._Ready();

@@ -2,8 +2,11 @@ using Godot;
 
 public static class BlockLoader
 {
-    public static void Load()
+    public static Texture2D BlockTextures;
+    //sets BlockTextures to textures, loads all blocks
+    public static void Load(Texture2D textures)
     {
+        BlockTextures = textures;
         TextureAtlas standard = new TextureAtlas {
             CellSize=8,
             TexWidth=256,
@@ -90,13 +93,8 @@ public static class BlockLoader
 
     private static AtlasTexture getItemTexture(AtlasTextureInfo t, Direction dir = Direction.PosX)
     {
-        if (Mesher.Singleton == null) {
-            GD.PrintErr("Cannot get block texture yet, mesher is not initialized");
-            return null;
-        }
-        Texture2D chunkTex = ((StandardMaterial3D)Mesher.Singleton.ChunkMaterial).AlbedoTexture;
         AtlasTexture itemTex = new AtlasTexture();
-        itemTex.Atlas = chunkTex;
+        itemTex.Atlas = BlockTextures;
         Vector2 min = new Vector2(t.UVMin[(int)dir].X*t.Atlas.TexWidth, t.UVMin[(int)dir].Y*t.Atlas.TexHeight);
         Vector2 max = new Vector2(t.UVMax[(int)dir].X*t.Atlas.TexWidth, t.UVMax[(int)dir].Y*t.Atlas.TexHeight);
         

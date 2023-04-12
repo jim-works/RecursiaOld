@@ -17,7 +17,6 @@ public partial class ItemLoader : Node
 
     public override void _EnterTree()
     {
-        BlockLoader.Load();
         Load();
         base._EnterTree();
     }
