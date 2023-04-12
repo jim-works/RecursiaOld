@@ -2,6 +2,7 @@ using Godot;
 
 //quadratic bezier curve
 //https://en.wikipedia.org/wiki/B%C3%A9zier_curve#Quadratic_B%C3%A9zier_curves
+namespace Recursia;
 public struct Bezier
 {
     public Vector3 start;
@@ -28,7 +29,7 @@ public struct Bezier
     }
 
     //second derivative wrt t
-    public Vector3 Dt2(float t)
+    public Vector3 Dt2()
     {
         return 2*(end-2*control+start);
     }

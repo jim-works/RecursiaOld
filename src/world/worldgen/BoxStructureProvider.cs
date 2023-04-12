@@ -1,19 +1,22 @@
 using System.Threading.Tasks;
 using Godot;
 
-public partial class BoxStructureProvider : StructureProvider
+namespace Recursia;
+public partial class BoxStructureProvider : WorldStructureProvider
 {
     private const int SIZE = 20;
-    private Block boxBlock;
-    private Block grass;
-    private FastNoiseLite leafNoise = new FastNoiseLite();
+    private readonly Block boxBlock;
+    private readonly Block grass;
+    private readonly FastNoiseLite leafNoise = new();
 
     public BoxStructureProvider() : base(new BlockCoord(SIZE,SIZE,SIZE))
     {
-        Kind = new Structure();
-        Kind.Name = "Box";
-        Kind.Mutex = false;
-        Kind.Priority = 0;
+        Kind = new WorldStructure
+        {
+            Name = "Box",
+            Mutex = false,
+            Priority = 0
+        };
 
         boxBlock = BlockTypes.Get("water");
         grass = BlockTypes.Get("grass");
@@ -24,7 +27,7 @@ public partial class BoxStructureProvider : StructureProvider
     {
         return world.GetBlock(coord) == grass; //tree must be planted on grass
     }
-    public override Structure PlaceStructure(AtomicChunkCollection c, BlockCoord position)
+    public override WorldStructure PlaceStructure(AtomicChunkCollection c, BlockCoord position)
     {
         for (int x = -SIZE; x <= SIZE; x++)
         {

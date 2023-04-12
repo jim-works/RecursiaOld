@@ -1,6 +1,7 @@
 using Godot;
 using System.IO;
 
+namespace Recursia;
 public static class SerializationExtensions
 {
     public static void Serialize(this Vector3 v, BinaryWriter bw)

@@ -1,3 +1,4 @@
+namespace Recursia;
 public partial class BlockcastHit
 {
     public Block Block;

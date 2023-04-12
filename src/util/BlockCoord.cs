@@ -2,6 +2,7 @@ using System.IO;
 
 //Faces of blocks are on integral coordinates
 //EX: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
+namespace Recursia;
 public struct BlockCoord : ISerializable
 {
     public int X, Y,Z;
@@ -42,7 +43,7 @@ public struct BlockCoord : ISerializable
     //returns positive modulus of each coordinate (eX: (-1,0,0)%16=(15,0,0))
     public static BlockCoord operator %(BlockCoord lhs, int rhs)
     {
-        BlockCoord coords = new BlockCoord(lhs.X%rhs,lhs.Y%rhs,lhs.Z%rhs);
+        BlockCoord coords = new(lhs.X%rhs,lhs.Y%rhs,lhs.Z%rhs);
         coords.X = coords.X < 0 ? coords.X + rhs : coords.X;
         coords.Y = coords.Y < 0 ? coords.Y + rhs : coords.Y;
         coords.Z = coords.Z < 0 ? coords.Z + rhs : coords.Z;
@@ -75,11 +76,11 @@ public struct BlockCoord : ISerializable
     }
     public override bool Equals(object obj)
     {
-        switch (obj)
+        return obj switch
         {
-            case BlockCoord BlockCoord: return BlockCoord == this;
-            default: return false;
-        }
+            BlockCoord BlockCoord => BlockCoord == this,
+            _ => false,
+        };
     }
     public override int GetHashCode()
     {

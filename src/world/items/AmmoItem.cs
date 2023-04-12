@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public abstract partial class AmmoItem : Item
 {
     [Export] public int Damage;

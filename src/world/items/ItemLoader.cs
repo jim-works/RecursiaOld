@@ -1,6 +1,7 @@
 using Godot;
 
 //TODO: refactor to data loader
+namespace Recursia;
 public partial class ItemLoader : Node
 {
     [Export] public Texture2D GunTexture;

@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public static class Math
 {
     //interpolates pos in the unit square where the corners have the values provided by the arguments
@@ -20,7 +21,7 @@ public static class Math
                         samples[x / sampleInterval, y / sampleInterval, z / sampleInterval], samples[x / sampleInterval, y / sampleInterval + 1, z / sampleInterval], samples[x / sampleInterval + 1, y / sampleInterval + 1, z / sampleInterval], samples[x / sampleInterval + 1, y / sampleInterval, z / sampleInterval],
                         samples[x / sampleInterval, y / sampleInterval, z / sampleInterval + 1], samples[x / sampleInterval, y / sampleInterval + 1, z / sampleInterval + 1], samples[x / sampleInterval + 1, y / sampleInterval + 1, z / sampleInterval + 1], samples[x / sampleInterval + 1, y / sampleInterval, z / sampleInterval + 1]);
     }
-    
+
     //returns the max magnitude component of the vector with the other two components zeroed
     //if multple components are equal, the first one is set the others are zeroed
     public static Vector3 MaxComponent(Vector3 source)

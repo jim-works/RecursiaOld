@@ -4,24 +4,25 @@ using System.Collections.Concurrent;
 using System;
 using System.Threading.Tasks;
 
+namespace Recursia;
 public partial class WorldGenerator
 {
     private const int POLL_INTERVAL_MS = 100;
     public int ShapingThreads {get; private set;} = Godot.Mathf.Max(1,System.Environment.ProcessorCount-4); //seems reasonable
     public int StructuresPerChunk = 10; //seems reasonable
-        
-    //contains chunks requested from outside sources (world loading)
-    private ConcurrentDictionary<ChunkCoord, Chunk> generating = new ();
-    //finished chunks that are ready to be send to the mesher
-    private volatile ConcurrentBag<(Chunk, AtomicChunkCollection)> done = new ConcurrentBag<(Chunk, AtomicChunkCollection)>();
 
-    private List<IChunkGenLayer> shapingLayers = new List<IChunkGenLayer>();
-    private List<StructureProvider> structureProviders = new List<StructureProvider>();
-    private List<Chunk> toSend = new();
+    //contains chunks requested from outside sources (world loading)
+    private readonly ConcurrentDictionary<ChunkCoord, Chunk> generating = new ();
+    //finished chunks that are ready to be send to the mesher
+    private readonly ConcurrentBag<(Chunk, AtomicChunkCollection)> done = new();
+
+    private readonly List<IChunkGenLayer> shapingLayers = new();
+    private readonly List<WorldStructureProvider> structureProviders = new();
+    private readonly List<Chunk> toSend = new();
 
     public int Seed {get; private set;} = 1127;
     private int currSeed;
-    private World world;
+    private readonly World world;
 
     public WorldGenerator(World world)
     {
@@ -45,7 +46,7 @@ public partial class WorldGenerator
             currSeed ^= currSeed << 13;
             currSeed ^= currSeed >> 17;
             currSeed ^= currSeed << 5;
-            currSeed *= 0x8001AD;    
+            currSeed *= 0x8001AD;
         }
         return currSeed;
     }
@@ -70,8 +71,7 @@ public partial class WorldGenerator
         return false;
     }
 
-    
-        //empties finishedGenerations and sends all those chunks that are still valid to the mesher
+    //empties finishedGenerations and sends all those chunks that are still valid to the mesher
     //a valid chunk is loaded in the world
     public void GetFinishedChunks(Action<List<Chunk>> dest)
     {
@@ -84,7 +84,6 @@ public partial class WorldGenerator
                 toSend.Add(c);
                 c.AddEvent("sent to dest");
                 changes.Commit();
-                
             }
         }
         dest(toSend);
@@ -119,7 +118,7 @@ public partial class WorldGenerator
     public async Task<AtomicChunkCollection> GenerateStructures(Chunk chunk)
     {
         chunk.GenerationState = ChunkGenerationState.PLACING_STRUCTURES;
-        AtomicChunkCollection area = new AtomicChunkCollection(world);
+        AtomicChunkCollection area = new(world);
         foreach (var provider in structureProviders)
         {
                 int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
@@ -128,7 +127,7 @@ public partial class WorldGenerator
                 BlockCoord origin = chunk.LocalToWorld(new BlockCoord(dx, dy, dz));
                 if (!provider.SuitableLocation(world, origin)) continue;
                 await requestArea(chunk.Position, provider.MaxArea, area);
-                Structure result = provider.PlaceStructure(area, origin);
+                WorldStructure result = provider.PlaceStructure(area, origin);
                 if (result != null && provider.Record)
                 {
                     chunk.Structures.Add(result);
@@ -154,9 +153,9 @@ public partial class WorldGenerator
             {
                 for (int z = center.Z-size.Z; z < center.Z + size.Z; z++)
                 {
-                    ChunkCoord coord = new ChunkCoord(x,y,z);
+                    ChunkCoord coord = new(x,y,z);
                     world.GetStickyChunkOrLoadFromDisk(coord, res => {
-                        if (res != null && res.GenerationState >= ChunkGenerationState.SHAPED) {
+                        if (res?.GenerationState >= ChunkGenerationState.SHAPED) {
                             collection.Add(res);
                         }
                         else {

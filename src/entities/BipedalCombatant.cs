@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class BipedalCombatant : Combatant
 {
     [Export] public NodePath AnimationTreePath;
@@ -13,8 +14,8 @@ public partial class BipedalCombatant : Combatant
     [Export] public NodePath RFootBottom;
 
     protected AnimationTree animationTree;
-    private bool lFootOnGround = false;
-    private bool rFootOnGround = false;
+    private bool lFootOnGround;
+    private bool rFootOnGround;
     private Node3D lFootTarget;
     private Node3D rFootTarget;
 
@@ -26,7 +27,7 @@ public partial class BipedalCombatant : Combatant
         base._Ready();
     }
 
-    public override void _PhysicsProcess(double dt)
+    public override void _PhysicsProcess(double delta)
     {
         if (SetSpeedToWalk) {
             animationTree.Set($"parameters/{WalkBlendNode}/TimeScale/scale", new Vector3(Velocity.X,0,Velocity.Z).Length()/StrideLength);
@@ -39,18 +40,13 @@ public partial class BipedalCombatant : Combatant
             GlobalPosition = new Vector3(GlobalPosition.X, GlobalPosition.Y + currSlope, GlobalPosition.Z);
             collisionDirections = 0 | (onGround() ? 1 : 0 << (int)Direction.NegY); //update if we are on ground or not
         }
-        base._PhysicsProcess(dt);
-    }
-
-    public void DoIK()
-    {
-        //TODO LOL
+        base._PhysicsProcess(delta);
     }
 
     //returns the distance the foot needs to raise to be above the ground
     private float getFootHeight(Vector3 footTargetGlobal)
     {
-        Vector3 start = new Vector3(footTargetGlobal.X,footTargetGlobal.Y+MaxSlope,footTargetGlobal.Z);
+        Vector3 start = new(footTargetGlobal.X,footTargetGlobal.Y+MaxSlope,footTargetGlobal.Z);
         BlockcastHit hit = World.Blockcast(start,new Vector3(0,-MaxSlope, 0));
         if (hit == null) return 0;
         return hit.HitPos.Y-footTargetGlobal.Y;

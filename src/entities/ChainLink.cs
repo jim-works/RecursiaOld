@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class ChainLink : SegmentedCombatantChild
 {
     [Export]
@@ -7,7 +8,7 @@ public partial class ChainLink : SegmentedCombatantChild
     [Export]
     public float NaturalDist=2;
 
-    public override void _PhysicsProcess(double dt)
+    public override void _PhysicsProcess(double delta)
     {
         if (Parent == null || !IsInstanceValid(Parent)) {
             QueueFree();
@@ -17,6 +18,6 @@ public partial class ChainLink : SegmentedCombatantChild
         Vector3 d = Parent.GlobalPosition-GlobalPosition;
         AddConstantForce(d.Normalized()*Tension*(d.Length()-NaturalDist));
 
-        base._PhysicsProcess(dt);
+        base._PhysicsProcess(delta);
     }
 }

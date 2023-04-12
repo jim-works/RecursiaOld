@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class PatrickQuack : BipedalCombatant
 {
     [Export] public float MaxDistFromTarget = 50;
@@ -21,11 +22,11 @@ public partial class PatrickQuack : BipedalCombatant
     [Export] public float AggroRange = 512;
 
     private AnimationNodeStateMachinePlayback stateMachine;
-    private double stateSwitchTimer = 0;
-    private double summonTimer = 0;
-    private double shootTimer = 0;
+    private double stateSwitchTimer;
+    private double summonTimer;
+    private double shootTimer;
     private Node3D summonPoint;
-    private int spawnIdx = 0;
+    private int spawnIdx;
 
     public override void _Ready()
     {
@@ -35,7 +36,7 @@ public partial class PatrickQuack : BipedalCombatant
         BossUI.Singleton.Track(this, "Patrick Quack");
     }
 
-    public override void _PhysicsProcess(double dt)
+    public override void _PhysicsProcess(double delta)
     {
         if (StateSwitchInterval <= stateSwitchTimer)
         {
@@ -49,17 +50,17 @@ public partial class PatrickQuack : BipedalCombatant
             }
             stateSwitchTimer = 0;
         }
-        stateSwitchTimer += dt;
-        
+        stateSwitchTimer += delta;
+
         if (stateMachine.GetCurrentNode() == SummonState)
         {
-            doSummon((float)dt);
+            doSummon((float)delta);
         }
         if (stateMachine.GetCurrentNode() == WalkBlendNode)
         {
-            doWalk((float)dt);
+            doWalk((float)delta);
         }
-        base._PhysicsProcess(dt);
+        base._PhysicsProcess(delta);
     }
 
     public override void Die()

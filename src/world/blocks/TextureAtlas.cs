@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class TextureAtlas
 {
     public int TexWidth, TexHeight, CellSize;

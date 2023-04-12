@@ -3,34 +3,35 @@ using Godot.Collections;
 using System.Collections.Generic;
 using System;
 
-public partial class ChunkMesh
+namespace Recursia;
+public sealed class ChunkMesh : IDisposable
 {
-    private Godot.Collections.Array data;
-    private ArrayMesh arrayMesh;
+    private readonly Godot.Collections.Array data;
+    private readonly ArrayMesh arrayMesh;
 
-    public List<Vector3> Verts {get; private set;} = new List<Vector3>();
-    public List<int> Tris {get; private set;} = new List<int>();
-    public List<Vector3> Norms {get; private set;} = new List<Vector3>();
-    public List<Vector2> UVs {get; private set;} = new List<Vector2>();
+    public List<Vector3> Verts {get;} = new List<Vector3>();
+    public List<int> Tris {get;} = new List<int>();
+    public List<Vector3> Norms {get;} = new List<Vector3>();
+    public List<Vector2> UVs {get;} = new List<Vector2>();
 
-    public MeshInstance3D Node {get; private set;}
+    public MeshInstance3D Node {get;private set;}
 
-    public ulong Timestamp = 0;
+    public ulong Timestamp;
 
     public ChunkMesh()
     {
         //setup mesh array
         data = new Godot.Collections.Array();
         arrayMesh = new ArrayMesh();
-        data.Resize((int)ArrayMesh.ArrayType.Max);
+        _ = data.Resize((int)Mesh.ArrayType.Max);
     }
     public void ApplyTo(MeshInstance3D node, Material mat)
     {
         //TODO: make this more efficient
-        data[(int)ArrayMesh.ArrayType.Vertex] = Variant.CreateFrom(new Span<Vector3>(Verts.ToArray()));
-        data[(int)ArrayMesh.ArrayType.Index] = Variant.CreateFrom(new Span<int>(Tris.ToArray()));
-        data[(int)ArrayMesh.ArrayType.Normal] = Variant.CreateFrom(new Span<Vector3>(Norms.ToArray()));
-        data[(int)ArrayMesh.ArrayType.TexUV] = Variant.CreateFrom(new Span<Vector2>(UVs.ToArray()));
+        data[(int)Mesh.ArrayType.Vertex] = Variant.CreateFrom(new Span<Vector3>(Verts.ToArray()));
+        data[(int)Mesh.ArrayType.Index] = Variant.CreateFrom(new Span<int>(Tris.ToArray()));
+        data[(int)Mesh.ArrayType.Normal] = Variant.CreateFrom(new Span<Vector3>(Norms.ToArray()));
+        data[(int)Mesh.ArrayType.TexUV] = Variant.CreateFrom(new Span<Vector2>(UVs.ToArray()));
         arrayMesh.ClearSurfaces();
         arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, data);
         node.Mesh = arrayMesh;
@@ -47,4 +48,9 @@ public partial class ChunkMesh
         Node = null;
     }
 
+    public void Dispose()
+    {
+        arrayMesh.Dispose();
+        data.Dispose();
+    }
 }

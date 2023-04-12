@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class ObjectLoader : Node
 {
     [Export] public PackedScene[] ObjectScenes;

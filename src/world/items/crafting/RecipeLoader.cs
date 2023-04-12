@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
+namespace Recursia;
 public static class RecipeLoader
 {
-
     public static void Load()
     {
         RecpieList.AddRecipe(new Recipe(

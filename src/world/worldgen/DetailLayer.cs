@@ -1,10 +1,11 @@
 using Godot;
 
-public partial class DetailLayer : IChunkGenLayer
+namespace Recursia;
+public class DetailLayer : IChunkGenLayer
 {
-    private Block stone;
-    private Block grass;
-    private Block dirt;
+    private readonly Block stone;
+    private readonly Block grass;
+    private readonly Block dirt;
     private const int dirtDepth = 2;
 
     public DetailLayer()
@@ -14,10 +15,9 @@ public partial class DetailLayer : IChunkGenLayer
         dirt = BlockTypes.Get("dirt");
     }
 
-    public void InitRandom(System.Func<int> seeds)
+    public void InitRandom(System.Func<int> seedFactory)
     {
     }
-
 
     public void GenerateChunk(World world, Chunk chunk)
     {
@@ -33,7 +33,7 @@ public partial class DetailLayer : IChunkGenLayer
                                 chunk[x,c,z] = dirt;
                             }
                         }
-                    } 
+                    }
                 }
             }
         }

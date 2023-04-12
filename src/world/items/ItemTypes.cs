@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 
+namespace Recursia;
 public static class ItemTypes
 {
-    private static Dictionary<string, Item> items = new Dictionary<string, Item>();
+    private static readonly Dictionary<string, Item> items = new();
     public static Item Get(string itemName) {
         if (items.TryGetValue(itemName, out var b)) return b;
         Godot.GD.PushWarning($"Item {itemName} not found");
@@ -24,11 +25,12 @@ public static class ItemTypes
     //creates an item that will place <block>
     //should only be used for picking up blocks with data you want to keep
     //the string overload will automatically create a factory/use the cached block pointer as required
-    public static BlockItem GetBlockItem(Block b) => new BlockItem {
-            DisplayName=b.Name,
-            Placing=b,
-            Texture2D = b.ItemTexture
-        };
+    public static BlockItem GetBlockItem(Block b) => new()
+    {
+        DisplayName = b.Name,
+        Placing = b,
+        Texture2D = b.ItemTexture
+    };
 
     public static void CreateType(string name, Item item) {
         if (items.ContainsKey(name)) {

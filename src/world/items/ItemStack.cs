@@ -1,3 +1,4 @@
+namespace Recursia;
 public struct ItemStack : ISerializable
 {
     public int Size;
@@ -34,7 +35,7 @@ public struct ItemStack : ISerializable
     }
     public static ItemStack Deserialize(System.IO.BinaryReader br) {
         string name = br.ReadString();
-        if (name == "") {
+        if (string.IsNullOrEmpty(name)) {
             return new ItemStack();
         }
         int size = br.ReadInt32();

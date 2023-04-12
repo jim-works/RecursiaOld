@@ -1,17 +1,17 @@
 using Godot;
 
-public partial class ShapingLayer : IChunkGenLayer
+namespace Recursia;
+public class ShapingLayer : IChunkGenLayer
 {
-    private Block stone;
-    private Block grass;
-    private Block dirt;
+    private readonly Block stone;
+    private readonly Block grass;
     private const int noiseSampleInterval = 4;
     private const float freq = 0.1f, freqMult = 3f, scaleMult = 0.5f;
     private const int octaves = 5;
     private SplineNoise densityNoise;
-    private Spline continentHeightSpline = new Spline(new Vector2[]{new Vector2(-50,-0.5f), new Vector2(25,0), new Vector2(50,0.5f), new Vector2(150,1)});
-    private Spline oceanHeightSpline = new Spline(new Vector2[]{new Vector2(-75,-0.4f), new Vector2(-25,0.7f), new Vector2(25,0.7f), new Vector2(100,1)});
-    private Spline coastBlendingSpline = new Spline(new Vector2[]{new Vector2(-0.5f,0), new Vector2(1,1)});
+    private readonly Spline continentHeightSpline = new(new Vector2[]{new Vector2(-50,-0.5f), new Vector2(25,0), new Vector2(50,0.5f), new Vector2(150,1)});
+    private readonly Spline oceanHeightSpline = new(new Vector2[]{new Vector2(-75,-0.4f), new Vector2(-25,0.7f), new Vector2(25,0.7f), new Vector2(100,1)});
+    private readonly Spline coastBlendingSpline = new(new Vector2[]{new Vector2(-0.5f,0), new Vector2(1,1)});
 
     //reduces density for (flattens) above ground terrain. low frequency
     private const float scaleFreq = 0.2f, scaleFreqMult = 1.5f, scaleScaleMult = 0.5f;
@@ -33,26 +33,25 @@ public partial class ShapingLayer : IChunkGenLayer
     {
         stone = BlockTypes.Get("stone");
         grass = BlockTypes.Get("grass");
-        dirt = BlockTypes.Get("dirt");
-        DebugInfoLabel.Inputs.Add((pos) => $"Density: {densityNoise.Sample(pos.X, pos.Y, pos.Z).ToString("0.00")}\n Scale: {scaleNoise.Sample(pos.X, pos.Z).ToString("0.00")}\n Wacky: {wackyNoise.Sample(pos.X, pos.Y, pos.Z).ToString("0.00")}"
-                                            + $"\n Oceanness: {coastBlendingSpline.Map(heightNoise.Sample(pos.X, pos.Z)).ToString("0.00")}");
+        DebugInfoLabel.Inputs.Add((pos) => $"Density: {densityNoise.Sample(pos.X, pos.Y, pos.Z):0.00}\n Scale: {scaleNoise.Sample(pos.X, pos.Z):0.00}\n Wacky: {wackyNoise.Sample(pos.X, pos.Y, pos.Z):0.00}"
+                                            + $"\n Oceanness: {coastBlendingSpline.Map(heightNoise.Sample(pos.X, pos.Z)):0.00}");
     }
 
-    public void InitRandom(System.Func<int> seeds)
+    public void InitRandom(System.Func<int> seedFactory)
     {
-        LayeredNoise layeredNoise = new LayeredNoise(seeds());
+        LayeredNoise layeredNoise = new(seedFactory());
         layeredNoise.AddSumLayers(freq, freqMult, scaleMult, octaves);
         densityNoise = new SplineNoise(layeredNoise, new Spline(new Vector2[]{new Vector2(-1,-1), new Vector2(1,1)}));
 
-        LayeredNoise scaleLayers = new LayeredNoise(seeds());
+        LayeredNoise scaleLayers = new(seedFactory());
         scaleLayers.AddSumLayers(scaleFreq, scaleFreqMult, scaleScaleMult, scaleOctaves);
         scaleNoise = new SplineNoise(scaleLayers, new Spline(new Vector2[]{new Vector2(-1,2), new Vector2(scaleLayers.Quantile(0.1f), 1), new Vector2(scaleLayers.Quantile(0.5f), 1f), new Vector2(scaleLayers.Quantile(0.8f),0.4f), new Vector2(1,0)}));
 
-        LayeredNoise wackyLayers = new LayeredNoise(seeds());
+        LayeredNoise wackyLayers = new(seedFactory());
         wackyLayers.AddSumLayers(wackyFreq, wackyFreqMult, wackyScaleMult, wackyOctaves);
         wackyNoise = new SplineNoise(wackyLayers, new Spline(new Vector2[]{new Vector2(-1,1), new Vector2(wackyLayers.Quantile(0.9f), 1), new Vector2(1f, 3)}));
 
-        LayeredNoise heightLayers = new LayeredNoise(seeds());
+        LayeredNoise heightLayers = new(seedFactory());
         heightLayers.AddSumLayers(heightFreq, heightFreqMult, heightScaleMult, heightOctaves);
         heightNoise = new SplineNoise(heightLayers, new Spline(new Vector2[]{new Vector2(-1,-1), new Vector2(heightLayers.Quantile(0.3f), -1), new Vector2(heightLayers.Quantile(0.4f),0), new Vector2(1,1)}));
     }
@@ -107,7 +106,6 @@ public partial class ShapingLayer : IChunkGenLayer
     public Block GetBlockType(float[,,] samples, BlockCoord worldCoords, int x, int y, int z)
     {
         float heightSample = heightNoise.Sample(worldCoords.X+x, worldCoords.Z+z);
-        float oceanness = coastBlendingSpline.Map(heightSample);
         float densitySample = Math.Trilerp(samples, x, y, z,noiseSampleInterval);
         if (getBlendedDensityCutoff(worldCoords.Y + y, heightSample) < densitySample)
         {

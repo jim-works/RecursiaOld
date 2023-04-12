@@ -1,8 +1,7 @@
 using System.IO;
 using System.Collections.Generic;
-using System.Threading;
 using System;
-
+namespace Recursia;
 public enum ChunkState
 {
     Unloaded = 0,
@@ -10,26 +9,27 @@ public enum ChunkState
     //Sticky chunks will not be unloaded. They are used for structures in worldgen that require neighboring chunks to be loaded
     Sticky = 2,
 }
-public partial class Chunk : ISerializable
+
+public class Chunk : ISerializable
 {
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
     private Block[,,] Blocks;
     public ChunkMesh Mesh;
     public bool Meshed {get {
-        return !(meshedHistory.Count == 0) && meshedHistory.Peek();
+        return meshedHistory.Count != 0 && meshedHistory.Peek();
     } set {
         meshedHistory.Enqueue(value);
     }}
     public ChunkGenerationState GenerationState {get; set;}
     public ChunkState State { get; private set; }
-    public List<Structure> Structures = new List<Structure>();
-    public List<PhysicsObject> PhysicsObjects = new List<PhysicsObject>();
+    public List<WorldStructure> Structures = new();
+    public List<PhysicsObject> PhysicsObjects = new();
     public bool SaveDirtyFlag = true;
-    public int stickyCount = 0;
-    private object _stickyLock = new Object();
-    private Queue<bool> meshedHistory = new();
-    private System.Collections.Concurrent.ConcurrentQueue<string> eventHistory = new();
+    public int stickyCount;
+    private readonly object _stickyLock = new();
+    private readonly Queue<bool> meshedHistory = new();
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> eventHistory = new();
 
     public Chunk(ChunkCoord chunkCoords)
     {
@@ -61,11 +61,6 @@ public partial class Chunk : ISerializable
         return res;
     }
 
-    public void ChunkTick(float dt)
-    {
-
-    }
-
     public Block this[BlockCoord index]
     {
         get { return this[index.X,index.Y,index.Z]; }
@@ -73,7 +68,7 @@ public partial class Chunk : ISerializable
     }
     public Block this[int x, int y, int z]
     {
-        get { return Blocks != null ? Blocks[x, y, z] : null; }
+        get { return Blocks?[x, y, z]; }
         set
         {
             if (Blocks != null || value != null)
@@ -153,8 +148,16 @@ public partial class Chunk : ISerializable
                             continue;
                         }
                         bw.Write(run);
-                        if (curr == null) bw.Write(0);
-                        else { bw.Write(1); bw.Write(curr.Name); curr.Serialize(bw); }
+                        if (curr == null)
+                        {
+                            bw.Write(0);
+                        }
+                        else
+                        {
+                            bw.Write(1);
+                            bw.Write(curr.Name);
+                            curr.Serialize(bw);
+                        }
                         run = 1;
                         curr = b;
                     }
@@ -162,8 +165,16 @@ public partial class Chunk : ISerializable
             }
 
             bw.Write(run);
-            if (curr == null) bw.Write(0);
-            else { bw.Write(1); bw.Write(curr.Name); curr.Serialize(bw); }
+            if (curr == null)
+            {
+                bw.Write(0);
+            }
+            else
+            {
+                bw.Write(1);
+                bw.Write(curr.Name);
+                curr.Serialize(bw);
+            }
         }
         //serialize physics objects
         // bw.Write(PhysicsObjects.Count);
@@ -176,7 +187,7 @@ public partial class Chunk : ISerializable
     public static Chunk Deserialize(BinaryReader br)
     {
         var pos = ChunkCoord.Deserialize(br);
-        Chunk c = new Chunk(pos);
+        Chunk c = new(pos);
         int run = 0;
         //deserialize blocks
         Block read = null;
@@ -190,13 +201,20 @@ public partial class Chunk : ISerializable
                     {
                         run = br.ReadInt32();
                         bool nullBlock = br.ReadInt32() == 0;
-                        if (nullBlock) read = null;
-                        else { 
+                        if (nullBlock)
+                        {
+                            read = null;
+                        }
+                        else
+                        {
                             string blockName = br.ReadString();
-                            try {
+                            try
+                            {
                                 read = BlockTypes.Get(blockName); read.Deserialize(br);
-                            } catch (Exception e) {
-                                Godot.GD.PushError($"Error deserializing block {blockName} at {pos} {x} {y} {z}: {e.ToString()}");
+                            }
+                            catch (Exception e)
+                            {
+                                Godot.GD.PushError($"Error deserializing block {blockName} at {pos} {x} {y} {z}: {e}");
                                 read = null;
                             }
                         }

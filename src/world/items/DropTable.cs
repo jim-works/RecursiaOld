@@ -1,6 +1,6 @@
-public partial class DropTable
+namespace Recursia;
+public class DropTable
 {
-
     public ItemStack drop;
 
     public ItemStack GetDrop()

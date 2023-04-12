@@ -1,14 +1,15 @@
 using Godot;
 using System.Collections.Generic;
 
+namespace Recursia;
 public partial class RecipeListUI : Control
 {
     [Export]
     public PackedScene CraftingRecipeUI;
     [Export]
     public int Padding;
-    
-    private List<CraftingRecipeUI> recipeUIs = new List<CraftingRecipeUI>();
+
+    private readonly List<CraftingRecipeUI> recipeUIs = new();
     private Control Parent; //scrollbox
 
     public override void _Ready()
@@ -35,7 +36,6 @@ public partial class RecipeListUI : Control
         }
         CustomMinimumSize = new Vector2(CustomMinimumSize.X, startHeight);
     }
-
 
     //signal
     public void OnPause()

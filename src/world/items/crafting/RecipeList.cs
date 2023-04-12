@@ -3,9 +3,10 @@ using System.Configuration;
 
 //TODO:
 //make this more efficient : (generalized) suffix tree?
+namespace Recursia;
 public static class RecpieList
 {
-    public static List<Recipe> Recipes = new List<Recipe>();
+    public static readonly List<Recipe> Recipes = new();
 
     public static void AddRecipe(Recipe r)
     {
@@ -17,7 +18,7 @@ public static class RecpieList
     public static List<Recipe> Search(string query)
     {
         query = query.Trim();
-        List<Recipe> result = new List<Recipe>();
+        List<Recipe> result = new();
         foreach (var recipe in Recipes)
         {
             if (recipe.Station.Contains(query))

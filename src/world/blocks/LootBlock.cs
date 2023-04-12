@@ -1,6 +1,7 @@
 using System.IO;
 using Godot;
 
+namespace Recursia;
 public partial class LootBlock : Block
 {
     public ItemStack[] Drops;

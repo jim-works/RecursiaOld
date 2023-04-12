@@ -1,15 +1,16 @@
 using Godot;
 using System.Collections.Generic;
 
+namespace Recursia;
 public partial class DebugDraw : Node
 {
-    public static DebugDraw Singleton;
+    public static DebugDraw Singleton {get; private set;}
 
     [Export] public Color Color;
 
-    public bool Draw = false;
+    public bool Draw;
     private ImmediateMesh geometry;
-    private List<Box> drawing = new List<Box>();
+    private readonly List<Box> drawing = new ();
 
     public override void _EnterTree()
     {
@@ -21,7 +22,7 @@ public partial class DebugDraw : Node
         geometry = new ImmediateMesh();
     }
 
-    public override void _Process(double dt)
+    public override void _Process(double delta)
     {
         geometry.ClearSurfaces();
         if (!Draw) return;
@@ -48,7 +49,7 @@ public partial class DebugDraw : Node
         //face
         onto.SurfaceAddVertex(box.Corner);
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,0,0));
-        
+
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,0,0));
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,box.Size.Y,0));
 
@@ -60,7 +61,7 @@ public partial class DebugDraw : Node
         //face
         onto.SurfaceAddVertex(box.Corner);
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,0,box.Size.Z));
-        
+
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,0,box.Size.Z));
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,box.Size.Y,box.Size.Z));
 
@@ -72,7 +73,7 @@ public partial class DebugDraw : Node
         //face
         onto.SurfaceAddVertex(box.Corner);
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,0,0));
-        
+
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,0,0));
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,0,box.Size.Z));
 
@@ -85,7 +86,7 @@ public partial class DebugDraw : Node
         //face
         onto.SurfaceAddVertex(box.Corner + box.Size);
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,box.Size.Y,box.Size.Z));
-        
+
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,box.Size.Y,box.Size.Z));
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,0,box.Size.Z));
 
@@ -97,7 +98,7 @@ public partial class DebugDraw : Node
         //face
         onto.SurfaceAddVertex(box.Corner + box.Size);
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,box.Size.Y,0));
-        
+
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,box.Size.Y,0));
         onto.SurfaceAddVertex(box.Corner+new Vector3(box.Size.X,0,0));
 
@@ -109,7 +110,7 @@ public partial class DebugDraw : Node
         //face
         onto.SurfaceAddVertex(box.Corner + box.Size);
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,box.Size.Y,box.Size.Z));
-        
+
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,box.Size.Y,box.Size.Z));
         onto.SurfaceAddVertex(box.Corner+new Vector3(0,box.Size.Y,0));
 

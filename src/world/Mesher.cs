@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 
 //Faces of blocks are on integral coordinates
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
+namespace Recursia;
 public partial class Mesher : Node
 {
     [Export]
@@ -13,13 +14,13 @@ public partial class Mesher : Node
     public float MaxMeshTime = 0.1f;
     [Export]
     public int MeshIntervalMs = 1000;
-    private float meshTimer = 0;
-    public static Mesher Singleton;
-    private ConcurrentDictionary<ChunkCoord, Chunk> toMesh = new();
-    private Dictionary<ChunkCoord, int> meshing = new();
-    private Dictionary<ChunkCoord, ChunkMesh> done = new();
-    private Dictionary<ChunkCoord, Chunk> waitingToMesh = new();
-    private ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new ConcurrentBag<(ChunkMesh, ChunkCoord)>();
+    private float meshTimer;
+    public static Mesher Singleton {get; private set;}
+    private readonly ConcurrentDictionary<ChunkCoord, Chunk> toMesh = new();
+    private readonly Dictionary<ChunkCoord, int> meshing = new();
+    private readonly Dictionary<ChunkCoord, ChunkMesh> done = new();
+    private readonly Dictionary<ChunkCoord, Chunk> waitingToMesh = new();
+    private readonly ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new();
     private World world;
     //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
     // Called when the node enters the scene tree for the first time.
@@ -48,7 +49,7 @@ public partial class Mesher : Node
                 multithreadGenerateChunk(c);
         }
         //spawn all on single thread to avoid a million race conditions
-        while (finishedMeshes.Count > 0)
+        while (!finishedMeshes.IsEmpty)
         {
             if (finishedMeshes.TryTake(out (ChunkMesh, ChunkCoord) pair))
             {
@@ -102,12 +103,15 @@ public partial class Mesher : Node
     public void MeshDeferred(Chunk c)
     {
         c.Meshed = false;
-        if (canMesh(c)) {
+        if (canMesh(c))
+        {
             toMesh[c.Position] = c;
             waitingToMesh.Remove(c.Position);
         }
-        else waitingToMesh[c.Position] = c;
-        
+        else
+        {
+            waitingToMesh[c.Position] = c;
+        }
 
         if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1) && canMesh(c1)) {
             MeshDeferred(c1);
@@ -141,12 +145,12 @@ public partial class Mesher : Node
     public bool canMesh(Chunk c)
     {
         //only mesh if all adjacent chunks are generated
-        return c != null && c.State >= ChunkState.Loaded && world.GetChunk(c.Position + new ChunkCoord(1,0,0))?.GenerationState == ChunkGenerationState.GENERATED 
-        && world.GetChunk(c.Position + new ChunkCoord(-1,0,0))?.GenerationState == ChunkGenerationState.GENERATED 
-        && world.GetChunk(c.Position + new ChunkCoord(0,1,0))?.GenerationState == ChunkGenerationState.GENERATED 
-        && world.GetChunk(c.Position + new ChunkCoord(0,-1,0))?.GenerationState == ChunkGenerationState.GENERATED 
-        && world.GetChunk(c.Position + new ChunkCoord(0,0,1))?.GenerationState == ChunkGenerationState.GENERATED 
-        && world.GetChunk(c.Position + new ChunkCoord(0,0,-1))?.GenerationState == ChunkGenerationState.GENERATED ;
+        return c?.State >= ChunkState.Loaded && world.GetChunk(c.Position + new ChunkCoord(1,0,0))?.GenerationState == ChunkGenerationState.GENERATED
+        && world.GetChunk(c.Position + new ChunkCoord(-1,0,0))?.GenerationState == ChunkGenerationState.GENERATED
+        && world.GetChunk(c.Position + new ChunkCoord(0,1,0))?.GenerationState == ChunkGenerationState.GENERATED
+        && world.GetChunk(c.Position + new ChunkCoord(0,-1,0))?.GenerationState == ChunkGenerationState.GENERATED
+        && world.GetChunk(c.Position + new ChunkCoord(0,0,1))?.GenerationState == ChunkGenerationState.GENERATED
+        && world.GetChunk(c.Position + new ChunkCoord(0,0,-1))?.GenerationState == ChunkGenerationState.GENERATED;
     }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
     private void spawnChunk(ChunkMesh mesh, ChunkCoord coord)
@@ -162,7 +166,7 @@ public partial class Mesher : Node
             //no need to spawn in a new MeshInstance3D if the chunk is empty
             return;
         }
-        MeshInstance3D meshNode = new MeshInstance3D();
+        MeshInstance3D meshNode = new();
         chunk.Mesh.ApplyTo(meshNode, ChunkMaterial);
         AddChild(chunk.Mesh.Node);
     }
@@ -171,15 +175,13 @@ public partial class Mesher : Node
         if (!meshing.TryAdd(chunk.Position, 1)) meshing[chunk.Position]++;
 
         Chunk c = chunk;
-        Task.Run(() => {
-            generateAndQueueChunk(c);
-        });
+        Task.Run(() => generateAndQueueChunk(c));
     }
     private void generateAndQueueChunk(Chunk c) {
         ChunkMesh mesh = generateMesh(c);
         finishedMeshes.Add((mesh, c.Position));
     }
-    private ChunkMesh getMesh()
+    private static ChunkMesh getMesh()
     {
         return new ChunkMesh();
     }
@@ -224,9 +226,9 @@ public partial class Mesher : Node
         }
         return chunkMesh;
     }
-    private void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, Block block, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, Block block, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
-        bool shouldAddFace(Chunk c, bool transparent, int x, int y, int z) => c == null || c[x,y,z] == null || !transparent && c[x,y,z].Transparent;
+        static bool shouldAddFace(Chunk c, bool transparent, int x, int y, int z) => c == null || c[x,y,z] == null || !transparent && c[x,y,z].Transparent;
         AtlasTextureInfo tex = block.TextureInfo;
         bool transparent = block.Transparent;
         Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);
@@ -254,7 +256,7 @@ public partial class Mesher : Node
             addFaceNegZ(pos, tex, verts, uvs, normals, tris);
         }
     }
-    private void finishFace(AtlasTextureInfo info, Vector3 normalDir, List<Vector3> normals, List<int> tris)
+    private static void finishFace(Vector3 normalDir, List<Vector3> normals, List<int> tris)
     {
         int faceId = normals.Count / 4;
         normals.Add(normalDir);
@@ -269,7 +271,7 @@ public partial class Mesher : Node
         tris.Add(faceId * 4 + 2);
     }
     //facing the +z direction
-    private void addFacePosZ(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void addFacePosZ(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 1, 0));
         verts.Add(origin + new Vector3(1, 1, 0));
@@ -281,57 +283,55 @@ public partial class Mesher : Node
         uvs.Add(new Vector2(info.UVMin[(int)Direction.PosZ].X, info.UVMax[(int)Direction.PosZ].Y));
         uvs.Add(info.UVMax[(int)Direction.PosZ]);
 
-        finishFace(info, new Vector3(0, 0, 1), normals, tris);
+        finishFace(new Vector3(0, 0, 1), normals, tris);
     }
     //facing the -z direction
-    private void addFaceNegZ(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void addFaceNegZ(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 1));
         verts.Add(origin + new Vector3(1, 0, 1));
         verts.Add(origin + new Vector3(1, 1, 1));
         verts.Add(origin + new Vector3(0, 1, 1));
-        
+
         uvs.Add(new Vector2(info.UVMin[(int)Direction.NegZ].X, info.UVMax[(int)Direction.NegZ].Y));
         uvs.Add(info.UVMax[(int)Direction.NegZ]);
         uvs.Add(new Vector2(info.UVMax[(int)Direction.NegZ].X, info.UVMin[(int)Direction.NegZ].Y));
         uvs.Add(info.UVMin[(int)Direction.NegZ]);
-        
-        finishFace(info, new Vector3(0, 0, -1), normals, tris);
+
+        finishFace(new Vector3(0, 0, -1), normals, tris);
     }
     //facing the +x direction
-    private void addFacePosX(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void addFacePosX(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 1));
         verts.Add(origin + new Vector3(0, 1, 1));
         verts.Add(origin + new Vector3(0, 1, 0));
         verts.Add(origin + new Vector3(0, 0, 0));
-        
+
         uvs.Add(info.UVMax[(int)Direction.PosX]);
         uvs.Add(new Vector2(info.UVMax[(int)Direction.PosX].X, info.UVMin[(int)Direction.PosX].Y)); //2
         uvs.Add(info.UVMin[(int)Direction.PosX]);
         uvs.Add(new Vector2(info.UVMin[(int)Direction.PosX].X, info.UVMax[(int)Direction.PosX].Y)); //3
 
-
-        finishFace(info, new Vector3(1, 0, 0), normals, tris);
+        finishFace(new Vector3(1, 0, 0), normals, tris);
     }
     //facing the -x direction
-    private void addFaceNegX(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void addFaceNegX(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(1, 0, 0));
         verts.Add(origin + new Vector3(1, 1, 0));
         verts.Add(origin + new Vector3(1, 1, 1));
         verts.Add(origin + new Vector3(1, 0, 1));
-        
+
         uvs.Add(info.UVMax[(int)Direction.NegX]);
         uvs.Add(new Vector2(info.UVMax[(int)Direction.NegX].X, info.UVMin[(int)Direction.NegX].Y));
         uvs.Add(info.UVMin[(int)Direction.NegX]);
         uvs.Add(new Vector2(info.UVMin[(int)Direction.NegX].X, info.UVMax[(int)Direction.NegX].Y));
-        
 
-        finishFace(info, new Vector3(-1, 0, 0), normals, tris);
+        finishFace(new Vector3(-1, 0, 0), normals, tris);
     }
     //facing the +y direction
-    private void addFacePosY(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void addFacePosY(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 1, 0));
         verts.Add(origin + new Vector3(0, 1, 1));
@@ -343,10 +343,10 @@ public partial class Mesher : Node
         uvs.Add(info.UVMax[(int)Direction.PosY]);
         uvs.Add(new Vector2(info.UVMax[(int)Direction.PosY].X, info.UVMin[(int)Direction.PosY].Y));
 
-        finishFace(info, new Vector3(0, 1, 0), normals, tris);
+        finishFace(new Vector3(0, 1, 0), normals, tris);
     }
     //facing the -y direction
-    private void addFaceNegY(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void addFaceNegY(Vector3 origin, AtlasTextureInfo info, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
         verts.Add(origin + new Vector3(0, 0, 0));
         verts.Add(origin + new Vector3(1, 0, 0));
@@ -358,6 +358,6 @@ public partial class Mesher : Node
         uvs.Add(info.UVMax[(int)Direction.NegY]);
         uvs.Add(new Vector2(info.UVMin[(int)Direction.NegY].X, info.UVMax[(int)Direction.NegY].Y));
 
-        finishFace(info, new Vector3(0, -1, 0), normals, tris);
+        finishFace(new Vector3(0, -1, 0), normals, tris);
     }
 }

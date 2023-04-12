@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class Inventory
 {
     public ItemStack[] Items;
@@ -68,9 +69,7 @@ public partial class Inventory
 
     public void SwapItems(int a, int b)
     {
-        var tmp = Items[a];
-        Items[a] = Items[b];
-        Items[b] = tmp;
+        (Items[b], Items[a]) = (Items[a], Items[b]);
         OnUpdate?.Invoke(this);
     }
     public void SwapItems(int slot, Inventory other, int otherSlot)
@@ -126,7 +125,6 @@ public partial class Inventory
         OnUpdate?.Invoke(this);
         return true;
     }
-    
     //returns true if successful, false if invalid operation (cannot take one item type into another)
     //puts as many items as possible into the slot
     //caller may have to clean up from's item if we take all the items in the stack

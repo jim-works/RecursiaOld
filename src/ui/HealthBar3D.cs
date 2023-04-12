@@ -1,6 +1,7 @@
 using Godot;
 using System;
 
+namespace Recursia;
 public partial class HealthBar3D : Node3D
 {
     [Export] public HealthBar SubBar;

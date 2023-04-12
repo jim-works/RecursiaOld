@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class ItemSlotUI : Control
 {
     private TextureRect itemTex;
@@ -16,7 +17,9 @@ public partial class ItemSlotUI : Control
     public void DisplayItem(ItemStack stack)
     {
         itemTex.Texture = stack.Item?.Texture2D;
+        #pragma warning disable CA1305
         countLabel.Text = stack.Item == null ? "" : stack.Size.ToString();
+        #pragma warning restore CA1305
     }
 
     public void OnGUIInput(InputEvent e)

@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class PlayerUIAssignment : Node
 {
     [Export] public NodePath HealthBar;

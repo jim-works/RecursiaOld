@@ -1,12 +1,13 @@
 using Godot;
 using System.Collections.Generic;
 
+namespace Recursia;
 public class EntityCollection
 {
-    private World world;
-    private Dictionary<ChunkCoord, List<PhysicsObject>> physicsObjects = new();
-    private Dictionary<ChunkCoord, List<Combatant>> combatants = new ();
-    private List<Player> players = new List<Player>();
+    private readonly World world;
+    private readonly Dictionary<ChunkCoord, List<PhysicsObject>> physicsObjects = new();
+    private readonly Dictionary<ChunkCoord, List<Combatant>> combatants = new ();
+    private readonly List<Player> players = new();
 
     public IEnumerable<Player> Players => players;
 
@@ -70,8 +71,6 @@ public class EntityCollection
         }
     }
 
-
-
     //init runs before object is added to scene tree
     //if will handle registering if T : PhysicsObject/Combatant
     public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T> init=null) where T : Node3D
@@ -113,14 +112,18 @@ public class EntityCollection
         enemy = null;
         //TODO: only check chunks in range
         foreach (var l in combatants.Values)
-        foreach(var c in l)
         {
-            float sqrDist = (pos-c.GlobalPosition).LengthSquared();
-            if (sqrDist < minSqrDist && sqrDist < maxDist*maxDist && c.Team != team) {
-                minSqrDist = sqrDist;
-                enemy = c;
+            foreach (var c in l)
+            {
+                float sqrDist = (pos - c.GlobalPosition).LengthSquared();
+                if (sqrDist < minSqrDist && sqrDist < maxDist * maxDist && c.Team != team)
+                {
+                    minSqrDist = sqrDist;
+                    enemy = c;
+                }
             }
         }
+
         return enemy != null;
     }
     public IEnumerable<Combatant> GetEnemiesInRange(Vector3 pos, float range, Team team)
@@ -149,10 +152,12 @@ public class EntityCollection
     {
         //TODO: only check chunks in range
         foreach (var l in combatants.Values)
-        foreach (var c in l)
         {
-            if (c.Team == team) continue;
-            if (c.GetBox().IntersectsBox(box)) return c;
+            foreach (var c in l)
+            {
+                if (c.Team == team) continue;
+                if (c.GetBox().IntersectsBox(box)) return c;
+            }
         }
         return null;
     }

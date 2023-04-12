@@ -2,6 +2,7 @@ using Godot;
 using System.IO;
 using System.Runtime.CompilerServices;
 
+namespace Recursia;
 public partial class PhysicsObject : Node3D, ISerializable
 {
     private const int COLLISION_INTERVAL = 5; //physics updates per collision check
@@ -17,7 +18,7 @@ public partial class PhysicsObject : Node3D, ISerializable
     public float Mass = 1f;
     public Vector3 Velocity;
     [Export]
-    public Vector3 Gravity = new Vector3(0,-20,0);
+    public Vector3 Gravity = new(0,-20,0);
     [Export]
     public float AirResistance = 0.1f;
     [Export]
@@ -29,15 +30,15 @@ public partial class PhysicsObject : Node3D, ISerializable
     public event System.Action<PhysicsObject> OnExitTree;
 
     public ChunkCoord OldCoord;
-    public bool Registered = false;
+    public bool Registered;
 
     public bool Collides = true;
     public string ObjectType;
 
     protected Vector3 currentForce; //zeroed each physics update
-    protected int collisionDirections = 0; //updated each physics update, bitmask of Directions of current collision with world
+    protected int collisionDirections; //updated each physics update, bitmask of Directions of current collision with world
 
-    private int _updatesSinceCollision = 0;
+    private int _updatesSinceCollision;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box GetBox() => Box.FromCenter(GlobalPosition+LocalDirectionToWorld(ColliderOffset), Size);
@@ -47,11 +48,11 @@ public partial class PhysicsObject : Node3D, ISerializable
         GlobalPosition = InitialPosition;
         OldCoord = (ChunkCoord)GlobalPosition;
         if (!Registered) World.Entities.RegisterObject(this); //used for objects created in editor (ex player, patrick quack's limbs)
-        
+
         base._EnterTree();
     }
 
-    public override void _PhysicsProcess(double dt)
+    public override void _PhysicsProcess(double delta)
     {
         if (OldCoord != (ChunkCoord)GlobalPosition)
         {
@@ -60,13 +61,13 @@ public partial class PhysicsObject : Node3D, ISerializable
         }
         if (!PhysicsActive) return;
         AddConstantForce(-AirResistance*Velocity);
-        Velocity += currentForce*(float)dt/Mass;
+        Velocity += currentForce*(float)delta/Mass;
         if (Velocity.LengthSquared() > MaxSpeed*MaxSpeed) Velocity=Velocity.Normalized()*MaxSpeed;
         //GD.Print(Velocity);
         currentForce = Gravity*Mass;
-        if (Collides) doCollision(World, (float)dt);
+        if (Collides) doCollision(World, (float)delta);
 
-        GlobalPosition += Velocity*(float)dt;
+        GlobalPosition += Velocity*(float)delta;
     }
 
     public override void _ExitTree()
@@ -100,8 +101,6 @@ public partial class PhysicsObject : Node3D, ISerializable
     {
         _updatesSinceCollision++;
         if (_updatesSinceCollision > COLLISION_INTERVAL) _updatesSinceCollision = 0;
-        Vector3 oldV = Velocity;
-        int oldMask = collisionDirections;
         collisionDirections = 0;
         Vector3 frameVelocity = Velocity * dt; //this is the amount the object will move this update
         Vector3 postPosition = GlobalPosition;
@@ -118,7 +117,7 @@ public partial class PhysicsObject : Node3D, ISerializable
                 {
                     postPosition.Y = Mathf.CeilToInt(GlobalPosition.Y-Size.Y/2+y)+Size.Y/2;
                     Velocity.Y = 0;
-                    collisionDirections |= (1<<(int)Direction.NegY);
+                    collisionDirections |= 1<<(int)Direction.NegY;
                     break;
                 }
             }
@@ -132,7 +131,7 @@ public partial class PhysicsObject : Node3D, ISerializable
                 {
                     postPosition.Y = Mathf.FloorToInt(GlobalPosition.Y+Size.Y/2+y)-Size.Y/2;
                     Velocity.Y = 0;
-                    collisionDirections |= (1<<(int)Direction.PosY);
+                    collisionDirections |= 1<<(int)Direction.PosY;
                     break;
                 }
             }
@@ -148,7 +147,7 @@ public partial class PhysicsObject : Node3D, ISerializable
                 {
                     //postPosition.X = Mathf.CeilToInt(GlobalPosition.X-Size.X/2+x)+Size.X/2;
                     Velocity.X = 0;
-                    collisionDirections |= (1<<(int)Direction.NegX);
+                    collisionDirections |= 1<<(int)Direction.NegX;
                     break;
                 }
             }
@@ -162,7 +161,7 @@ public partial class PhysicsObject : Node3D, ISerializable
                 {
                     postPosition.X = Mathf.FloorToInt(GlobalPosition.X+Size.X/2+x)-Size.X/2;
                     Velocity.X = 0;
-                    collisionDirections |= (1<<(int)Direction.PosX);
+                    collisionDirections |= 1<<(int)Direction.PosX;
                     break;
                 }
             }
@@ -177,7 +176,7 @@ public partial class PhysicsObject : Node3D, ISerializable
                 {
                     //postPosition.Z = Mathf.CeilToInt(GlobalPosition.Z-Size.Z/2+z)+Size.Z/2;
                     Velocity.Z = 0;
-                    collisionDirections |= (1<<(int)Direction.NegZ);
+                    collisionDirections |= 1<<(int)Direction.NegZ;
                     break;
                 }
             }
@@ -191,7 +190,7 @@ public partial class PhysicsObject : Node3D, ISerializable
                 {
                     postPosition.Z = Mathf.FloorToInt(GlobalPosition.Z+Size.Z/2+z)-Size.Z/2;
                     Velocity.Z = 0;
-                    collisionDirections |= (1<<(int)Direction.PosZ);
+                    collisionDirections |= 1<<(int)Direction.PosZ;
                     break;
                 }
             }
@@ -200,11 +199,11 @@ public partial class PhysicsObject : Node3D, ISerializable
         GlobalPosition = postPosition;
     }
 
-    public virtual void Serialize(BinaryWriter writer)
+    public virtual void Serialize(BinaryWriter bw)
     {
-        writer.Write(ObjectType);
-        GlobalPosition.Serialize(writer);
-        Velocity.Serialize(writer);
+        bw.Write(ObjectType);
+        GlobalPosition.Serialize(bw);
+        Velocity.Serialize(bw);
     }
 
     public static T Deserialize<T>(World world, BinaryReader br) where T : PhysicsObject
@@ -214,8 +213,6 @@ public partial class PhysicsObject : Node3D, ISerializable
         initialPos.Deserialize(br);
         Vector3 initialV = Vector3.Zero;
         initialV.Deserialize(br);
-        return ObjectTypes.GetInstance<T>(world, type, initialPos, obj => {
-            obj.Velocity = initialV;
-        });
+        return ObjectTypes.GetInstance<T>(world, type, initialPos, obj => obj.Velocity = initialV);
     }
 }

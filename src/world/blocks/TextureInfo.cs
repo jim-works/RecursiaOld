@@ -1,4 +1,5 @@
-public partial class AtlasTextureInfo
+namespace Recursia;
+public class AtlasTextureInfo
 {
     public Godot.Vector2[] UVMin;
     public Godot.Vector2[] UVMax;

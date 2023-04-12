@@ -1,10 +1,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
+namespace Recursia;
 public class ChunkCollection
 {
     public event System.Action<Chunk> OnChunkOverwritten;
-    private ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
+    private readonly ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
 
     public Block GetBlock(BlockCoord coord)
     {
@@ -15,11 +16,10 @@ public class ChunkCollection
         return null;
     }
 
-
     public Chunk this[ChunkCoord index] {
         get { return chunks.TryGetValue(index, out Chunk c) ? c : null;}
         set {
-            chunks.AddOrUpdate(index, (coord) => value, (coord, old) => {
+            chunks.AddOrUpdate(index, (_) => value, (_, old) => {
                 OnChunkOverwritten?.Invoke(old);
                 return value;
             });

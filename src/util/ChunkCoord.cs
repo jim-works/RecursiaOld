@@ -1,5 +1,6 @@
 using System.IO;
 
+namespace Recursia;
 public struct ChunkCoord
 {
     public int X, Y,Z;
@@ -40,7 +41,7 @@ public struct ChunkCoord
     //returns positive modulus of each coordinate (ex: (-1,0,0)%16=(15,0,0))
     public static ChunkCoord operator %(ChunkCoord lhs, int rhs)
     {
-        ChunkCoord coords = new ChunkCoord(lhs.X%rhs,lhs.Y%rhs,lhs.Z%rhs);
+        ChunkCoord coords = new(lhs.X%rhs,lhs.Y%rhs,lhs.Z%rhs);
         coords.X = coords.X < 0 ? coords.X + rhs : coords.X;
         coords.Y = coords.Y < 0 ? coords.Y + rhs : coords.Y;
         coords.Z = coords.Z < 0 ? coords.Z + rhs : coords.Z;
@@ -71,11 +72,11 @@ public struct ChunkCoord
     }
     public override bool Equals(object obj)
     {
-        switch (obj)
+        return obj switch
         {
-            case ChunkCoord ChunkCoord: return ChunkCoord == this;
-            default: return false;
-        }
+            ChunkCoord ChunkCoord => ChunkCoord == this,
+            _ => false,
+        };
     }
     public override int GetHashCode()
     {

@@ -1,9 +1,10 @@
 using System.Linq;
 using Godot;
 
+namespace Recursia;
 public struct Spline
 {
-    private Vector2[] controlPoints;
+    private readonly Vector2[] controlPoints;
     public Spline(Vector2[] controlPoints)
     {
         this.controlPoints = controlPoints.OrderBy(p => p.X).ToArray();
@@ -20,6 +21,6 @@ public struct Spline
                 return Mathf.Lerp(controlPoints[i-1].Y, controlPoints[i].Y, t);
             }
         }
-        return controlPoints[controlPoints.Length-1].Y;
+        return controlPoints[^1].Y;
     }
 }

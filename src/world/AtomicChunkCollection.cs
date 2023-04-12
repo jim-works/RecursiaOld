@@ -2,11 +2,12 @@ using System.Collections.Generic;
 
 //Chunk collection where we either write all changes at once or none at all
 //Must call Commit() to apply changes. Will use World.BatchSetBlock()
+namespace Recursia;
 public class AtomicChunkCollection
 {
-    private Dictionary<ChunkCoord, Chunk> chunks = new ();
-    private Dictionary<BlockCoord, Block> changes = new();
-    private World world;
+    private readonly Dictionary<ChunkCoord, Chunk> chunks = new ();
+    private readonly Dictionary<BlockCoord, Block> changes = new();
+    private readonly World world;
     public AtomicChunkCollection(World world)
     {
         this.world = world;
@@ -15,7 +16,7 @@ public class AtomicChunkCollection
     //returns true if successful, false if destination chunk isn't present in the collection
     public bool SetBlock(BlockCoord coord, Block to)
     {
-        if (TryGetValue((ChunkCoord)coord, out Chunk c))
+        if (TryGetValue((ChunkCoord)coord, out Chunk _))
         {
             changes.Add(coord, to);
             return true;
@@ -43,7 +44,6 @@ public class AtomicChunkCollection
         }
         return null;
     }
-
 
     public Chunk this[ChunkCoord index] {
         get { return chunks.TryGetValue(index, out Chunk c) ? c : null;}

@@ -1,6 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
+namespace Recursia;
 public partial class ChainStriker : Combatant
 {
     [Export]
@@ -13,8 +14,8 @@ public partial class ChainStriker : Combatant
     public double AttackInterval = 3;
     [Export] public float AggroRange = 250;
 
-    private double attackTimer = 0;
-    private List<Combatant> links = new List<Combatant>();
+    private double attackTimer;
+    private readonly List<Combatant> links = new();
 
     public override void _Ready()
     {

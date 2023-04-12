@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class Projectile : PhysicsObject
 {
     [Export]
@@ -35,7 +36,7 @@ public partial class Projectile : PhysicsObject
 
     protected virtual void onHit(Combatant c)
     {
-        if (c!= null) c.TakeDamage(new Damage{Amount=Damage,Team=team});
+        c?.TakeDamage(new Damage{Amount=Damage,Team=team});
         QueueFree();
     }
 }

@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class SegmentedCombatantChild : Combatant
 {
     [Export] public NodePath ParentPath;

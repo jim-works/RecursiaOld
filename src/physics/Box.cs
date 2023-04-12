@@ -2,6 +2,7 @@ using Godot;
 using System.Runtime.CompilerServices;
 
 //Axis-Aligned Bounding Box
+namespace Recursia;
 public struct Box
 {
     public Vector3 Corner;
@@ -38,5 +39,4 @@ public struct Box
             && Corner.Y <= other.Corner.Y+other.Size.Y && Corner.Y+Size.Y >= other.Corner.Y
             && Corner.Z <= other.Corner.Z+other.Size.Z && Corner.Z+Size.Z >= other.Corner.Z;
     }
-
 }

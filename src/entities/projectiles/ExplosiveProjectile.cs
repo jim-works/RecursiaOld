@@ -1,13 +1,14 @@
 using Godot;
 
+namespace Recursia;
 public partial class ExplosiveProjectile : Projectile
 {
     [Export] public float ExplosionSize = 10;
     [Export] public float FlingFactor = 1;
     [Export] public AudioStream ExplosionSound;
     [Export] public NodePath AudioPlayerPath;
-    private bool exploded = false;
-    private bool dying = false;
+    private bool exploded;
+    private bool dying;
     private double dieTime = 2;
     private AudioStreamPlayer3D audioStreamPlayer;
 
@@ -36,7 +37,7 @@ public partial class ExplosiveProjectile : Projectile
     {
         if (exploded) return;
         Explode();
-        if (c!= null) c.TakeDamage(new Damage{Amount=Damage,Team=team});
+        c?.TakeDamage(new Damage{Amount=Damage,Team=team});
     }
     public void Explode()
     {

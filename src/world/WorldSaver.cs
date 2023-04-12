@@ -13,6 +13,7 @@ using System.Linq;
 //-1,0,0.group -> group containing chunks from -GROUP_SIZE,0,0 through -1,0,0
 //xxx.dat contains info like region origin, level, structures, etc
 //if the region has level < Region.ATOMIC_LOAD_LEVEL, we serialize the entire region and all of its children into the .dat file
+namespace Recursia;
 public partial class WorldSaver : Node
 {
     [Export] public double SaveIntervalSeconds = 5;
@@ -136,7 +137,7 @@ public partial class WorldSaver : Node
         //copy to avoid race
         try {
         KeyValuePair<ChunkCoord, Action<Chunk>>[] coords = loadQueue.ToArray();
-        List<Chunk> results = new List<Chunk>();
+        List<Chunk> results = new();
         sql.LoadChunks(coords.Select(kvp => kvp.Key), results);
         for (int i = 0; i < coords.Length; i++)
         {
@@ -156,7 +157,7 @@ public partial class WorldSaver : Node
             }
         }
         } catch (Exception e) {
-            Godot.GD.Print(e);
+            GD.Print(e);
         }
     }
-} 
+}

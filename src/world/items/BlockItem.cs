@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class BlockItem : Item
 {
     public Block Placing;
@@ -17,8 +18,7 @@ public partial class BlockItem : Item
 
     public override bool Equals(object obj)
     {
-        if (obj is BlockItem other && other.Placing == Placing && other.Reach == Reach) return true;
-        return false;
+        return obj is BlockItem other && other.Placing == Placing && other.Reach == Reach;
     }
 
     public override int GetHashCode()

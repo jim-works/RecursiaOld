@@ -1,3 +1,4 @@
+namespace Recursia;
 public enum ChunkGenerationState
 {
     UNGENERATED = 0,

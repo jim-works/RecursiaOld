@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class BulletItem : AmmoItem
 {
     [Export] public PackedScene ProjectileScene {get; set;}

@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using Godot;
 
+namespace Recursia;
 public static class SphereShaper
 {
     public static void Shape3D(World world, Vector3 origin, float strength)
     {
-        BlockCoord minBounds = new BlockCoord((int)(origin.X-strength),(int)(origin.Y-strength),(int)(origin.Z-strength));
-        BlockCoord maxBounds = new BlockCoord((int)(origin.X + strength), (int)(origin.Y + strength), (int)(origin.Z + strength));
+        BlockCoord minBounds = new((int)(origin.X-strength),(int)(origin.Y-strength),(int)(origin.Z-strength));
+        BlockCoord maxBounds = new((int)(origin.X + strength), (int)(origin.Y + strength), (int)(origin.Z + strength));
         BlockCoord originInt = (BlockCoord)origin;
         world.BatchSetBlock((setter) =>
         {
@@ -16,7 +17,7 @@ public static class SphereShaper
                 {
                     for (int z = minBounds.Z; z < maxBounds.Z; z++)
                     {
-                        BlockCoord p = new BlockCoord(x, y, z);
+                        BlockCoord p = new(x, y, z);
                         float sqrDist = (p - originInt).sqrMag();
                         if (sqrDist > strength * strength) continue; //outside of blast radius 
                         setter(p, null);
@@ -24,6 +25,5 @@ public static class SphereShaper
                 }
             }
         });
-
     }
 }

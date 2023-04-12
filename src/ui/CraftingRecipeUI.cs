@@ -1,6 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
+namespace Recursia;
 public partial class CraftingRecipeUI : Control
 {
     [Export]
@@ -9,12 +10,12 @@ public partial class CraftingRecipeUI : Control
     public int Padding = 2;
     [Export]
     public int SlotSizePx = 64;
-    private List<ItemSlotUI> slots = new List<ItemSlotUI>();
+    private readonly List<ItemSlotUI> slots = new();
     private Player player;
     private Recipe displaying;
 
     private float getHeight(int rows) => rows*SlotSizePx+(rows+1)*Padding;
-    
+
     //returns the height of the container after displaying everything
     //TODO: pooling
     public float DisplayRecipe(Recipe r)
@@ -34,7 +35,7 @@ public partial class CraftingRecipeUI : Control
         //products
         productsLabel.Position = new Vector2(productsLabel.Position.X, offsetY+getHeight(endrow+1)+Padding);
         offsetY += productsLabel.Size.Y+Padding*2;
-        endrow = displayList(r.Product, new Vector2(0,offsetY), endrow+1, (b) => craft());
+        endrow = displayList(r.Product, new Vector2(0,offsetY), endrow+1, (_) => craft());
         Size = new Vector2(Size.X, offsetY + getHeight(endrow+1)+Padding);
         return Size.Y;
     }
@@ -51,7 +52,6 @@ public partial class CraftingRecipeUI : Control
             ItemSlotUI slot = ItemSlotUI.Instantiate<ItemSlotUI>();
             AddChild(slot);
             slot.Position = new Vector2(offset.X+column*SlotSizePx+(column+1)*Padding, offset.Y+getHeight(row));
-            int idx = i;
             if (onclick != null) slot.OnClick += onclick;
             slot.DisplayItem(items[i]);
             slots.Add(slot);

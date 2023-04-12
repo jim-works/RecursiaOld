@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using MathNet.Numerics.Distributions;
 using Godot;
 
+namespace Recursia;
 public class LayeredNoise
 {
     private struct Layer
@@ -10,9 +11,9 @@ public class LayeredNoise
         public Vector3 freq;
         public float amp;
     }
-    private List<Layer> layers = new List<Layer>();
-    private float sumNoiseMagnitude = 0;
-    public int Seed {get; private set;}
+    private readonly List<Layer> layers = new();
+    private float sumNoiseMagnitude;
+    public int Seed { get; }
     private float variance;
 
     public LayeredNoise(int seed = 1337)
@@ -35,7 +36,7 @@ public class LayeredNoise
     }
     public void AddSumLayers(float baseFreq, float freqMult, float scaleMult, int octaves)
     {
-        FastNoiseLite fn = new FastNoiseLite(Seed);
+        FastNoiseLite fn = new(Seed);
         fn.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
         AddLayers(fn, octaves, baseFreq*Vector3.One, freqMult, 1, scaleMult);
     }

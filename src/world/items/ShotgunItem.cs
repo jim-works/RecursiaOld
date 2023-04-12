@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class ShotgunItem : GunItem
 {
     [Export] public float Spread = 0.05f;
@@ -12,6 +13,5 @@ public partial class ShotgunItem : GunItem
             Vector3 randDir = new Vector3(dir.X+(2*GD.Randf()+1)*Spread,dir.Y+(2*GD.Randf()+1)*Spread,dir.Z+(2*GD.Randf()+1)*Spread).Normalized();
             bullet.Fire(position, randDir*ShootSpeed, user, this);
         }
-        
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 
+namespace Recursia;
 public partial class Recipe
 {
     public List<ItemStack> Ingredients {get; private set;}

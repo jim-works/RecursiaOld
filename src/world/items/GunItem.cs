@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class GunItem : WeaponItem
 {
     [Export] public float ShootSpeed = 50;

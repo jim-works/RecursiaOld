@@ -1,6 +1,7 @@
 using Godot;
 using System.Collections.Generic;
 
+namespace Recursia;
 public partial class InventoryUI : Control
 {
     [Export]
@@ -9,10 +10,10 @@ public partial class InventoryUI : Control
     public int Padding = 2;
     [Export]
     public int SlotSizePx = 64;
-    private Inventory tracking = null;
-    private List<ItemSlotUI> slots = new List<ItemSlotUI>();
+    private Inventory tracking;
+    private readonly List<ItemSlotUI> slots = new();
     private Player player;
-    
+
     public void TrackInventory(Inventory inv)
     {
         if (tracking != null) tracking.OnUpdate -= onInventoryUpdate;

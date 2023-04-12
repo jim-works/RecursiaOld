@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class Settings : Node
 {
     [Signal] public delegate void on_pauseEventHandler();
@@ -7,7 +8,7 @@ public partial class Settings : Node
 
     public const int SAVE_FORMAT_VERSION = 1;
 
-    public static bool Paused = false;
+    public static bool Paused {get; set;}
 
     public override void _Ready()
     {

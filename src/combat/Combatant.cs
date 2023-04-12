@@ -1,10 +1,11 @@
 using Godot;
 
+namespace Recursia;
 public partial class Combatant : PhysicsObject
 {
     private float health;
     private float maxHealth;
-    public Team Team = null;
+    public Team Team;
     [Export] public string InitialTeamName;
     [Export] public float InitialHealth;
     [Export] public double InvincibilitySeconds = 0.001f; //should be 1 frame
@@ -14,14 +15,14 @@ public partial class Combatant : PhysicsObject
     public Inventory Inventory;
     public double ItemCooldown;
 
-    private double invicinibilityTimer = 0;
+    private double invicinibilityTimer;
     private AudioStreamPlayer3D audioStreamPlayer;
 
     public override void _Ready()
     {
         base._Ready();
         audioStreamPlayer = GetNodeOrNull<AudioStreamPlayer3D>(AudioPlayer);
-        
+
         if (Team == null && !string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
         if (InitialHealth > 0) {
             maxHealth = InitialHealth;
@@ -41,7 +42,7 @@ public partial class Combatant : PhysicsObject
                 for (int z = -1; z <= 1; z++)
                 {
                     Block b = World.GetBlock((BlockCoord)GlobalPosition+new BlockCoord(x,y,z));
-                    if (b != null && b.Name == "lava")
+                    if (b?.Name == "lava")
                     {
                         TakeDamage(new Damage{
                             Amount=1
@@ -79,7 +80,7 @@ public partial class Combatant : PhysicsObject
         health = Mathf.Max(0,health-damage.Amount);
         GD.Print($"{Name} took {damage.Amount} damage. Health={health}");
         if (health <= 0) Die();
-    } 
+    }
     public virtual void Die()
     {
         QueueFree();

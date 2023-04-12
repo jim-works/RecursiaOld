@@ -5,9 +5,10 @@ using System.IO.Compression;
 using System.Threading.Tasks;
 using System;
 
-public class SQLInterface
+namespace Recursia;
+public class SQLInterface : IDisposable
 {
-    private SQLiteConnection conn;
+    private readonly SQLiteConnection conn;
     private const string createChunkTable = @"
         CREATE TABLE chunks (
             x INTEGER NOT NULL,
@@ -32,10 +33,10 @@ public class SQLInterface
     ";
     private const string worldFormatVersion = "1";
 
-    private SQLiteCommand saveChunkCommand;
-    private SQLiteCommand loadChunkCommand;
-    private SQLiteCommand savePlayerCommand;
-    private SQLiteCommand loadPlayerCommand;
+    private readonly SQLiteCommand saveChunkCommand;
+    private readonly SQLiteCommand loadChunkCommand;
+    private readonly SQLiteCommand savePlayerCommand;
+    private readonly SQLiteCommand loadPlayerCommand;
 
     public SQLInterface(string dbpath)
     {
@@ -93,16 +94,12 @@ public class SQLInterface
         loadPlayerCommand.Parameters.Add("@name", System.Data.DbType.String);
 
         //print number of chunks in database
-        using (SQLiteCommand command = conn.CreateCommand())
+        using SQLiteCommand command = conn.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM chunks";
+        using SQLiteDataReader reader = command.ExecuteReader();
+        if (reader.Read())
         {
-            command.CommandText = "SELECT COUNT(*) FROM chunks";
-            using (SQLiteDataReader reader = command.ExecuteReader())
-            {
-                if (reader.Read())
-                {
-                    Godot.GD.Print("Database contains " + reader.GetInt32(0) + " chunks");
-                }
-            }
+            Godot.GD.Print("Database contains " + reader.GetInt32(0) + " chunks");
         }
     }
 
@@ -110,21 +107,16 @@ public class SQLInterface
     {
         try
         {
-            using (SQLiteCommand command = conn.CreateCommand())
+            using SQLiteCommand command = conn.CreateCommand();
+            command.CommandText = "SELECT value FROM worldInfo WHERE key = 'formatVersion'";
+            using SQLiteDataReader reader = command.ExecuteReader();
+            if (reader.Read())
             {
-                command.CommandText = "SELECT value FROM worldInfo WHERE key = 'formatVersion'";
-                using (SQLiteDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        return (string)reader["value"] == worldFormatVersion;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-
-                }
+                return (string)reader["value"] == worldFormatVersion;
+            }
+            else
+            {
+                return false;
             }
         }
         catch (SQLiteException e)
@@ -136,20 +128,18 @@ public class SQLInterface
     private void initializeTables()
     {
         Godot.GD.Print("Initializing tables");
-        using (SQLiteCommand command = conn.CreateCommand())
-        {
-            command.CommandText = createChunkTable;
-            command.ExecuteNonQuery();
-            command.CommandText = createWorldInfoTable;
-            command.ExecuteNonQuery();
-            command.CommandText = @"
+        using SQLiteCommand command = conn.CreateCommand();
+        command.CommandText = createChunkTable;
+        command.ExecuteNonQuery();
+        command.CommandText = createWorldInfoTable;
+        command.ExecuteNonQuery();
+        command.CommandText = @"
                 INSERT INTO worldInfo (key, value)
                 VALUES ('formatVersion', @formatVersion)";
-            command.Parameters.AddWithValue("@formatVersion", worldFormatVersion);
-            command.ExecuteNonQuery();
-            command.CommandText = createPlayersTable;
-            command.ExecuteNonQuery();
-        }
+        command.Parameters.AddWithValue("@formatVersion", worldFormatVersion);
+        command.ExecuteNonQuery();
+        command.CommandText = createPlayersTable;
+        command.ExecuteNonQuery();
     }
 
     public void Close()
@@ -161,24 +151,22 @@ public class SQLInterface
 
     public void SaveChunks(Func<Chunk> getChunk)
     {
-        using (SQLiteTransaction transaction = conn.BeginTransaction())
+        using SQLiteTransaction transaction = conn.BeginTransaction();
+        while (getChunk() is Chunk chunk)
         {
-            while (getChunk() is Chunk chunk)
+            saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
+            saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;
+            saveChunkCommand.Parameters["@z"].Value = chunk.Position.Z;
+            using (MemoryStream ms = new())
+            using (BinaryWriter bw = new(ms))
+            using (GZipStream gz = new(ms, CompressionLevel.Fastest))
             {
-                saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
-                saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;
-                saveChunkCommand.Parameters["@z"].Value = chunk.Position.Z;
-                using (MemoryStream ms = new MemoryStream())
-                using (BinaryWriter bw = new BinaryWriter(ms))
-                using (GZipStream gz = new GZipStream(ms, CompressionLevel.Fastest))
-                {
-                    chunk.Serialize(bw);
-                    saveChunkCommand.Parameters["@terrainData"].Value = ms.ToArray();
-                }
-                saveChunkCommand.ExecuteNonQuery();
+                chunk.Serialize(bw);
+                saveChunkCommand.Parameters["@terrainData"].Value = ms.ToArray();
             }
-            transaction.Commit();
+            saveChunkCommand.ExecuteNonQuery();
         }
+        transaction.Commit();
     }
 
     public void LoadChunks(IEnumerable<ChunkCoord> chunks, List<Chunk> placeInto)
@@ -194,34 +182,30 @@ public class SQLInterface
                 placeInto.Add(null);
                 continue;
             }
-            using (MemoryStream ms = new MemoryStream((byte[])result))
-            using (GZipStream gz = new GZipStream(ms, CompressionMode.Decompress))
-            using (BinaryReader br = new BinaryReader(ms))
-            {
-                Chunk chunk = Chunk.Deserialize(br);
-                placeInto.Add(chunk);
-            }
+            using MemoryStream ms = new((byte[])result);
+            using GZipStream gz = new(ms, CompressionMode.Decompress);
+            using BinaryReader br = new(ms);
+            Chunk chunk = Chunk.Deserialize(br);
+            placeInto.Add(chunk);
         }
     }
 
     public void SavePlayers(IEnumerable<Player> players)
     {
-        using (SQLiteTransaction transaction = conn.BeginTransaction())
+        using SQLiteTransaction transaction = conn.BeginTransaction();
+        foreach (var p in players)
         {
-            foreach (var p in players)
+            savePlayerCommand.Parameters["@name"].Value = p.Name;
+            using (MemoryStream ms = new())
+            using (BinaryWriter bw = new(ms))
+            using (GZipStream gz = new(ms, CompressionLevel.Fastest))
             {
-                savePlayerCommand.Parameters["@name"].Value = p.Name;
-                using (MemoryStream ms = new MemoryStream())
-                using (BinaryWriter bw = new BinaryWriter(ms))
-                using (GZipStream gz = new GZipStream(ms, CompressionLevel.Fastest))
-                {
-                    p.Serialize(bw);
-                    savePlayerCommand.Parameters["@data"].Value = ms.ToArray();
-                }
-                savePlayerCommand.ExecuteNonQuery();
+                p.Serialize(bw);
+                savePlayerCommand.Parameters["@data"].Value = ms.ToArray();
             }
-            transaction.Commit();
+            savePlayerCommand.ExecuteNonQuery();
         }
+        transaction.Commit();
     }
     public void LoadPlayers(World world, IEnumerable<string> names, List<Player> placeInto)
     {
@@ -234,13 +218,17 @@ public class SQLInterface
                 placeInto.Add(null);
                 continue;
             }
-            using (MemoryStream ms = new MemoryStream((byte[])result))
-            using (GZipStream gz = new GZipStream(ms, CompressionMode.Decompress))
-            using (BinaryReader br = new BinaryReader(ms))
-            {
-                Player player = Player.Deserialize(world, br);
-                placeInto.Add(player);
-            }
+            using MemoryStream ms = new((byte[])result);
+            using GZipStream gz = new(ms, CompressionMode.Decompress);
+            using BinaryReader br = new(ms);
+            Player player = Player.Deserialize(world, br);
+            placeInto.Add(player);
         }
+    }
+
+    public void Dispose()
+    {
+        conn.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

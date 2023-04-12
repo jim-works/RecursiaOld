@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using Godot;
 
+namespace Recursia;
 public static class BlockTypes
 {
-    private static Dictionary<string, System.Func<Block>> blocks = new Dictionary<string, System.Func<Block>>();
+    private static readonly Dictionary<string, System.Func<Block>> blocks = new();
 
     public static Block Get(string blockName) {
         if (blocks.TryGetValue(blockName, out var b)) return b();

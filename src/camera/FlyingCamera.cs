@@ -2,6 +2,7 @@ using Godot;
 using Godot.Collections;
 using System.Collections.Generic;
 
+namespace Recursia;
 public partial class FlyingCamera : Node3D
 {
     [Export]
@@ -23,15 +24,15 @@ public partial class FlyingCamera : Node3D
         world = GetParent<World>();
         base._Ready();
     }
-    public override void _Input(InputEvent e)
+    public override void _Input(InputEvent @event)
     {
-        if (e is InputEventMouseMotion m) {
+        if (@event is InputEventMouseMotion m) {
             Vector2 d = m.Relative;
             yaw = (yaw - LookSensitivity*d.X) % 360;
             pitch = System.Math.Min(System.Math.Max(pitch-LookSensitivity*d.Y,-90),90);
             RotationDegrees = new Vector3(pitch,yaw,0);
         }
-        base._Input(e);
+        base._Input(@event);
     }
 
     public override void _Process(double delta)
@@ -52,7 +53,7 @@ public partial class FlyingCamera : Node3D
                 SphereShaper.Shape3D(world, hit.HitPos, 25);
             }
         }
-        
+
         base._Process(delta);
     }
     private void move(float delta)

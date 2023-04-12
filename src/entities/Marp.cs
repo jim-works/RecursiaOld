@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class Marp : BipedalCombatant
 {
     [Export] public float WalkSpeed = 10;
@@ -14,9 +15,9 @@ public partial class Marp : BipedalCombatant
 
     [Export] public Node3D CarryTarget;
 
-    private Combatant carrying = null;
+    private Combatant carrying;
     private AnimationNodeStateMachinePlayback stateMachine;
-    private double stateSwitchTimer = 0;
+    private double stateSwitchTimer;
 
     public override void _Ready()
     {
@@ -24,7 +25,7 @@ public partial class Marp : BipedalCombatant
         stateMachine = (AnimationNodeStateMachinePlayback)animationTree.Get("parameters/playback");
     }
 
-    public override void _PhysicsProcess(double dt)
+    public override void _PhysicsProcess(double delta)
     {
         if (StateSwitchInterval <= stateSwitchTimer)
         {
@@ -34,18 +35,18 @@ public partial class Marp : BipedalCombatant
                 stateSwitchTimer = 0;
             }
         }
-        stateSwitchTimer += dt;
+        stateSwitchTimer += delta;
         if (stateMachine.GetCurrentNode() == WalkBlendNode)
         {
-            doWalk((float)dt);
+            doWalk();
         }
-        base._PhysicsProcess(dt);
+        base._PhysicsProcess(delta);
     }
-    private void doWalk(float dt)
+    private void doWalk()
     {
         if (IsInstanceValid(carrying))
         {
-            Vector3 carryDest = new Vector3(0,0,WalkSpeed);
+            Vector3 carryDest = new(0,0,WalkSpeed);
             if (IsInstanceValid(CarryTarget)) carryDest = (CarryTarget.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
             Velocity = new Vector3(carryDest.X, Velocity.Y, carryDest.Z);
             carrying.GlobalPosition = GlobalPosition+new Vector3(0,2,0);
@@ -53,12 +54,12 @@ public partial class Marp : BipedalCombatant
             if (CarryTime <= stateSwitchTimer) carrying = null;
             return;
         }
-        
+
         if (!World.Entities.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest)) return;
         if (closest == null) return;
         Vector3 dv = (closest.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.X, Velocity.Y, dv.Z);
-        Vector3 dp = (closest.GlobalPosition-GlobalPosition);
+        Vector3 dp = closest.GlobalPosition-GlobalPosition;
         if (new Vector3(dp.X,0,dp.Z).LengthSquared() < 2 && dp.Y < 4)
         {
             if (dp.Y > 3)

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using Godot;
+namespace Recursia;
 public static class ObjectTypes
 {
-    private static Dictionary<string, PackedScene> objects = new Dictionary<string, PackedScene>();
+    private static readonly Dictionary<string, PackedScene> objects = new();
     public static T GetInstance<T>(World world, string type, Vector3 position, System.Action<T> init = null) where T : Node3D {
         if (objects.TryGetValue(type, out var b)) {
             T obj = world.Entities.SpawnObject<T>(b, position, init);

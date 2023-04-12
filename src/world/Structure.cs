@@ -1,4 +1,5 @@
-public partial class Structure
+namespace Recursia;
+public class WorldStructure
 {
     public string Name;
     public BlockCoord Position;

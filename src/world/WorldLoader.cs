@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using Godot;
 
+namespace Recursia;
 public class WorldLoader
 {
-    private World world;
-    private List<Node3D> chunkLoaders = new List<Node3D>();
-    private int loadDistance = 10;
-    private HashSet<ChunkCoord> loadedChunks = new HashSet<ChunkCoord>();
-    private List<ChunkCoord> toUnload = new List<ChunkCoord>();
+    private readonly World world;
+    private readonly List<Node3D> chunkLoaders = new();
+    private readonly int loadDistance = 10;
+    private readonly HashSet<ChunkCoord> loadedChunks = new();
+    private readonly List<ChunkCoord> toUnload = new();
 
     public WorldLoader(World world)
     {

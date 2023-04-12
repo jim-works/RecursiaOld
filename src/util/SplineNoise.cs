@@ -1,10 +1,11 @@
 using Godot;
 using System.Linq;
 
+namespace Recursia;
 public class SplineNoise
 {
-    private LayeredNoise noise;
-    private Spline spline;
+    private readonly LayeredNoise noise;
+    private readonly Spline spline;
     public SplineNoise(LayeredNoise noise, Spline spline)
     {
         this.noise = noise;

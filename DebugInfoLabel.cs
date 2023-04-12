@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System;
 using System.Text;
 
+namespace Recursia;
 public partial class DebugInfoLabel : Label
 {
-	public static List<Func<Vector3,string>> Inputs = new();	
-	private StringBuilder sb = new();
+	public static readonly List<Func<Vector3,string>> Inputs = new();
+	private readonly StringBuilder sb = new();
 
 	public override void _Process(double delta)
 	{
@@ -14,7 +15,7 @@ public partial class DebugInfoLabel : Label
 		foreach (var func in Inputs)
 		{
 			sb.Append(func(Player.LocalPlayer.GlobalPosition));
-			sb.Append("\n");
+			sb.Append('\n');
 		}
 		Text = sb.ToString();
 	}

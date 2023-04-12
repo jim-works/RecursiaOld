@@ -1,5 +1,6 @@
 using Godot;
 
+namespace Recursia;
 public partial class TrackingProjectile : Projectile
 {
     [Export] public double TrackingDelay;
@@ -18,7 +19,7 @@ public partial class TrackingProjectile : Projectile
         {
             Velocity = launchSpeed*TrackSpeedMult*(target.GlobalPosition-GlobalPosition).Normalized();
         }
-        
+
         base._PhysicsProcess(delta);
     }
 }

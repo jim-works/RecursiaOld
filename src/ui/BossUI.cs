@@ -1,9 +1,10 @@
 using Godot;
 using System;
 
+namespace Recursia;
 public partial class BossUI : Control
 {
-    public static BossUI Singleton;
+    public static BossUI Singleton {get; private set;}
 
     [Export] public NodePath HealthBarPath;
     [Export] public NodePath NameLabelPath;

@@ -1,16 +1,17 @@
 using Godot;
 using System;
 
+namespace Recursia;
 public partial class BlockFactoryItem : Item
 {
     [Export] public string BlockName;
     [Export] public float Reach = 10;
-    public Action<Block> InitPlaced = null;
+    public Action<Block> InitPlaced;
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         BlockcastHit hit = user.World.Blockcast(position, dir*Reach);
-        if (hit != null && hit.Normal != Vector3.Zero) { //zero normal means we are inside the block we are gonna place
+        if (hit?.Normal != Vector3.Zero) { //zero normal means we are inside the block we are gonna place
             Block placing = BlockTypes.Get(BlockName);
             InitPlaced?.Invoke(placing);
             user.World.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, placing);
@@ -21,8 +22,7 @@ public partial class BlockFactoryItem : Item
 
     public override bool Equals(object obj)
     {
-        if (obj is BlockFactoryItem other && other.BlockName == BlockName && other.Reach == Reach) return true;
-        return false;
+        return obj is BlockFactoryItem other && other.BlockName == BlockName && other.Reach == Reach;
     }
 
     public override int GetHashCode()

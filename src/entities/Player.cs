@@ -1,21 +1,22 @@
 using System.IO;
 using Godot;
 
+namespace Recursia;
 public partial class Player : Combatant
 {
-    public static Player LocalPlayer;
+    public static Player LocalPlayer {get; private set;}
     public static event System.Action<Player> OnLocalPlayerAssigned;
     [Export] public float Reach = 100;
     [Export] public float MoveSpeed = 10;
     [Export] public float JumpHeight = 10;
-    [Export] public Vector3 CameraOffset = new Vector3(0, 0.7f, 0);
+    [Export] public Vector3 CameraOffset = new(0, 0.7f, 0);
     [Export] public int InitialInventorySize = 10;
     [Export] public int JumpCount = 1;
 
-    public Inventory MouseInventory = new Inventory(1);
+    public Inventory MouseInventory = new(1);
 
-    private int SelectedSlot = 0;
-    private int jumpsLeft = 0;
+    private int SelectedSlot;
+    private int jumpsLeft;
 
     public override void _Ready()
     {
@@ -26,8 +27,15 @@ public partial class Player : Combatant
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.GetBlockItem("lava"), Size = 1 });
         BlockFactoryItem lootBlockItem = ItemTypes.GetBlockItem("loot");
-        lootBlockItem.InitPlaced = (Block b) => {
-            (b as LootBlock).Drops = new ItemStack[] { new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 } };
+        lootBlockItem.InitPlaced = (Block block) => {
+            if (block is LootBlock b)
+            {
+                 b.Drops = new ItemStack[] { new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 }};
+            }
+            else
+            {
+                GD.PushError("Initplaced passed a block which is not a loot block!");
+            }
         };
         Inventory.CopyItem(new ItemStack {Item = lootBlockItem, Size = 1});
         World.Loader.AddChunkLoader(this);
@@ -47,24 +55,27 @@ public partial class Player : Combatant
     public override void _Input(InputEvent @event)
     {
         if (@event is InputEventKey key && key.Pressed)
-            if ((Key)key.Keycode == Key.Key1)
+        {
+            if (key.Keycode == Key.Key1)
             {
                 SelectedSlot = 0;
                 GD.Print("Selected slot 0!");
             }
-            else if ((Key)key.Keycode == Key.Key2)
+            else if (key.Keycode == Key.Key2)
             {
                 SelectedSlot = 1;
                 GD.Print("Selected slot 1!");
             }
-            else if ((Key)key.Keycode == Key.P)
+            else if (key.Keycode == Key.P)
             {
                 LootBlock b = (LootBlock)BlockTypes.Get("loot");
                 b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=1}};
                 World.SetBlock((BlockCoord)GlobalPosition, b);
-            } else if ((Key)key.Keycode == Key.T) {
+            } else if (key.Keycode == Key.T) {
                 Collides = !Collides;
             }
+        }
+
         base._Input(@event);
     }
 
@@ -105,7 +116,7 @@ public partial class Player : Combatant
     public void Use(Vector3 dir)
     {
         BlockcastHit hit = World.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
-        if (hit != null && hit.Block.Usable)
+        if (hit?.Block.Usable == true)
         {
             hit.Block.OnUse(this, hit.BlockPos);
         }
@@ -132,8 +143,8 @@ public partial class Player : Combatant
     {
         return PhysicsObject.Deserialize<Player>(world, br);
     }
-    public override void Serialize(BinaryWriter writer)
-    {
-        base.Serialize(writer);
-    }
+    // public override void Serialize(BinaryWriter writer)
+    // {
+    //     base.Serialize(writer);
+    // }
 }
