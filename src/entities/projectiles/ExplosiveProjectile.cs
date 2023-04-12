@@ -43,19 +43,19 @@ public partial class ExplosiveProjectile : Projectile
         audioStreamPlayer.Stream = ExplosionSound;
         audioStreamPlayer.Play();
         exploded = true;
-        SphereShaper.Shape3D(World.Singleton, GlobalPosition, ExplosionSize);
+        SphereShaper.Shape3D(World, GlobalPosition, ExplosionSize);
         GpuParticles3D TrailParticles = GetNode<GpuParticles3D>("Trail");
         GpuParticles3D ExplosionParticles = GetNode<GpuParticles3D>("Explosion");
         ExplosionParticles.Emitting = true;
         TrailParticles.Emitting = false;
         PhysicsActive = false;
         dying = true;
-        foreach(PhysicsObject obj in World.Singleton.GetPhysicsObjectsInRange(GlobalPosition,ExplosionSize))
+        foreach(PhysicsObject obj in World.Entities.GetPhysicsObjectsInRange(GlobalPosition,ExplosionSize))
         {
             if (obj == this) continue;
             obj.AddImpulse((Vector3.Up+(obj.GlobalPosition-GlobalPosition).Normalized())*FlingFactor);
         }
-        foreach(Combatant obj in World.Singleton.GetEnemiesInRange(GlobalPosition,ExplosionSize,team))
+        foreach(Combatant obj in World.Entities.GetEnemiesInRange(GlobalPosition,ExplosionSize,team))
         {
             obj.TakeDamage(new Damage{Team=team,Amount=Damage});
         }

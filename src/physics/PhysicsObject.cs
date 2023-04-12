@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 public partial class PhysicsObject : Node3D, ISerializable
 {
     private const int COLLISION_INTERVAL = 5; //physics updates per collision check
+    public World World;
     [Export]
     public Vector3 Size;
     [Export] public Vector3 ColliderOffset;
@@ -45,7 +46,7 @@ public partial class PhysicsObject : Node3D, ISerializable
     {
         GlobalPosition = InitialPosition;
         OldCoord = (ChunkCoord)GlobalPosition;
-        if (!Registered) World.Singleton.RegisterObject(this); //used for objects created in editor (ex player, patrick quack's limbs)
+        if (!Registered) World.Entities.RegisterObject(this); //used for objects created in editor (ex player, patrick quack's limbs)
         
         base._EnterTree();
     }
@@ -63,7 +64,7 @@ public partial class PhysicsObject : Node3D, ISerializable
         if (Velocity.LengthSquared() > MaxSpeed*MaxSpeed) Velocity=Velocity.Normalized()*MaxSpeed;
         //GD.Print(Velocity);
         currentForce = Gravity*Mass;
-        if (Collides) doCollision(World.Singleton, (float)dt);
+        if (Collides) doCollision(World, (float)dt);
 
         GlobalPosition += Velocity*(float)dt;
     }

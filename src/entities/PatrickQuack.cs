@@ -66,19 +66,19 @@ public partial class PatrickQuack : BipedalCombatant
     {
         LootBlock b = (LootBlock)BlockTypes.Get("loot");
         b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=MinDrops+(Mathf.RoundToInt(GD.Randf()*RandomDrops))}};
-        World.Singleton.SetBlock((BlockCoord)GlobalPosition, b);
+        World.SetBlock((BlockCoord)GlobalPosition, b);
         base.Die();
     }
     private void doWalk(float dt)
     {
-        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest)) return;
+        if (!World.Entities.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest)) return;
         if ((closest.GlobalPosition-GlobalPosition).LengthSquared() < MaxDistFromTarget*MaxDistFromTarget) return; // close enough to target, skip walking
         Vector3 dv = (closest.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.X, Velocity.Y, dv.Z);
         if (shootTimer >= ShootInterval)
         {
             PlaySound(ShootSound);
-            Projectile proj = World.Singleton.SpawnObject<Projectile>(Projectile, summonPoint.GlobalPosition);
+            Projectile proj = World.Entities.SpawnObject<Projectile>(Projectile, summonPoint.GlobalPosition);
             proj.Launch((closest.GlobalPosition-summonPoint.GlobalPosition).Normalized()*ProjectileVelocity, Team);
             shootTimer = 0;
         }
@@ -90,7 +90,7 @@ public partial class PatrickQuack : BipedalCombatant
         if (summonTimer >= SummonInterval)
         {
             PlaySound(SummonSound);
-            Combatant c = World.Singleton.SpawnObject<Combatant>(EnemiesToSummon[spawnIdx], summonPoint.GlobalPosition);
+            Combatant c = World.Entities.SpawnObject<Combatant>(EnemiesToSummon[spawnIdx], summonPoint.GlobalPosition);
             if (c is Marp m) m.CarryTarget = this;
             spawnIdx = (spawnIdx+1)%EnemiesToSummon.Length;
             c.Team = Team;

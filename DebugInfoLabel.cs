@@ -13,7 +13,7 @@ public partial class DebugInfoLabel : Label
 		sb.Clear();
 		foreach (var func in Inputs)
 		{
-			sb.Append(func(World.Singleton.LocalPlayer.GlobalPosition));
+			sb.Append(func(Player.LocalPlayer.GlobalPosition));
 			sb.Append("\n");
 		}
 		Text = sb.ToString();

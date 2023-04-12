@@ -18,7 +18,7 @@ public partial class InventoryUI : Control
         if (tracking != null) tracking.OnUpdate -= onInventoryUpdate;
         tracking = inv;
         inv.OnUpdate += onInventoryUpdate;
-        player = World.Singleton.LocalPlayer;
+        player = Player.LocalPlayer;
         resetItemSlots(inv);
     }
 

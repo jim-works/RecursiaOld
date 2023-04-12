@@ -2,6 +2,7 @@ using Godot;
 
 public partial class Player : Combatant
 {
+    public static Player LocalPlayer;
     [Export] public float Reach = 100;
     [Export] public float MoveSpeed = 10;
     [Export] public float JumpHeight = 10;
@@ -16,7 +17,6 @@ public partial class Player : Combatant
 
     public override void _Ready()
     {
-        World.Singleton.RegisterObject(this); //necessary for now since player is added in editor instead of created using World.SpawnObject
         Inventory = new Inventory(InitialInventorySize);
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("gun"), Size = 1 });
         Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("explosive_bullet"), Size = 100 });
@@ -28,18 +28,16 @@ public partial class Player : Combatant
             (b as LootBlock).Drops = new ItemStack[] { new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 } };
         };
         Inventory.CopyItem(new ItemStack {Item = lootBlockItem, Size = 1});
-        World.Singleton.ChunkLoaders.Add(this);
-        World.Singleton.LocalPlayer = this;
-        World.Singleton.Players.Add(this);
+        World.Loader.AddChunkLoader(this);
+        LocalPlayer = this;
         jumpsLeft = JumpCount;
         base._Ready();
     }
 
     public override void _ExitTree()
     {
-        World.Singleton.LocalPlayer = null;
-        World.Singleton.Players.Remove(this);
-        World.Singleton.ChunkLoaders.Remove(this);
+        LocalPlayer = null;
+        World.Loader.RemoveChunkLoader(this);
         base._ExitTree();
     }
 
@@ -60,7 +58,7 @@ public partial class Player : Combatant
             {
                 LootBlock b = (LootBlock)BlockTypes.Get("loot");
                 b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=1}};
-                World.Singleton.SetBlock((BlockCoord)GlobalPosition, b);
+                World.SetBlock((BlockCoord)GlobalPosition, b);
             } else if ((Key)key.Keycode == Key.T) {
                 Collides = !Collides;
             }
@@ -85,10 +83,10 @@ public partial class Player : Combatant
     //called by rotating camera
     public void Punch(Vector3 dir)
     {
-        BlockcastHit hit = World.Singleton.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
+        BlockcastHit hit = World.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
         if (hit != null)
         {
-            ItemStack drop = World.Singleton.BreakBlock(hit.BlockPos);
+            ItemStack drop = World.BreakBlock(hit.BlockPos);
             Inventory.AddItem(ref drop);
         }
     }
@@ -103,7 +101,7 @@ public partial class Player : Combatant
     //called by rotating camera
     public void Use(Vector3 dir)
     {
-        BlockcastHit hit = World.Singleton.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
+        BlockcastHit hit = World.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
         if (hit != null && hit.Block.Usable)
         {
             hit.Block.OnUse(this, hit.BlockPos);

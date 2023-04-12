@@ -6,7 +6,7 @@ public partial class BulletItem : AmmoItem
 
     public override void Fire(Vector3 origin, Vector3 velocity, Combatant user, GunItem gun)
     {
-        Projectile proj = World.Singleton.SpawnObject<Projectile>(ProjectileScene, origin);
+        Projectile proj = user.World.Entities.SpawnObject<Projectile>(ProjectileScene, origin);
         proj.Damage = Damage+gun?.Damage ?? Damage;
         proj.Launch(velocity, user.Team);
     }

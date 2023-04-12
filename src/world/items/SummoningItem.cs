@@ -20,9 +20,9 @@ public partial class SummoningItem : Item
         for (int y = summonPos.Y; y < summonPos.Y+MaxCheckHeight; y++)
         {
             summonY=y;
-            if (World.Singleton.GetBlock(new BlockCoord(summonPos.X,y,summonPos.Z)) == null) break; //open space found
+            if (user.World.GetBlock(new BlockCoord(summonPos.X,y,summonPos.Z)) == null) break; //open space found
         }
-        Combatant c = World.Singleton.SpawnObject<Combatant>(ToSummon, new Vector3(position.X+offset.X,summonY,position.Z+offset.Z));
+        Combatant c = user.World.Entities.SpawnObject<Combatant>(ToSummon, new Vector3(position.X+offset.X,summonY,position.Z+offset.Z));
         if (SetToUserTeam) c.Team = user.Team;
 
         if (ConsumeOnUse) source.Size--;

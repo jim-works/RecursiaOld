@@ -10,11 +10,11 @@ public partial class PlayerUIAssignment : Node
 
     public override void _Ready()
     {
-        GetNode<HealthBar>(HealthBar).Tracking = World.Singleton.LocalPlayer;
-        GetNode<InventoryUI>(Inventory).TrackInventory(World.Singleton.LocalPlayer.Inventory);
-        GetNode<InventoryUI>(MouseInventory).TrackInventory(World.Singleton.LocalPlayer.MouseInventory);
+        GetNode<HealthBar>(HealthBar).Tracking = Player.LocalPlayer;
+        GetNode<InventoryUI>(Inventory).TrackInventory(Player.LocalPlayer.Inventory);
+        GetNode<InventoryUI>(MouseInventory).TrackInventory(Player.LocalPlayer.MouseInventory);
         GetNode<RecipeListUI>(RecipeList).DisplayList(RecpieList.Search(""));
-        GetNode<CoordinateTextUI>(CoordinateText).Tracking = World.Singleton.LocalPlayer;
+        GetNode<CoordinateTextUI>(CoordinateText).Tracking = Player.LocalPlayer;
         base._Ready();
     }
 }

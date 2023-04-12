@@ -54,7 +54,7 @@ public partial class Marp : BipedalCombatant
             return;
         }
         
-        if (!World.Singleton.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest)) return;
+        if (!World.Entities.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest)) return;
         if (closest == null) return;
         Vector3 dv = (closest.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
         Velocity = new Vector3(dv.X, Velocity.Y, dv.Z);

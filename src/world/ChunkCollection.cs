@@ -1,33 +1,10 @@
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 public class ChunkCollection
 {
+    public event System.Action<Chunk> OnChunkOverwritten;
     private ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
-
-    //returns true if successful, false if destination chunk isn't present in the collection
-    //doesn't trigger any events like meshing
-    public bool SetBlock(BlockCoord coord, Block to)
-    {
-        if (TryGetValue((ChunkCoord)coord, out Chunk c))
-        {
-            c[Chunk.WorldToLocal(coord)] = to;
-            return true;
-        }
-        return false;
-    }
-
-    //returns true if successful (block placed), false if destination chunk isn't present in the collection or the dest block isn't null
-    //doesn't trigger any events like meshing
-    public bool SetIfNull(BlockCoord coord, Block to)
-    {
-        if (TryGetValue((ChunkCoord)coord, out Chunk c))
-        {
-            BlockCoord pos = Chunk.WorldToLocal(coord);
-            if (c[pos] == null) c[pos] = to; else return false;
-            return true;
-        }
-        return false;
-    }
 
     public Block GetBlock(BlockCoord coord)
     {
@@ -41,7 +18,12 @@ public class ChunkCollection
 
     public Chunk this[ChunkCoord index] {
         get { return chunks.TryGetValue(index, out Chunk c) ? c : null;}
-        set {chunks[index] = value;}
+        set {
+            chunks.AddOrUpdate(index, (coord) => value, (coord, old) => {
+                OnChunkOverwritten?.Invoke(old);
+                return value;
+            });
+        }
     }
 
     public bool Contains(ChunkCoord c) => chunks.ContainsKey(c);

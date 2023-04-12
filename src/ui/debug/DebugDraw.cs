@@ -29,7 +29,7 @@ public partial class DebugDraw : Node
         {
             drawBox(b, geometry);
         }
-        foreach (var p in World.Singleton.GetPhysicsObjectsInRange(World.Singleton.LocalPlayer.Position, 1000))
+        foreach (var p in Player.LocalPlayer.World.Entities.GetPhysicsObjectsInRange(Player.LocalPlayer.Position, 1000))
         {
             drawBox(p.GetBox(), geometry);
         }

@@ -23,6 +23,7 @@ public partial class WorldSaver : Node
     private double saveTimer;
     private double loadTimer;
     private const string DB_FILE_EXT = "db";
+    private World world;
 
     private SQLInterface sql;
     private ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
@@ -31,7 +32,8 @@ public partial class WorldSaver : Node
 
     public override void _Ready()
     {
-        string folder = Path.Join(WorldsFolder, World.Singleton.Name);
+        world = GetParent<World>();
+        string folder = Path.Join(WorldsFolder, world.Name);
         Directory.CreateDirectory(folder);
         sql = new SQLInterface(Path.Join(folder, "world.db"));
         GD.Print("World save folder is " + folder);
@@ -61,7 +63,7 @@ public partial class WorldSaver : Node
         if (saveTimer > SaveIntervalSeconds)
         {
             saveTimer = 0;
-            Save(World.Singleton);
+            Save(world);
 
         }
         if (loadTimer > LoadIntervalSeconds)
@@ -80,12 +82,12 @@ public partial class WorldSaver : Node
 
     public override void _ExitTree()
     {
-        Save(World.Singleton);
+        Save(world);
         emptySaveQueue();
         sql.Close();
     }
 
-    public void Load(ChunkCoord coord, Action<Chunk> callback)
+    public void LoadAndStick(ChunkCoord coord, Action<Chunk> callback)
     {
 #if NO_SAVING
         callback(null);
@@ -146,6 +148,7 @@ public partial class WorldSaver : Node
             if (c != null)
             {
                 c.SaveDirtyFlag = false;
+                c.Stick();
             }
             loadQueue.TryRemove(coords[i].Key, out _);
         }

@@ -9,11 +9,11 @@ public partial class BlockFactoryItem : Item
 
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
-        BlockcastHit hit = World.Singleton.Blockcast(position, dir*Reach);
+        BlockcastHit hit = user.World.Blockcast(position, dir*Reach);
         if (hit != null && hit.Normal != Vector3.Zero) { //zero normal means we are inside the block we are gonna place
             Block placing = BlockTypes.Get(BlockName);
             InitPlaced?.Invoke(placing);
-            World.Singleton.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, placing);
+            user.World.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, placing);
         }
         source.Decrement(1);
         base.OnUse(user, position, dir, ref source);

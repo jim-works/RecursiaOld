@@ -51,7 +51,7 @@ public partial class BipedalCombatant : Combatant
     private float getFootHeight(Vector3 footTargetGlobal)
     {
         Vector3 start = new Vector3(footTargetGlobal.X,footTargetGlobal.Y+MaxSlope,footTargetGlobal.Z);
-        BlockcastHit hit = World.Singleton.Blockcast(start,new Vector3(0,-MaxSlope, 0));
+        BlockcastHit hit = World.Blockcast(start,new Vector3(0,-MaxSlope, 0));
         if (hit == null) return 0;
         return hit.HitPos.Y-footTargetGlobal.Y;
     }
@@ -66,8 +66,8 @@ public partial class BipedalCombatant : Combatant
 
     private void updateGrounded()
     {
-        lFootOnGround = World.Singleton.Blockcast(lFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
-        rFootOnGround = World.Singleton.Blockcast(rFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
+        lFootOnGround = World.Blockcast(lFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
+        rFootOnGround = World.Blockcast(rFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
     }
 
     private bool onGround() => lFootOnGround || rFootOnGround;

@@ -3,9 +3,9 @@ using Godot;
 public static class ObjectTypes
 {
     private static Dictionary<string, PackedScene> objects = new Dictionary<string, PackedScene>();
-    public static T GetInstance<T>(string type, Vector3 position, System.Action<T> init = null) where T : Node3D {
+    public static T GetInstance<T>(World world, string type, Vector3 position, System.Action<T> init = null) where T : Node3D {
         if (objects.TryGetValue(type, out var b)) {
-            T obj = World.Singleton.SpawnObject<T>(b, position, init);
+            T obj = world.Entities.SpawnObject<T>(b, position, init);
             if (obj is PhysicsObject p)
             {
                 p.ObjectType = type;

@@ -43,14 +43,14 @@ public partial class ChainStriker : Combatant
             if (combatant == this) continue;
             combatant.Die();
         }
-        SphereShaper.Shape3D(World.Singleton, GlobalPosition, 6.2f);
+        SphereShaper.Shape3D(World, GlobalPosition, 6.2f);
         base.Die();
     }
 
     private void attack()
     {
         attackTimer = 0;
-        if (World.Singleton.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest))
+        if (World.Entities.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest))
         {
             if (GlobalPosition.Y < closest.GlobalPosition.Y) AddImpulse(new Vector3(0, 10, 0)); //little hop
             AddImpulse((closest.GlobalPosition - GlobalPosition).Normalized() * StrikeImpulse);
@@ -59,7 +59,7 @@ public partial class ChainStriker : Combatant
 
     private Combatant spawnLink(Combatant prev, float maxSpeed)
     {
-        ChainLink link = World.Singleton.SpawnObject<ChainLink>(ChainLink, GlobalPosition, link => link.Parent = prev);
+        ChainLink link = World.Entities.SpawnObject<ChainLink>(ChainLink, GlobalPosition, link => link.Parent = prev);
         link.MaxSpeed = maxSpeed;
         links.Add(link);
         return link;

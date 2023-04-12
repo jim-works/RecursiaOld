@@ -21,10 +21,12 @@ public partial class WorldGenerator
 
     public int Seed {get; private set;} = 1127;
     private int currSeed;
+    private World world;
 
-    public WorldGenerator()
+    public WorldGenerator(World world)
     {
         currSeed = Seed;
+        this.world = world;
         //initialize worldgen threads
         Godot.GD.Print($"Starting world generator with {ShapingThreads} threads!");
         shapingLayers.Add(initLayer(new ShapingLayer()));
@@ -97,15 +99,15 @@ public partial class WorldGenerator
     private async Task doGeneration(Chunk toGenerate)
     {
         toGenerate.AddEvent("do generation");
-        ShapeChunk(World.Singleton, toGenerate);
+        ShapeChunk(toGenerate);
         toGenerate.AddEvent("shaped");
-        AtomicChunkCollection collection = await GenerateStructures(World.Singleton, toGenerate);
+        AtomicChunkCollection collection = await GenerateStructures(toGenerate);
         toGenerate.AddEvent("structured");
         done.Add((toGenerate, collection));
         toGenerate.AddEvent("sent to done");
     }
 
-    public void ShapeChunk(World world, Chunk chunk) {
+    public void ShapeChunk(Chunk chunk) {
         chunk.GenerationState = ChunkGenerationState.SHAPING;
         foreach (var genLayer in shapingLayers)
         {
@@ -114,7 +116,7 @@ public partial class WorldGenerator
         chunk.GenerationState = ChunkGenerationState.SHAPED;
     }
 
-    public async Task<AtomicChunkCollection> GenerateStructures(World world, Chunk chunk)
+    public async Task<AtomicChunkCollection> GenerateStructures(Chunk chunk)
     {
         chunk.GenerationState = ChunkGenerationState.PLACING_STRUCTURES;
         AtomicChunkCollection area = new AtomicChunkCollection(world);
@@ -125,7 +127,7 @@ public partial class WorldGenerator
                 int dz = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
                 BlockCoord origin = chunk.LocalToWorld(new BlockCoord(dx, dy, dz));
                 if (!provider.SuitableLocation(world, origin)) continue;
-                await requestArea(world, chunk.Position, provider.MaxArea, area);
+                await requestArea(chunk.Position, provider.MaxArea, area);
                 Structure result = provider.PlaceStructure(area, origin);
                 if (result != null && provider.Record)
                 {
@@ -142,7 +144,7 @@ public partial class WorldGenerator
 
     //populates the expanding dictionary
     //returns a task that completes when the area is ready (all chunks are shaped)
-    private async Task<AtomicChunkCollection> requestArea(World world, ChunkCoord center, ChunkCoord size, AtomicChunkCollection collection)
+    private async Task<AtomicChunkCollection> requestArea(ChunkCoord center, ChunkCoord size, AtomicChunkCollection collection)
     {
         //coord, need to stick
         HashSet<ChunkCoord> needed = new ();
@@ -153,7 +155,7 @@ public partial class WorldGenerator
                 for (int z = center.Z-size.Z; z < center.Z + size.Z; z++)
                 {
                     ChunkCoord coord = new ChunkCoord(x,y,z);
-                    world.GetOrLoadChunkCheckDisk(coord, true, res => {
+                    world.GetStickyChunkOrLoadFromDisk(coord, res => {
                         if (res != null && res.GenerationState >= ChunkGenerationState.SHAPED) {
                             collection.Add(res);
                         }

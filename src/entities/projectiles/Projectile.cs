@@ -22,7 +22,7 @@ public partial class Projectile : PhysicsObject
     public override void _PhysicsProcess(double delta)
     {
         base._PhysicsProcess(delta);
-        if (World.Singleton.CollidesWithEnemy(GetBox(), team) is Combatant hit)
+        if (World.Entities.CollidesWithEnemy(GetBox(), team) is Combatant hit)
         {
             onHit(hit);
         }

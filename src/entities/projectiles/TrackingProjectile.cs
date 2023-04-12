@@ -12,7 +12,7 @@ public partial class TrackingProjectile : Projectile
         TrackingDelay -= delta;
         if (target == null && TrackingDelay <= 0)
         {
-            World.Singleton.ClosestEnemy(GlobalPosition, team, AggroRange, out target);
+            World.Entities.ClosestEnemy(GlobalPosition, team, AggroRange, out target);
         }
         if (target != null)
         {
