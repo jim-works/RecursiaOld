@@ -202,8 +202,20 @@ public partial class PhysicsObject : Node3D, ISerializable
 
     public virtual void Serialize(BinaryWriter writer)
     {
+        writer.Write(ObjectType);
         GlobalPosition.Serialize(writer);
         Velocity.Serialize(writer);
-        
+    }
+
+    public static T Deserialize<T>(World world, BinaryReader br) where T : PhysicsObject
+    {
+        string type = br.ReadString();
+        Vector3 initialPos = Vector3.Zero;
+        initialPos.Deserialize(br);
+        Vector3 initialV = Vector3.Zero;
+        initialV.Deserialize(br);
+        return ObjectTypes.GetInstance<T>(world, type, initialPos, obj => {
+            obj.Velocity = initialV;
+        });
     }
 }

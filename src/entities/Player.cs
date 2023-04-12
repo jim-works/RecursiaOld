@@ -1,3 +1,4 @@
+using System.IO;
 using Godot;
 
 public partial class Player : Combatant
@@ -125,5 +126,14 @@ public partial class Player : Combatant
         {
             Jump();
         }
+    }
+
+    public static Player Deserialize(World world, BinaryReader br)
+    {
+        return PhysicsObject.Deserialize<Player>(world, br);
+    }
+    public override void Serialize(BinaryWriter writer)
+    {
+        base.Serialize(writer);
     }
 }

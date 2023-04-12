@@ -6,6 +6,9 @@ public class EntityCollection
     private World world;
     private Dictionary<ChunkCoord, List<PhysicsObject>> physicsObjects = new();
     private Dictionary<ChunkCoord, List<Combatant>> combatants = new ();
+    private List<Player> players = new List<Player>();
+
+    public IEnumerable<Player> Players => players;
 
     public EntityCollection(World world)
     {
@@ -33,6 +36,10 @@ public class EntityCollection
             comb.Remove(c);
             if (combatants.Count == 0) combatants.Remove(from);
         }
+        if (p is Player player)
+        {
+            players.Remove(player);
+        }
     }
     private void addPhysicsObject(PhysicsObject p)
     {
@@ -59,8 +66,11 @@ public class EntityCollection
             {
                 combatants[to] = new List<Combatant> { c };
             }
+            if (p is Player player) players.Add(player);
         }
     }
+
+
 
     //init runs before object is added to scene tree
     //if will handle registering if T : PhysicsObject/Combatant

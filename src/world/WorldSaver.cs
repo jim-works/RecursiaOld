@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 using System;
 using System.Linq;
 
-
-
 //encode path using coordinate of chunk group:
 //-1,0,0.group -> group containing chunks from -GROUP_SIZE,0,0 through -1,0,0
 //xxx.dat contains info like region origin, level, structures, etc
@@ -19,16 +17,15 @@ public partial class WorldSaver : Node
 {
     [Export] public double SaveIntervalSeconds = 5;
     [Export] public double LoadIntervalSeconds = 0.100f;
-    [Export] public string WorldsFolder = Path.Join(Godot.OS.GetUserDataDir(), "worlds");
+    [Export] public string WorldsFolder = Path.Join(OS.GetUserDataDir(), "worlds");
     private double saveTimer;
     private double loadTimer;
-    private const string DB_FILE_EXT = "db";
     private World world;
 
     private SQLInterface sql;
-    private ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
-    private ConcurrentDictionary<ChunkCoord, Action<Chunk>> loadQueue = new();
-    private volatile List<(Chunk, Action<Chunk>)> callbackQueue = new();
+    private readonly ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
+    private readonly ConcurrentDictionary<ChunkCoord, Action<Chunk>> loadQueue = new();
+    private readonly List<(Chunk, Action<Chunk>)> callbackQueue = new();
 
     public override void _Ready()
     {
@@ -64,7 +61,6 @@ public partial class WorldSaver : Node
         {
             saveTimer = 0;
             Save(world);
-
         }
         if (loadTimer > LoadIntervalSeconds)
         {
@@ -107,6 +103,7 @@ public partial class WorldSaver : Node
             saveQueue[kvp.Key] = kvp.Value;
             kvp.Value.SaveDirtyFlag = false;
         }
+        sql.SavePlayers(world.Entities.Players);
 #endif
     }
     public void Save(Chunk c)
@@ -123,16 +120,15 @@ public partial class WorldSaver : Node
 #if NO_SAVING
         return;
 #else
-        Godot.GD.Print($"Saving {saveQueue.Count} groups...");
+        GD.Print($"Saving {saveQueue.Count} groups...");
         //TODO THIS ISN"T SAFE FOR SOME REASON
         sql.SaveChunks(() => {
             foreach (var kvp in saveQueue.ToArray())
-                if (saveQueue.TryRemove(kvp.Key, out Chunk val))
-                    return val;
+                if (saveQueue.TryRemove(kvp.Key, out Chunk val)) return val;
             return null;
         });
         saveQueue.Clear();
-        Godot.GD.Print("Saved");
+        GD.Print("Saved");
 #endif
     }
     private void emptyLoadQueue()

@@ -23,10 +23,19 @@ public class SQLInterface
             value TEXT NOT NULL,
             PRIMARY KEY (key)
         ) STRICT";
+    private const string createPlayersTable = @"
+        CREATE TABLE players (
+            name TEXT NOT NULL,
+            data BLOB NOT NULL,
+            PRIMARY KEY (name)
+        ) STRICT
+    ";
     private const string worldFormatVersion = "1";
 
     private SQLiteCommand saveChunkCommand;
     private SQLiteCommand loadChunkCommand;
+    private SQLiteCommand savePlayerCommand;
+    private SQLiteCommand loadPlayerCommand;
 
     public SQLInterface(string dbpath)
     {
@@ -72,6 +81,16 @@ public class SQLInterface
         loadChunkCommand.Parameters.Add("@x", System.Data.DbType.Int32);
         loadChunkCommand.Parameters.Add("@y", System.Data.DbType.Int32);
         loadChunkCommand.Parameters.Add("@z", System.Data.DbType.Int32);
+        savePlayerCommand = conn.CreateCommand();
+        savePlayerCommand.CommandText = @"
+            INSERT OR REPLACE INTO players (name, data)
+            VALUES (@name, @data)";
+        savePlayerCommand.Parameters.Add("@name", System.Data.DbType.String);
+        savePlayerCommand.Parameters.Add("@data", System.Data.DbType.Binary);
+        loadPlayerCommand = conn.CreateCommand();
+        loadPlayerCommand.CommandText = @"
+            SELECT data FROM players WHERE name=@name";
+        loadPlayerCommand.Parameters.Add("@name", System.Data.DbType.String);
 
         //print number of chunks in database
         using (SQLiteCommand command = conn.CreateCommand())
@@ -128,6 +147,8 @@ public class SQLInterface
                 VALUES ('formatVersion', @formatVersion)";
             command.Parameters.AddWithValue("@formatVersion", worldFormatVersion);
             command.ExecuteNonQuery();
+            command.CommandText = createPlayersTable;
+            command.ExecuteNonQuery();
         }
     }
 
@@ -179,6 +200,46 @@ public class SQLInterface
             {
                 Chunk chunk = Chunk.Deserialize(br);
                 placeInto.Add(chunk);
+            }
+        }
+    }
+
+    public void SavePlayers(IEnumerable<Player> players)
+    {
+        using (SQLiteTransaction transaction = conn.BeginTransaction())
+        {
+            foreach (var p in players)
+            {
+                savePlayerCommand.Parameters["@name"].Value = p.Name;
+                using (MemoryStream ms = new MemoryStream())
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                using (GZipStream gz = new GZipStream(ms, CompressionLevel.Fastest))
+                {
+                    p.Serialize(bw);
+                    savePlayerCommand.Parameters["@data"].Value = ms.ToArray();
+                }
+                savePlayerCommand.ExecuteNonQuery();
+            }
+            transaction.Commit();
+        }
+    }
+    public void LoadPlayers(World world, IEnumerable<string> names, List<Player> placeInto)
+    {
+        foreach (string name in names)
+        {
+            loadPlayerCommand.Parameters["@name"].Value = name;
+            object result = loadPlayerCommand.ExecuteScalar();
+            if (result == null)
+            {
+                placeInto.Add(null);
+                continue;
+            }
+            using (MemoryStream ms = new MemoryStream((byte[])result))
+            using (GZipStream gz = new GZipStream(ms, CompressionMode.Decompress))
+            using (BinaryReader br = new BinaryReader(ms))
+            {
+                Player player = Player.Deserialize(world, br);
+                placeInto.Add(player);
             }
         }
     }
