@@ -14,7 +14,7 @@ public sealed class ChunkMesh : IDisposable
     public List<Vector3> Norms {get;} = new List<Vector3>();
     public List<Vector2> UVs {get;} = new List<Vector2>();
 
-    public MeshInstance3D Node {get;private set;}
+    public MeshInstance3D? Node {get;private set;}
 
     public ulong Timestamp;
 
@@ -25,7 +25,7 @@ public sealed class ChunkMesh : IDisposable
         arrayMesh = new ArrayMesh();
         _ = data.Resize((int)Mesh.ArrayType.Max);
     }
-    public void ApplyTo(MeshInstance3D node, Material mat)
+    public void ApplyTo(MeshInstance3D node, Material? mat)
     {
         //TODO: make this more efficient
         data[(int)Mesh.ArrayType.Vertex] = Variant.CreateFrom(new Span<Vector3>(Verts.ToArray()));
@@ -35,7 +35,7 @@ public sealed class ChunkMesh : IDisposable
         arrayMesh.ClearSurfaces();
         arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, data);
         node.Mesh = arrayMesh;
-        node.SetSurfaceOverrideMaterial(0, mat);
+        if (mat != null) node.SetSurfaceOverrideMaterial(0, mat);
         Node = node;
     }
     public void ClearData()

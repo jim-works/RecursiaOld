@@ -70,7 +70,7 @@ public struct ChunkCoord
     {
         return $"({X}, {Y}, {Z})";
     }
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj switch
         {

@@ -3,7 +3,7 @@ using Godot;
 namespace Recursia;
 public static class BlockLoader
 {
-    private static Texture2D blockTextures;
+    private static Texture2D? blockTextures;
     //sets BlockTextures to textures, loads all blocks
     public static void Load(Texture2D textures)
     {
@@ -25,56 +25,61 @@ public static class BlockLoader
         createBasic("log", standard, 4, 1,100);
         createBasic("leaves", standard, 4, 2,100);
         createBasic("water", standard, 0,2,transparent:true);
-        createFactory<LootBlock>("loot", standard, new int[]{2,2,2,2,2,2}, new int[]{1,2,1,1,2,1}, usable: true);
+        createFactory("loot", standard, new int[]{2,2,2,2,2,2}, new int[]{1,2,1,1,2,1}, (n,i,t) => {
+            return new LootBlock(n, i, t, System.Array.Empty<ItemStack>())
+            {
+                Usable = true
+            };
+        });
     }
 
     private static void createBasic(string name, TextureAtlas atlas, int x, int y, float explosionResistance=0, bool transparent=false)
     {
-        Block b = new()
+        Block b = new(name,atlas.Sample(x,y),getItemTexture(atlas.Sample(x,y)))
         {
-            Name=name,
-            TextureInfo=atlas.Sample(x,y),
             ExplosionResistance=explosionResistance,
             Transparent=transparent,
         };
         BlockTypes.CreateType(name, () => b);
-        b.ItemTexture = getItemTexture(atlas.Sample(x,y));
-        b.DropTable = new DropTable {
-            drop = new ItemStack{Item=ItemTypes.GetBlockItem(name), Size=1}
-        };
+        if (ItemTypes.TryGetBlockItem(name, out BlockFactoryItem? blockItem))
+        {
+            b.DropTable = new DropTable
+            {
+                drop = new ItemStack { Item = blockItem, Size = 1 }
+            };
+            return;
+        }
+        GD.PushError($"Couldn't find block item for {name} to add to its drop table.");
     }
 
     private static void createBasic(string name, TextureAtlas atlas, int[] x, int[] y, float explosionResistance=0, Direction itemTexDir=Direction.PosX)
     {
-        Block b = new()
+        Block b = new(name,atlas.Sample(x,y),getItemTexture(atlas.Sample(x,y),itemTexDir))
         {
-            Name=name,
-            TextureInfo=atlas.Sample(x,y),
             ExplosionResistance=explosionResistance,
         };
         BlockTypes.CreateType(name, () => b);
-        b.ItemTexture = getItemTexture(atlas.Sample(x,y), itemTexDir);
-        b.DropTable = new DropTable {
-            drop = new ItemStack{Item=ItemTypes.GetBlockItem(name), Size=1}
-        };
+        if (ItemTypes.TryGetBlockItem(name, out BlockFactoryItem? blockItem))
+        {
+            b.DropTable = new DropTable
+            {
+                drop = new ItemStack { Item = blockItem, Size = 1 }
+            };
+            return;
+        }
+        GD.PushError($"Couldn't find block item for {name} to add to its drop table.");
     }
 
-    private static void createFactory<T>(string name, TextureAtlas atlas, int[] x, int[] y, bool usable=false, System.Action<T> init=null, Direction itemTexDir = Direction.PosX) where T : Block, new()
+    private static void createFactory<T>(string name, TextureAtlas atlas, int[] x, int[] y, System.Func<string,AtlasTextureInfo,AtlasTexture,T> ctor, Direction itemTexDir = Direction.PosX)
+        where T : Block
     {
         var texInfo = atlas.Sample(x,y);
         var itemTex = getItemTexture(texInfo, itemTexDir);
         BlockTypes.CreateType(name, () => {
-            T b = new()
-            {
-                Name = name,
-                TextureInfo = texInfo,
-                ItemTexture = itemTex,
-                Usable = usable,
-            };
+            T b = ctor(name,texInfo,itemTex);
             b.DropTable = new DropTable {
                 drop = new ItemStack{Item=ItemTypes.GetBlockItem(b), Size=1}
             };
-            init?.Invoke(b);
             return b;
         });
     }

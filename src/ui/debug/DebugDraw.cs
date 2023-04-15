@@ -4,22 +4,17 @@ using System.Collections.Generic;
 namespace Recursia;
 public partial class DebugDraw : Node
 {
-    public static DebugDraw Singleton {get; private set;}
+    public static DebugDraw? Singleton {get; private set;}
 
     [Export] public Color Color;
 
     public bool Draw;
-    private ImmediateMesh geometry;
+    private ImmediateMesh geometry = new();
     private readonly List<Box> drawing = new ();
 
     public override void _EnterTree()
     {
         Singleton = this;
-    }
-
-    public override void _Ready()
-    {
-        geometry = new ImmediateMesh();
     }
 
     public override void _Process(double delta)
@@ -30,10 +25,14 @@ public partial class DebugDraw : Node
         {
             drawBox(b, geometry);
         }
-        foreach (var p in Player.LocalPlayer.World.Entities.GetPhysicsObjectsInRange(Player.LocalPlayer.Position, 1000))
+        if (Player.LocalPlayer?.World != null)
         {
-            drawBox(p.GetBox(), geometry);
+            foreach (var p in Player.LocalPlayer.World.Entities.GetPhysicsObjectsInRange(Player.LocalPlayer.Position, 1000))
+            {
+                drawBox(p.GetBox(), geometry);
+            }
         }
+
         drawing.Clear();
     }
 

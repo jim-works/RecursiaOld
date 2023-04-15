@@ -6,15 +6,17 @@ public partial class GunItem : WeaponItem
     [Export] public float ShootSpeed = 50;
     [Export] public int AmmoPerShot=1;
 
+    public GunItem(string typeName, string displayname) : base(typeName, displayname) {}
+
     public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         //check for ammo
         if (user.Inventory == null) return;
-        int bulletSlot = user.Inventory.Select(stack => stack.Size >= AmmoPerShot && stack.Item is BulletItem);
+        (Item item, int bulletSlot) = user.Inventory.SelectItem(stack => stack.Size >= AmmoPerShot && stack.Item is BulletItem);
         if (bulletSlot == -1) return;
 
         //Get bullet and update inventory
-        BulletItem bullet = (BulletItem)user.Inventory.Items[bulletSlot].Item;
+        BulletItem bullet = (BulletItem)item;
         user.Inventory.DeleteFromSlot(bulletSlot,AmmoPerShot);
 
         onFire(bullet,user,position,dir,ref source);

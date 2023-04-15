@@ -7,13 +7,20 @@ using System.IO;
 namespace Recursia;
 public partial class Item : Resource, ISerializable
 {
+    public static readonly Item Empty = new("empty", "empty") {MaxStack = 0};
     [Export] public string DisplayName;
     [Export] public int MaxStack = 999;
     [Export] public float Cooldown = 0;
-    [Export] public Texture2D Texture2D;
-    [Export] public AudioStream UseSound;
+    [Export] public Texture2D? Texture2D;
+    [Export] public AudioStream? UseSound;
 
     public string TypeName;
+
+    public Item(string typeName, string displayname)
+    {
+        TypeName = typeName;
+        DisplayName = displayname;
+    }
 
     public virtual void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
@@ -24,9 +31,9 @@ public partial class Item : Resource, ISerializable
     public virtual void Deserialize(BinaryReader br){}
 
     //allows subclasses to override .Equals, keeping == and != consistent with that
-    public static bool operator ==(Item a, Item b)
+    public static bool operator ==(Item? a, Item? b)
     {
         return a is null ? b is null : a.Equals(b);
     }
-    public static bool operator !=(Item a, Item b) => !(a==b);
+    public static bool operator !=(Item? a, Item? b) => !(a==b);
 }

@@ -55,17 +55,6 @@ public class SQLInterface : IDisposable
         conn = new SQLiteConnection(connectionString);
         conn.Open();
 
-        if (init)
-        {
-            initializeTables();
-        }
-        else if (!verifyDB())
-        {
-            Godot.GD.PushError("Database format version mismatch!!");
-            conn = null;
-            return;
-        }
-
         //prepare save/load commands
         saveChunkCommand = conn.CreateCommand();
         saveChunkCommand.CommandText = @"
@@ -92,6 +81,17 @@ public class SQLInterface : IDisposable
         loadPlayerCommand.CommandText = @"
             SELECT data FROM players WHERE name=@name";
         loadPlayerCommand.Parameters.Add("@name", System.Data.DbType.String);
+
+        if (init)
+        {
+            initializeTables();
+        }
+        else if (!verifyDB())
+        {
+            Godot.GD.PushError("Database format version mismatch!!");
+            conn = null!;
+            return;
+        }
 
         //print number of chunks in database
         using SQLiteCommand command = conn.CreateCommand();
@@ -149,7 +149,7 @@ public class SQLInterface : IDisposable
         conn.Close();
     }
 
-    public void SaveChunks(Func<Chunk> getChunk)
+    public void SaveChunks(Func<Chunk?> getChunk)
     {
         using SQLiteTransaction transaction = conn.BeginTransaction();
         while (getChunk() is Chunk chunk)
@@ -169,7 +169,7 @@ public class SQLInterface : IDisposable
         transaction.Commit();
     }
 
-    public void LoadChunks(IEnumerable<ChunkCoord> chunks, List<Chunk> placeInto)
+    public void LoadChunks(IEnumerable<ChunkCoord> chunks, List<Chunk?> placeInto)
     {
         foreach (ChunkCoord coord in chunks)
         {
@@ -207,7 +207,7 @@ public class SQLInterface : IDisposable
         }
         transaction.Commit();
     }
-    public void LoadPlayers(World world, IEnumerable<string> names, List<Player> placeInto)
+    public void LoadPlayers(World world, IEnumerable<string> names, List<Player?> placeInto)
     {
         foreach (string name in names)
         {
@@ -221,7 +221,11 @@ public class SQLInterface : IDisposable
             using MemoryStream ms = new((byte[])result);
             using GZipStream gz = new(ms, CompressionMode.Decompress);
             using BinaryReader br = new(ms);
-            Player player = Player.Deserialize(world, br);
+            Player? player = PhysicsObject.Deserialize<Player>(world, br);
+            if (player == null)
+            {
+                throw new InvalidDataException($"Couldn't load data for player name: {name}! Data corrupted!");
+            }
             placeInto.Add(player);
         }
     }

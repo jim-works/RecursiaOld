@@ -14,8 +14,8 @@ public class Chunk : ISerializable
 {
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
-    private Block[,,] Blocks;
-    public ChunkMesh Mesh;
+    private Block?[,,]? Blocks;
+    public ChunkMesh? Mesh;
     public bool Meshed {get {
         return meshedHistory.Count != 0 && meshedHistory.Peek();
     } set {
@@ -61,19 +61,19 @@ public class Chunk : ISerializable
         return res;
     }
 
-    public Block this[BlockCoord index]
+    public Block? this[BlockCoord index]
     {
         get { return this[index.X,index.Y,index.Z]; }
         set { this[index.X,index.Y,index.Z]=value; SaveDirtyFlag = true;}
     }
-    public Block this[int x, int y, int z]
+    public Block? this[int x, int y, int z]
     {
         get { return Blocks?[x, y, z]; }
         set
         {
             if (Blocks != null || value != null)
             {
-                if (Blocks == null) Blocks = new Block[Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE, Chunk.CHUNK_SIZE];
+                if (Blocks == null) Blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
                 Blocks[x, y, z] = value;
             }
         }
@@ -128,20 +128,20 @@ public class Chunk : ISerializable
         if (Blocks == null)
         {
             //this case doesn't need to exist, but should be faster than the other
-            bw.Write(Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE);
+            bw.Write(CHUNK_SIZE*CHUNK_SIZE*CHUNK_SIZE);
             bw.Write(0);
         }
         else
         {
-            Block curr = Blocks[0, 0, 0];
+            Block? curr = Blocks[0, 0, 0];
             int run = 0;
-            for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+            for (int x = 0; x < CHUNK_SIZE; x++)
             {
-                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                for (int y = 0; y < CHUNK_SIZE; y++)
                 {
-                    for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                    for (int z = 0; z < CHUNK_SIZE; z++)
                     {
-                        Block b = Blocks[x, y, z];
+                        Block? b = Blocks[x, y, z];
                         if (curr == b)
                         {
                             run++;
@@ -190,12 +190,12 @@ public class Chunk : ISerializable
         Chunk c = new(pos);
         int run = 0;
         //deserialize blocks
-        Block read = null;
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+        Block? read = null;
+        for (int x = 0; x < CHUNK_SIZE; x++)
         {
-            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            for (int y = 0; y < CHUNK_SIZE; y++)
             {
-                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                for (int z = 0; z < CHUNK_SIZE; z++)
                 {
                     if (run == 0)
                     {
@@ -210,7 +210,8 @@ public class Chunk : ISerializable
                             string blockName = br.ReadString();
                             try
                             {
-                                read = BlockTypes.Get(blockName); read.Deserialize(br);
+                                BlockTypes.TryGet(blockName, out read);
+                                read!.Deserialize(br);
                             }
                             catch (Exception e)
                             {

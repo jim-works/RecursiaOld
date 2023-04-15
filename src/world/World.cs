@@ -6,27 +6,31 @@ using System.Collections.Generic;
 namespace Recursia;
 public partial class World : Node
 {
-    [Export] public Texture2D BlockTextureAtlas;
+    [Export] public Texture2D? BlockTextureAtlas;
     [Export] public Vector3 SpawnPoint = new(0,10,0);
     public ChunkCollection Chunks = new();
     public EntityCollection Entities;
 
     public WorldGenerator WorldGen;
     public WorldLoader Loader;
-    public event System.Action<Chunk> OnChunkUpdate;
-    public event System.Action<Chunk> OnChunkReady;
-    public event System.Action<Chunk> OnChunkUnload;
+    public event System.Action<Chunk>? OnChunkUpdate;
+    public event System.Action<Chunk>? OnChunkReady;
+    public event System.Action<Chunk>? OnChunkUnload;
 
     private double chunkLoadingInterval = 0.5f; //seconds per chunk loading update
     private double _chunkLoadingTimer;
-    private WorldSaver saver;
+    private WorldSaver? saver;
 
-    public override void _EnterTree()
+    public World()
     {
-        BlockLoader.Load(BlockTextureAtlas);
         Loader = new(this);
         Entities = new(this);
         WorldGen = new(this);
+    }
+    public override void _EnterTree()
+    {
+        BlockLoader.Load(BlockTextureAtlas!);
+        WorldGen.LoadLayers();
         Chunks.OnChunkOverwritten += (c) => GD.Print($"Duplicate chunk {c}");
         base._EnterTree();
     }
@@ -64,7 +68,7 @@ public partial class World : Node
     }
 
     public void LoadChunk(ChunkCoord coord) {
-        GetStickyChunkOrLoadFromDisk(coord, (Chunk c) => {
+        GetStickyChunkOrLoadFromDisk(coord, (Chunk? c) => {
             if (c == null) {
                 GenerateChunkDeferred(coord, false);
             } else {
@@ -74,18 +78,18 @@ public partial class World : Node
         });
     }
     public void UnloadChunk(ChunkCoord coord) {
-        if (!Chunks.TryGetValue(coord, out Chunk c)) return;//already unloaded
+        if (!Chunks.TryGetChunk(coord, out Chunk? c)) return;//already unloaded
         lock (c)
         {
             if (c.State == ChunkState.Sticky) return; //don't unload sticky chunks
             c.ForceUnload();
-            saver.Save(c);
+            saver!.Save(c);
             OnChunkUnload?.Invoke(c);
             Chunks.TryRemove(coord, out var _);
         }
     }
     private Chunk getOrCreateChunk(ChunkCoord chunkCoords, bool sticky) {
-        if(Chunks.TryGetValue(chunkCoords, out Chunk c)) {
+        if(Chunks.TryGetChunk(chunkCoords, out Chunk? c)) {
             //chunk already exists
             if (sticky) c.Stick();
             return c;
@@ -102,17 +106,17 @@ public partial class World : Node
     //calls callback when load is completed. returned chunk is sticky, call c.Unstick() when done.
     //doesn't generate a new chunk, callback is invoked with null if it doesn't exist
     //never returns a chunk in UNLOADED state
-    public void GetStickyChunkOrLoadFromDisk(ChunkCoord coord, System.Action<Chunk> callback)
+    public void GetStickyChunkOrLoadFromDisk(ChunkCoord coord, System.Action<Chunk?>? callback)
     {
-        if (GetAndStick(coord) is Chunk c)
+        if (Chunks.TryGetAndStick(coord, out Chunk? c))
         {
             callback?.Invoke(c);
             return;
         }
         //chunk doesn't exist, load it
-        saver.LoadAndStick(coord, c => {
+        saver!.LoadAndStick(coord, c => {
             //make sure is hasn't already been loaded since we went to the db
-            if (GetAndStick(coord) is Chunk loaded)
+            if (Chunks.TryGetAndStick(coord, out Chunk? loaded))
             {
                 callback?.Invoke(loaded);
                 //make sure to unload the one recieved from disk, probably older
@@ -128,21 +132,6 @@ public partial class World : Node
             callback?.Invoke(c);
         });
     }
-    public Chunk GetAndStick(ChunkCoord coord)
-    {
-        Chunk c = GetChunk(coord);
-        if (c == null) return null;
-        lock (c)
-        {
-            if (c.State == ChunkState.Unloaded)
-            {
-                //c is going to be unloaded, return null.
-                return null;
-            }
-            c.Stick();
-        }
-        return c;
-    }
     //doesn't hold a lock on c, take out a lock on c if needed
     private void loadChunk(Chunk c)
     {
@@ -156,24 +145,23 @@ public partial class World : Node
     {
         //need lock to be thread safe on the condition - todo verify
         //don't need to check if worldgen is in the process of generating the chunk since it will already be in World.Chunks before it gets sent to generator
-        if (GetChunk(coord) != null) return;
+        if (Chunks.Contains(coord)) return;
         Chunk c = createChunk(coord, true);
         if (stick) c.Stick();
         WorldGen.GenerateDeferred(c);
     }
-    public Chunk GetChunk(ChunkCoord chunkCoords) => Chunks[chunkCoords];
-    public Block GetBlock(BlockCoord coords) => Chunks.GetBlock(coords);
+    public Block? GetBlock(BlockCoord coords) => Chunks.GetBlock(coords);
     public ItemStack BreakBlock(BlockCoord coords) {
-        DropTable dt = GetBlock(coords).DropTable;
+        DropTable? dt = GetBlock(coords)?.DropTable;
         if (dt == null) {
-            GD.Print("Null droptable!");
+            GD.PushWarning("Null droptable!");
         }
         SetBlock(coords, null);
         return dt?.GetDrop() ?? new ItemStack();
     }
     //only updates chunks at the end of the batch
     //call batch(coord, block) to set the blocks
-    public void BatchSetBlock(System.Action<System.Action<BlockCoord, Block>> batch) {
+    public void BatchSetBlock(System.Action<System.Action<BlockCoord, Block?>> batch) {
         List<Chunk> chunksToUpdate = new();
         batch((coords, block) => {
             ChunkCoord chunkCoords = (ChunkCoord)coords;
@@ -188,7 +176,7 @@ public partial class World : Node
             c.Unstick();
         }
     }
-    public void SetBlock(BlockCoord coords, Block block, bool updateChunk=true) {
+    public void SetBlock(BlockCoord coords, Block? block, bool updateChunk=true) {
         ChunkCoord chunkCoords = (ChunkCoord)coords;
         BlockCoord blockCoords = Chunk.WorldToLocal(coords);
         Chunk c = getOrCreateChunk(chunkCoords, false);
@@ -199,13 +187,13 @@ public partial class World : Node
         }
     }
     //returns the block closest to origin that intersects the line segment from origin to (origin + line)
-    public BlockcastHit Blockcast(Vector3 origin, Vector3 line) {
+    public BlockcastHit? Blockcast(Vector3 origin, Vector3 line) {
         //TODO: improve this
         const float stepSize = 0.05f;
         float lineLength = line.Length();
         Vector3 lineNorm = line/lineLength;
         BlockCoord oldCoords = (BlockCoord)origin;
-        Block b = GetBlock(oldCoords);
+        Block? b = GetBlock(oldCoords);
         if (b != null)
         {
             return new BlockcastHit
@@ -246,7 +234,7 @@ public partial class World : Node
         float lineLength = d.Length();
         Vector3 lineNorm = d/lineLength;
         BlockCoord oldCoords = (BlockCoord)origin;
-        Block b = GetBlock(oldCoords);
+        Block? b = GetBlock(oldCoords);
         if (b != null)
         {
             buffer.Add(new BlockcastHit

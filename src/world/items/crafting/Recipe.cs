@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 
 namespace Recursia;
-public partial class Recipe
+public class Recipe
 {
-    public List<ItemStack> Ingredients {get; private set;}
-    public List<ItemStack> Product {get; private set;}
-    public string Station {get; private set;}
+    public List<ItemStack> Ingredients { get; }
+    public List<ItemStack> Product {get;}
+    public string Station {get;}
 
     //copies lists into corresponding properties
     public Recipe(List<ItemStack> ingredients, List<ItemStack> products, string station)

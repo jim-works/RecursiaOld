@@ -5,7 +5,7 @@ namespace Recursia;
 public partial class CoordinateTextUI : Label
 {
     [Export]
-    public Combatant Tracking;
+    public Combatant? Tracking;
 
     public override void _Process(double delta)
     {

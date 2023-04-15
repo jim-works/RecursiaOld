@@ -3,8 +3,8 @@ using Godot;
 namespace Recursia;
 public partial class ObjectLoader : Node
 {
-    [Export] public PackedScene[] ObjectScenes;
-    [Export] public string[] ObjectTypeNames;
+    [Export] public PackedScene[] ObjectScenes = null!;
+    [Export] public string[] ObjectTypeNames = null!;
 
     public override void _EnterTree()
     {

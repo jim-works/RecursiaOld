@@ -17,7 +17,7 @@ public partial class FlyingCamera : Node3D
 
     private float yaw;
     private float pitch;
-    private World world;
+    private World? world;
 
     public override void _Ready()
     {
@@ -41,14 +41,14 @@ public partial class FlyingCamera : Node3D
 
         if (Input.IsActionJustPressed("punch")) {
             Vector3 dir = -Basis.Z*PunchDistance;
-            BlockcastHit hit = world.Blockcast(GlobalPosition, dir);
+            BlockcastHit? hit = world!.Blockcast(GlobalPosition, dir);
             if (hit != null) {
                 world.SetBlock(hit.BlockPos, null);
             }
         }
         if (Input.IsActionJustPressed("use")) {
             Vector3 dir = -Basis.Z*PunchDistance;
-            BlockcastHit hit = world.Blockcast(GlobalPosition, dir);
+            BlockcastHit? hit = world!.Blockcast(GlobalPosition, dir);
             if (hit != null) {
                 SphereShaper.Shape3D(world, hit.HitPos, 25);
             }

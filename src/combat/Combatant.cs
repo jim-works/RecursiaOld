@@ -5,25 +5,25 @@ public partial class Combatant : PhysicsObject
 {
     private float health;
     private float maxHealth;
-    public Team Team;
-    [Export] public string InitialTeamName;
+    public Team? Team;
+    [Export] public string? InitialTeamName;
     [Export] public float InitialHealth;
     [Export] public double InvincibilitySeconds = 0.001f; //should be 1 frame
 
     [Export] public NodePath AudioPlayer = "AudioStreamPlayer3D";
 
-    public Inventory Inventory;
+    public Inventory? Inventory;
     public double ItemCooldown;
 
     private double invicinibilityTimer;
-    private AudioStreamPlayer3D audioStreamPlayer;
+    private AudioStreamPlayer3D? audioStreamPlayer;
 
     public override void _Ready()
     {
         base._Ready();
         audioStreamPlayer = GetNodeOrNull<AudioStreamPlayer3D>(AudioPlayer);
 
-        if (Team == null && !string.IsNullOrEmpty(InitialTeamName)) Team = new Team{TeamName=InitialTeamName};
+        if (Team == null && !string.IsNullOrEmpty(InitialTeamName)) Team = new Team(InitialTeamName);
         if (InitialHealth > 0) {
             maxHealth = InitialHealth;
             health = InitialHealth;
@@ -41,7 +41,7 @@ public partial class Combatant : PhysicsObject
             {
                 for (int z = -1; z <= 1; z++)
                 {
-                    Block b = World.GetBlock((BlockCoord)GlobalPosition+new BlockCoord(x,y,z));
+                    Block? b = World?.GetBlock((BlockCoord)GlobalPosition+new BlockCoord(x,y,z));
                     if (b?.Name == "lava")
                     {
                         TakeDamage(new Damage{
@@ -56,14 +56,14 @@ public partial class Combatant : PhysicsObject
 
     public void UseItem(int slot, Vector3 offset, Vector3 direction)
     {
-        if (ItemCooldown > 0) return;
-        Inventory.Items[slot].Item?.OnUse(this, offset, direction, ref Inventory.Items[slot]);
+        if (ItemCooldown > 0 || Inventory == null) return;
+        Inventory.Items[slot].Item.OnUse(this, offset, direction, ref Inventory.Items[slot]);
         //play usage sound
-        PlaySound(Inventory.Items[slot].Item?.UseSound);
+        PlaySound(Inventory.Items[slot].Item.UseSound);
         Inventory.TriggerUpdate();
     }
 
-    public void PlaySound(AudioStream clip)
+    public void PlaySound(AudioStream? clip)
     {
         if (audioStreamPlayer != null && clip != null)
         {

@@ -5,20 +5,30 @@ namespace Recursia;
 public partial class InventoryUI : Control
 {
     [Export]
-    public PackedScene ItemSlotUI;
+    public PackedScene? ItemSlotUI;
     [Export]
     public int Padding = 2;
     [Export]
     public int SlotSizePx = 64;
-    private Inventory tracking;
+    private Inventory? tracking;
     private readonly List<ItemSlotUI> slots = new();
-    private Player player;
+    private Player player = null!; //we want exceptions if somehow this is null and the player clicked on something
+
+    public override void _Ready()
+    {
+        if (ItemSlotUI == null) GD.PushError($"Null ItemSlotUI on InventoryUI {Name}");
+    }
 
     public void TrackInventory(Inventory inv)
     {
         if (tracking != null) tracking.OnUpdate -= onInventoryUpdate;
         tracking = inv;
         inv.OnUpdate += onInventoryUpdate;
+        if (Player.LocalPlayer == null)
+        {
+            GD.PushError("null localplayer in inventoryUI");
+            return;
+        }
         player = Player.LocalPlayer;
         resetItemSlots(inv);
     }
@@ -48,7 +58,7 @@ public partial class InventoryUI : Control
         {
             int column = i % slotsPerRow;
             if (column == 0) row++;
-            ItemSlotUI slot = ItemSlotUI.Instantiate<ItemSlotUI>();
+            ItemSlotUI slot = ItemSlotUI!.Instantiate<ItemSlotUI>();
             AddChild(slot);
             slot.Position = new Vector2(column*SlotSizePx+(column+1)*Padding, row*SlotSizePx+(row+1)*Padding);
             int idx = i;
@@ -84,11 +94,13 @@ public partial class InventoryUI : Control
     private void slotRightClicked(int slot, Inventory inv)
     {
         //if there's a mouse item we want to try to put one of it into our inventory
-        if (player.MouseInventory.Items[0].Item != null) {
+        if (!player.MouseInventory.Items[0].IsEmpty) {
+            GD.Print("not empty");
             inv.PutItem(slot, ref player.MouseInventory.Items[0], 1);
         }
         else {
             //if not, split the stack and put the other half on the mouse
+            GD.Print("empty");
             int count = inv.GetItem(slot).Size/2;
             inv.TakeItems(slot, count, ref player.MouseInventory.Items[0]);
         }

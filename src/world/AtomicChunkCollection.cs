@@ -5,8 +5,8 @@ using System.Collections.Generic;
 namespace Recursia;
 public class AtomicChunkCollection
 {
-    private readonly Dictionary<ChunkCoord, Chunk> chunks = new ();
-    private readonly Dictionary<BlockCoord, Block> changes = new();
+    private readonly Dictionary<ChunkCoord, Chunk?> chunks = new ();
+    private readonly Dictionary<BlockCoord, Block?> changes = new();
     private readonly World world;
     public AtomicChunkCollection(World world)
     {
@@ -14,7 +14,7 @@ public class AtomicChunkCollection
     }
 
     //returns true if successful, false if destination chunk isn't present in the collection
-    public bool SetBlock(BlockCoord coord, Block to)
+    public bool SetBlock(BlockCoord coord, Block? to)
     {
         if (TryGetValue((ChunkCoord)coord, out Chunk _))
         {
@@ -25,33 +25,33 @@ public class AtomicChunkCollection
     }
 
     //returns true if successful (block placed), false if destination chunk isn't present in the collection or the dest block isn't null
-    public bool SetIfNull(BlockCoord coord, Block to)
+    public bool SetIfNull(BlockCoord coord, Block? to)
     {
-        if (TryGetValue((ChunkCoord)coord, out Chunk c))
+        if (TryGetValue((ChunkCoord)coord, out Chunk? c))
         {
             BlockCoord pos = Chunk.WorldToLocal(coord);
-            if (c[pos] == null) changes.Add(coord, to); else return false;
+            if (c?[pos] == null) changes.Add(coord, to); else return false;
             return true;
         }
         return false;
     }
 
-    public Block GetBlock(BlockCoord coord)
+    public Block? GetBlock(BlockCoord coord)
     {
-        if (TryGetValue((ChunkCoord)coord, out Chunk c))
+        if (TryGetValue((ChunkCoord)coord, out Chunk? c))
         {
-            return c[Chunk.WorldToLocal(coord)];
+            return c?[Chunk.WorldToLocal(coord)];
         }
         return null;
     }
 
-    public Chunk this[ChunkCoord index] {
-        get { return chunks.TryGetValue(index, out Chunk c) ? c : null;}
+    public Chunk? this[ChunkCoord index] {
+        get { return chunks.TryGetValue(index, out Chunk? c) ? c : null;}
         set {chunks[index] = value;}
     }
 
     public bool Contains(ChunkCoord c) => chunks.ContainsKey(c);
-    public bool TryGetValue(ChunkCoord c, out Chunk chunk) => chunks.TryGetValue(c, out chunk);
+    public bool TryGetValue(ChunkCoord c, out Chunk? chunk) => chunks.TryGetValue(c, out chunk);
     public void Remove(ChunkCoord c) => chunks.Remove(c);
     public void Add(Chunk c) => chunks[c.Position] = c;
 
@@ -66,5 +66,5 @@ public class AtomicChunkCollection
         changes.Clear();
     }
 
-    public System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<ChunkCoord, Chunk>> GetEnumerator() => chunks.GetEnumerator();
+    public IEnumerator<System.Collections.Generic.KeyValuePair<ChunkCoord, Chunk>> GetEnumerator() => chunks.GetEnumerator();
 }

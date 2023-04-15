@@ -6,7 +6,7 @@ namespace Recursia;
 public partial class PhysicsObject : Node3D, ISerializable
 {
     private const int COLLISION_INTERVAL = 5; //physics updates per collision check
-    public World World;
+    public World? World;
     [Export]
     public Vector3 Size;
     [Export] public Vector3 ColliderOffset;
@@ -26,14 +26,14 @@ public partial class PhysicsObject : Node3D, ISerializable
     [Export] public bool PhysicsActive = true;
     [Export] public Vector3 InitialPosition;
 
-    public event System.Action<PhysicsObject, ChunkCoord> OnCrossChunkBoundary;
-    public event System.Action<PhysicsObject> OnExitTree;
+    public event System.Action<PhysicsObject, ChunkCoord>? OnCrossChunkBoundary;
+    public event System.Action<PhysicsObject>? OnExitTree;
 
     public ChunkCoord OldCoord;
     public bool Registered;
 
     public bool Collides = true;
-    public string ObjectType;
+    public string ObjectType = "physics_object";
 
     protected Vector3 currentForce; //zeroed each physics update
     protected int collisionDirections; //updated each physics update, bitmask of Directions of current collision with world
@@ -47,6 +47,11 @@ public partial class PhysicsObject : Node3D, ISerializable
     {
         GlobalPosition = InitialPosition;
         OldCoord = (ChunkCoord)GlobalPosition;
+        if (World == null)
+        {
+            GD.PushError($"Null world on {Name}");
+            return;
+        }
         if (!Registered) World.Entities.RegisterObject(this); //used for objects created in editor (ex player, patrick quack's limbs)
 
         base._EnterTree();
@@ -65,7 +70,7 @@ public partial class PhysicsObject : Node3D, ISerializable
         if (Velocity.LengthSquared() > MaxSpeed*MaxSpeed) Velocity=Velocity.Normalized()*MaxSpeed;
         //GD.Print(Velocity);
         currentForce = Gravity*Mass;
-        if (Collides) doCollision(World, (float)delta);
+        if (Collides) doCollision(World!, (float)delta);
 
         GlobalPosition += Velocity*(float)delta;
     }
@@ -206,13 +211,21 @@ public partial class PhysicsObject : Node3D, ISerializable
         Velocity.Serialize(bw);
     }
 
-    public static T Deserialize<T>(World world, BinaryReader br) where T : PhysicsObject
+    public virtual void Deserialize(BinaryReader br) {}
+
+    public static T? Deserialize<T>(World world, BinaryReader br) where T : PhysicsObject
     {
         string type = br.ReadString();
         Vector3 initialPos = Vector3.Zero;
         initialPos.Deserialize(br);
         Vector3 initialV = Vector3.Zero;
         initialV.Deserialize(br);
-        return ObjectTypes.GetInstance<T>(world, type, initialPos, obj => obj.Velocity = initialV);
+        if (ObjectTypes.TryGetInstance<T>(world, type, initialPos, out T? obj, obj => obj.Velocity = initialV))
+        {
+            obj.Deserialize(br);
+            return obj;
+        }
+        GD.PushError("couldn't instantiate object type " + type);
+        return null;
     }
 }

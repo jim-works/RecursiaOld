@@ -4,13 +4,13 @@ using System;
 namespace Recursia;
 public partial class BossUI : Control
 {
-    public static BossUI Singleton {get; private set;}
+    public static BossUI? Singleton {get; private set;}
 
-    [Export] public NodePath HealthBarPath;
-    [Export] public NodePath NameLabelPath;
+    [Export] public NodePath? HealthBarPath;
+    [Export] public NodePath? NameLabelPath;
 
-    private HealthBar healthBar;
-    private Label nameLabel;
+    private HealthBar healthBar = null!;
+    private Label nameLabel = null!;
 
     public override void _EnterTree()
     {

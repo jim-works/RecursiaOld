@@ -1,7 +1,9 @@
+using Godot;
 //not sure exactly how to do this yet
 namespace Recursia;
 public abstract class TickableBlock : Block
 {
+    protected TickableBlock(string name, AtlasTextureInfo textureInfo, AtlasTexture itemTexture) : base(name,textureInfo,itemTexture) {}
     public override void OnLoad(BlockCoord pos, Chunk c)
     {}
 

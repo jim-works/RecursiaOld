@@ -6,6 +6,8 @@ public partial class ShotgunItem : GunItem
     [Export] public float Spread = 0.05f;
     [Export] public int BulletsPerShot = 5;
 
+    public ShotgunItem(string typeName, string displayname) : base(typeName, displayname) {}
+
     protected override void onFire(BulletItem bullet, Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         for (int i = 0; i < BulletsPerShot; i++)

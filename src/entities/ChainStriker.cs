@@ -5,7 +5,7 @@ namespace Recursia;
 public partial class ChainStriker : Combatant
 {
     [Export]
-    public PackedScene ChainLink;
+    public PackedScene? ChainLink;
     [Export]
     public int ChainSize = 5;
     [Export]
@@ -23,7 +23,9 @@ public partial class ChainStriker : Combatant
         links.Add(this);
         for (int i = 0; i < ChainSize; i++)
         {
-            prev = spawnLink(prev, 100+5*i);
+            if (spawnLink(prev, 100+5*i) is Combatant c) {
+                prev = c;
+            }
         }
         base._Ready();
     }
@@ -44,23 +46,24 @@ public partial class ChainStriker : Combatant
             if (combatant == this) continue;
             combatant.Die();
         }
-        SphereShaper.Shape3D(World, GlobalPosition, 6.2f);
+        SphereShaper.Shape3D(World!, GlobalPosition, 6.2f);
         base.Die();
     }
 
     private void attack()
     {
         attackTimer = 0;
-        if (World.Entities.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant closest))
+        if (World?.Entities.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant? closest) ?? false)
         {
+            if (closest == null) return;
             if (GlobalPosition.Y < closest.GlobalPosition.Y) AddImpulse(new Vector3(0, 10, 0)); //little hop
             AddImpulse((closest.GlobalPosition - GlobalPosition).Normalized() * StrikeImpulse);
         }
     }
 
-    private Combatant spawnLink(Combatant prev, float maxSpeed)
+    private Combatant? spawnLink(Combatant prev, float maxSpeed)
     {
-        ChainLink link = World.Entities.SpawnObject<ChainLink>(ChainLink, GlobalPosition, link => link.Parent = prev);
+        if (World?.Entities.SpawnObject<ChainLink>(ChainLink!, GlobalPosition, link => link.Parent = prev) is not ChainLink link) return null;
         link.MaxSpeed = maxSpeed;
         links.Add(link);
         return link;

@@ -3,21 +3,21 @@ using Godot;
 namespace Recursia;
 public partial class BipedalCombatant : Combatant
 {
-    [Export] public NodePath AnimationTreePath;
+    [Export] public NodePath? AnimationTreePath;
     [Export] public string WalkBlendNode = "walk";
     [Export] public bool SetSpeedToWalk=true;
     [Export] public float StrideLength = 40;
 
     [Export] public bool HandleCollision = true; //needed for large, segmented combatants. handles ik, standing on one foot, etc.
     [Export] public float MaxSlope = 5;
-    [Export] public NodePath LFootBottom;
-    [Export] public NodePath RFootBottom;
+    [Export] public NodePath? LFootBottom;
+    [Export] public NodePath? RFootBottom;
 
-    protected AnimationTree animationTree;
+    protected AnimationTree? animationTree;
     private bool lFootOnGround;
     private bool rFootOnGround;
-    private Node3D lFootTarget;
-    private Node3D rFootTarget;
+    private Node3D? lFootTarget;
+    private Node3D? rFootTarget;
 
     public override void _Ready()
     {
@@ -30,9 +30,9 @@ public partial class BipedalCombatant : Combatant
     public override void _PhysicsProcess(double delta)
     {
         if (SetSpeedToWalk) {
-            animationTree.Set($"parameters/{WalkBlendNode}/TimeScale/scale", new Vector3(Velocity.X,0,Velocity.Z).Length()/StrideLength);
+            animationTree!.Set($"parameters/{WalkBlendNode}/TimeScale/scale", new Vector3(Velocity.X,0,Velocity.Z).Length()/StrideLength);
         }
-        float currSlope = Mathf.Max(getFootHeight(lFootTarget.GlobalPosition), getFootHeight(rFootTarget.GlobalPosition));
+        float currSlope = Mathf.Max(getFootHeight(lFootTarget!.GlobalPosition), getFootHeight(rFootTarget!.GlobalPosition));
         if (currSlope >= MaxSlope) {
             Velocity = Vector3.Zero;
             collisionDirections = 0xff; //inside wall, so colliding in all directions
@@ -47,7 +47,7 @@ public partial class BipedalCombatant : Combatant
     private float getFootHeight(Vector3 footTargetGlobal)
     {
         Vector3 start = new(footTargetGlobal.X,footTargetGlobal.Y+MaxSlope,footTargetGlobal.Z);
-        BlockcastHit hit = World.Blockcast(start,new Vector3(0,-MaxSlope, 0));
+        BlockcastHit? hit = World?.Blockcast(start,new Vector3(0,-MaxSlope, 0));
         if (hit == null) return 0;
         return hit.HitPos.Y-footTargetGlobal.Y;
     }
@@ -62,8 +62,8 @@ public partial class BipedalCombatant : Combatant
 
     private void updateGrounded()
     {
-        lFootOnGround = World.Blockcast(lFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
-        rFootOnGround = World.Blockcast(rFootTarget.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
+        lFootOnGround = World?.Blockcast(lFootTarget!.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
+        rFootOnGround = World?.Blockcast(rFootTarget!.GlobalPosition, new Vector3(0,-0.05f,0)) != null;
     }
 
     private bool onGround() => lFootOnGround || rFootOnGround;

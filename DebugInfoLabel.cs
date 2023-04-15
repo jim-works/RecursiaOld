@@ -12,11 +12,14 @@ public partial class DebugInfoLabel : Label
 	public override void _Process(double delta)
 	{
 		sb.Clear();
-		foreach (var func in Inputs)
-		{
-			sb.Append(func(Player.LocalPlayer.GlobalPosition));
-			sb.Append('\n');
-		}
+        if (Player.LocalPlayer != null)
+        {
+            foreach (var func in Inputs)
+            {
+                sb.Append(func(Player.LocalPlayer.GlobalPosition));
+                sb.Append('\n');
+            }
+        }
 		Text = sb.ToString();
 	}
 }

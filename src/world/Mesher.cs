@@ -9,19 +9,19 @@ namespace Recursia;
 public partial class Mesher : Node
 {
     [Export]
-    public Material ChunkMaterial;
+    public Material? ChunkMaterial;
     [Export]
     public float MaxMeshTime = 0.1f;
     [Export]
     public int MeshIntervalMs = 1000;
     private float meshTimer;
-    public static Mesher Singleton {get; private set;}
+    public static Mesher? Singleton {get; private set;}
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> toMesh = new();
     private readonly Dictionary<ChunkCoord, int> meshing = new();
     private readonly Dictionary<ChunkCoord, ChunkMesh> done = new();
     private readonly Dictionary<ChunkCoord, Chunk> waitingToMesh = new();
     private readonly ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new();
-    private World world;
+    private World world = null!;
     //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
     // Called when the node enters the scene tree for the first time.
     public override void _EnterTree()
@@ -45,7 +45,7 @@ public partial class Mesher : Node
         var kvps = toMesh.ToArray();
         foreach(var kvp in kvps)
         {
-            if (toMesh.TryRemove(kvp.Key, out Chunk c))
+            if (toMesh.TryRemove(kvp.Key, out Chunk? c))
                 multithreadGenerateChunk(c);
         }
         //spawn all on single thread to avoid a million race conditions
@@ -57,7 +57,7 @@ public partial class Mesher : Node
                 meshing[pair.Item2]--;
                 if (meshing[pair.Item2] == 0) meshing.Remove(pair.Item2);
                 //only spawn chunks if they're not being meshed again, and only spawn the most up to date mesh
-                if (!meshing.ContainsKey(pair.Item2) && (!done.TryGetValue(pair.Item2, out ChunkMesh other) || other.Timestamp <= pair.Item1.Timestamp))
+                if (!meshing.ContainsKey(pair.Item2) && (!done.TryGetValue(pair.Item2, out ChunkMesh? other) || other.Timestamp <= pair.Item1.Timestamp))
                 {
                     done[pair.Item2] = pair.Item1;
                 }
@@ -74,11 +74,12 @@ public partial class Mesher : Node
     {
         if (@event is InputEventKey key && key.IsPressed() && key.Keycode == Key.C)
         {
-            ChunkCoord cpos = (ChunkCoord)Player.LocalPlayer.Position;
-            Chunk c = world.GetChunk(cpos);
-            string info = "null";
-            if (c != null) info = $"Meshed: {c.GetMeshedHistory()}, waiting to be meshed: {waitingToMesh.ContainsKey(cpos)}, state: {c.State}, generation state: {c.GenerationState}\nevent hist: {c.GetEventHistory()}";
-            Godot.GD.Print($"Chunk at {cpos}: {info}");
+            ChunkCoord cpos = (ChunkCoord)Player.LocalPlayer!.Position;
+            if (world.Chunks.TryGetChunk(cpos, out Chunk? c))
+            {
+                string info = $"Meshed: {c.GetMeshedHistory()}, waiting to be meshed: {waitingToMesh.ContainsKey(cpos)}, state: {c.State}, generation state: {c.GenerationState}\nevent hist: {c.GetEventHistory()}";
+                GD.Print($"Chunk at {cpos}: {info}");
+            }
             int stickies = 0;
             int maxSticky = 0;
             foreach (var kvp in world.Chunks)
@@ -88,7 +89,7 @@ public partial class Mesher : Node
                     stickies ++;
                 }
             }
-            Godot.GD.Print($"{stickies} sticky chunks in the world, max stick {maxSticky}");
+            GD.Print($"{stickies} sticky chunks in the world, max stick {maxSticky}");
         }
         base._Input(@event);
     }
@@ -113,55 +114,55 @@ public partial class Mesher : Node
             waitingToMesh[c.Position] = c;
         }
 
-        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1) && canMesh(c1)) {
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk? c1) && canMesh(c1)) {
             MeshDeferred(c1);
         }
-        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk c2) && canMesh(c2)) {
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk? c2) && canMesh(c2)) {
             MeshDeferred(c2);
         }
-        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,1,0), out Chunk c3) && canMesh(c3)) {
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,1,0), out Chunk? c3) && canMesh(c3)) {
             MeshDeferred(c3);
         }
-        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,-1,0), out Chunk c4) && canMesh(c4)) {
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,-1,0), out Chunk? c4) && canMesh(c4)) {
             MeshDeferred(c4);
         }
-        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk c5) && canMesh(c5)) {
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk? c5) && canMesh(c5)) {
             MeshDeferred(c5);
         }
-        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk c6) && canMesh(c6)) {
+        if (waitingToMesh.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk? c6) && canMesh(c6)) {
             MeshDeferred(c6);
         }
     }
     public void OnChunkUpdate(Chunk c)
     {
         MeshDeferred(c);
-        if (world.Chunks.TryGetValue(c.Position + new ChunkCoord(1,0,0), out Chunk c1)) MeshDeferred(c1);
-        if (world.Chunks.TryGetValue(c.Position + new ChunkCoord(-1,0,0), out Chunk c2)) MeshDeferred(c2);
-        if (world.Chunks.TryGetValue(c.Position + new ChunkCoord(0,1,0), out Chunk c3)) MeshDeferred(c3);
-        if (world.Chunks.TryGetValue(c.Position + new ChunkCoord(0,-1,0), out Chunk c4)) MeshDeferred(c4);
-        if (world.Chunks.TryGetValue(c.Position + new ChunkCoord(0,0,1), out Chunk c5)) MeshDeferred(c5);
-        if (world.Chunks.TryGetValue(c.Position + new ChunkCoord(0,0,-1), out Chunk c6)) MeshDeferred(c6);
+        if (world.Chunks.TryGetChunk(c.Position + new ChunkCoord(1,0,0), out Chunk? c1)) MeshDeferred(c1);
+        if (world.Chunks.TryGetChunk(c.Position + new ChunkCoord(-1,0,0), out Chunk? c2)) MeshDeferred(c2);
+        if (world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,1,0), out Chunk? c3)) MeshDeferred(c3);
+        if (world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,-1,0), out Chunk? c4)) MeshDeferred(c4);
+        if (world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,0,1), out Chunk? c5)) MeshDeferred(c5);
+        if (world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,0,-1), out Chunk? c6)) MeshDeferred(c6);
     }
     public bool canMesh(Chunk c)
     {
         //only mesh if all adjacent chunks are generated
-        return c?.State >= ChunkState.Loaded && world.GetChunk(c.Position + new ChunkCoord(1,0,0))?.GenerationState == ChunkGenerationState.GENERATED
-        && world.GetChunk(c.Position + new ChunkCoord(-1,0,0))?.GenerationState == ChunkGenerationState.GENERATED
-        && world.GetChunk(c.Position + new ChunkCoord(0,1,0))?.GenerationState == ChunkGenerationState.GENERATED
-        && world.GetChunk(c.Position + new ChunkCoord(0,-1,0))?.GenerationState == ChunkGenerationState.GENERATED
-        && world.GetChunk(c.Position + new ChunkCoord(0,0,1))?.GenerationState == ChunkGenerationState.GENERATED
-        && world.GetChunk(c.Position + new ChunkCoord(0,0,-1))?.GenerationState == ChunkGenerationState.GENERATED;
+        return c.State >= ChunkState.Loaded
+        && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(1,0,0), out Chunk? c1) && c1.GenerationState == ChunkGenerationState.GENERATED
+        && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(-1,0,0), out Chunk? c2) && c2.GenerationState == ChunkGenerationState.GENERATED
+        && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,1,0), out Chunk? c3) && c3.GenerationState == ChunkGenerationState.GENERATED
+        && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,-1,0), out Chunk? c4) && c4.GenerationState == ChunkGenerationState.GENERATED
+        && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,0,1), out Chunk? c5) && c5.GenerationState == ChunkGenerationState.GENERATED
+        && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,0,-1), out Chunk? c6) && c6.GenerationState == ChunkGenerationState.GENERATED;
     }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
     private void spawnChunk(ChunkMesh mesh, ChunkCoord coord)
     {
-        Chunk chunk = world.GetChunk(coord);
-        if (chunk == null) return;
+        if (!world.Chunks.TryGetChunk(coord, out Chunk? chunk)) return;
         chunk.Meshed = true;
         chunk.Mesh?.ClearData();
         chunk.Mesh = mesh;
         chunk.AddEvent("spawned");
-        if (mesh == null)
+        if (mesh.Verts.Count == 0)
         {
             //no need to spawn in a new MeshInstance3D if the chunk is empty
             return;
@@ -187,10 +188,6 @@ public partial class Mesher : Node
     }
     private ChunkMesh generateMesh(Chunk chunk)
     {
-        if (chunk == null)
-        {
-            return null;
-        }
         chunk.AddEvent("mesh generated");
         ChunkMesh chunkMesh = getMesh();
         chunkMesh.Timestamp = Godot.Time.GetTicksUsec();
@@ -199,13 +196,13 @@ public partial class Mesher : Node
         var normals = chunkMesh.Norms;
         var uvs = chunkMesh.UVs;
 
-        Chunk[] neighbors = new Chunk[6]; //we are in 3d
-        neighbors[(int)Direction.PosX] = world.GetChunk(chunk.Position + new ChunkCoord(1,0,0));
-        neighbors[(int)Direction.PosY] = world.GetChunk(chunk.Position + new ChunkCoord(0,1,0));
-        neighbors[(int)Direction.PosZ] = world.GetChunk(chunk.Position + new ChunkCoord(0,0,1));
-        neighbors[(int)Direction.NegX] = world.GetChunk(chunk.Position + new ChunkCoord(-1,0,0));
-        neighbors[(int)Direction.NegY] = world.GetChunk(chunk.Position + new ChunkCoord(0,-1,0));
-        neighbors[(int)Direction.NegZ] = world.GetChunk(chunk.Position + new ChunkCoord(0,0,-1));
+        Chunk?[] neighbors = new Chunk?[6]; //we are in 3d
+        neighbors[(int)Direction.PosX] = world.Chunks.GetChunkOrNull(chunk.Position + new ChunkCoord(1,0,0));
+        neighbors[(int)Direction.PosY] = world.Chunks.GetChunkOrNull(chunk.Position + new ChunkCoord(0,1,0));
+        neighbors[(int)Direction.PosZ] = world.Chunks.GetChunkOrNull(chunk.Position + new ChunkCoord(0,0,1));
+        neighbors[(int)Direction.NegX] = world.Chunks.GetChunkOrNull(chunk.Position + new ChunkCoord(-1,0,0));
+        neighbors[(int)Direction.NegY] = world.Chunks.GetChunkOrNull(chunk.Position + new ChunkCoord(0,-1,0));
+        neighbors[(int)Direction.NegZ] = world.Chunks.GetChunkOrNull(chunk.Position + new ChunkCoord(0,0,-1));
 
         //generate the mesh
         for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
@@ -214,7 +211,6 @@ public partial class Mesher : Node
             {
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
-                    if (chunk[x,y,z] == null) continue;
                     meshBlock(chunk, neighbors, new BlockCoord(x,y,z), chunk[x,y,z], vertices, uvs, normals, tris);
                 }
             }
@@ -222,13 +218,13 @@ public partial class Mesher : Node
 
         if (vertices.Count==0) {
             chunkMesh.ClearData();
-            return null;
         }
         return chunkMesh;
     }
-    private static void meshBlock(Chunk chunk, Chunk[] neighbors, BlockCoord localPos, Block block, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void meshBlock(Chunk chunk, Chunk?[] neighbors, BlockCoord localPos, Block? block, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
     {
-        static bool shouldAddFace(Chunk c, bool transparent, int x, int y, int z) => c == null || c[x,y,z] == null || !transparent && c[x,y,z].Transparent;
+        static bool shouldAddFace(Chunk? c, bool transparent, int x, int y, int z) => c == null || c[x,y,z] == null || !transparent && c[x,y,z]!.Transparent;
+        if (block == null) return;
         AtlasTextureInfo tex = block.TextureInfo;
         bool transparent = block.Transparent;
         Vector3 pos = (Vector3)chunk.LocalToWorld(localPos);

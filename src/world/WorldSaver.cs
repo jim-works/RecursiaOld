@@ -21,12 +21,12 @@ public partial class WorldSaver : Node
     [Export] public string WorldsFolder = Path.Join(OS.GetUserDataDir(), "worlds");
     private double saveTimer;
     private double loadTimer;
-    private World world;
+    private World? world;
 
-    private SQLInterface sql;
+    private SQLInterface? sql;
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
-    private readonly ConcurrentDictionary<ChunkCoord, Action<Chunk>> loadQueue = new();
-    private readonly List<(Chunk, Action<Chunk>)> callbackQueue = new();
+    private readonly ConcurrentDictionary<ChunkCoord, Action<Chunk?>> loadQueue = new();
+    private readonly List<(Chunk?, Action<Chunk?>)> callbackQueue = new();
 
     public override void _Ready()
     {
@@ -61,7 +61,7 @@ public partial class WorldSaver : Node
         if (saveTimer > SaveIntervalSeconds)
         {
             saveTimer = 0;
-            Save(world);
+            Save(world!);
         }
         if (loadTimer > LoadIntervalSeconds)
         {
@@ -79,12 +79,12 @@ public partial class WorldSaver : Node
 
     public override void _ExitTree()
     {
-        Save(world);
+        Save(world!);
         emptySaveQueue();
-        sql.Close();
+        sql!.Close();
     }
 
-    public void LoadAndStick(ChunkCoord coord, Action<Chunk> callback)
+    public void LoadAndStick(ChunkCoord coord, Action<Chunk?> callback)
     {
 #if NO_SAVING
         callback(null);
@@ -104,7 +104,7 @@ public partial class WorldSaver : Node
             saveQueue[kvp.Key] = kvp.Value;
             kvp.Value.SaveDirtyFlag = false;
         }
-        sql.SavePlayers(world.Entities.Players);
+        sql!.SavePlayers(world.Entities.Players);
 #endif
     }
     public void Save(Chunk c)
@@ -123,9 +123,9 @@ public partial class WorldSaver : Node
 #else
         GD.Print($"Saving {saveQueue.Count} groups...");
         //TODO THIS ISN"T SAFE FOR SOME REASON
-        sql.SaveChunks(() => {
+        sql!.SaveChunks(() => {
             foreach (var kvp in saveQueue.ToArray())
-                if (saveQueue.TryRemove(kvp.Key, out Chunk val)) return val;
+                if (saveQueue.TryRemove(kvp.Key, out Chunk? val)) return val;
             return null;
         });
         saveQueue.Clear();
@@ -136,12 +136,12 @@ public partial class WorldSaver : Node
     {
         //copy to avoid race
         try {
-        KeyValuePair<ChunkCoord, Action<Chunk>>[] coords = loadQueue.ToArray();
-        List<Chunk> results = new();
-        sql.LoadChunks(coords.Select(kvp => kvp.Key), results);
+        KeyValuePair<ChunkCoord, Action<Chunk?>>[] coords = loadQueue.ToArray();
+        List<Chunk?> results = new();
+        sql!.LoadChunks(coords.Select(kvp => kvp.Key), results);
         for (int i = 0; i < coords.Length; i++)
         {
-            Chunk c = results[i];
+            Chunk? c = results[i];
             if (c != null)
             {
                 c.SaveDirtyFlag = false;

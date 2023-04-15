@@ -4,8 +4,8 @@ using Godot;
 namespace Recursia;
 public partial class Player : Combatant
 {
-    public static Player LocalPlayer {get; private set;}
-    public static event System.Action<Player> OnLocalPlayerAssigned;
+    public static Player? LocalPlayer {get; private set;}
+    public static event System.Action<Player>? OnLocalPlayerAssigned;
     [Export] public float Reach = 100;
     [Export] public float MoveSpeed = 10;
     [Export] public float JumpHeight = 10;
@@ -20,25 +20,32 @@ public partial class Player : Combatant
 
     public override void _Ready()
     {
+        //temporary, so idc about nullable
         Inventory = new Inventory(InitialInventorySize);
-        Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("gun"), Size = 1 });
-        Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("explosive_bullet"), Size = 100 });
-        Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("cursed_idol"), Size = 3 });
-        Inventory.CopyItem(new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 });
-        Inventory.CopyItem(new ItemStack { Item = ItemTypes.GetBlockItem("lava"), Size = 1 });
-        BlockFactoryItem lootBlockItem = ItemTypes.GetBlockItem("loot");
-        lootBlockItem.InitPlaced = (Block block) => {
-            if (block is LootBlock b)
+        ItemTypes.TryGet("gun", out Item? gun);
+        ItemTypes.TryGet("marp_rod", out Item? marp_rod);
+        ItemTypes.TryGet("explosive_bullet", out Item? explosive_bullet);
+        ItemTypes.TryGet("cursed_idol", out Item? cursed_idol);
+        Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
+        Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
+        Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
+        Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 1 });
+        if (ItemTypes.TryGetBlockItem("loot", out BlockFactoryItem? lootBlockItem))
+        {
+            lootBlockItem.InitPlaced = (Block block) =>
             {
-                 b.Drops = new ItemStack[] { new ItemStack { Item = ItemTypes.Get("marp_rod"), Size = 1 }};
-            }
-            else
-            {
-                GD.PushError("Initplaced passed a block which is not a loot block!");
-            }
-        };
-        Inventory.CopyItem(new ItemStack {Item = lootBlockItem, Size = 1});
-        World.Loader.AddChunkLoader(this);
+                if (block is LootBlock b)
+                {
+                    b.Drops = new ItemStack[] { new ItemStack { Item = marp_rod!, Size = 1 } };
+                }
+                else
+                {
+                    GD.PushError("Initplaced passed a block which is not a loot block!");
+                }
+            };
+            Inventory.CopyItem(new ItemStack {Item = lootBlockItem, Size = 1});
+        }
+        World?.Loader.AddChunkLoader(this);
         LocalPlayer = this;
         OnLocalPlayerAssigned?.Invoke(this);
         jumpsLeft = JumpCount;
@@ -48,7 +55,7 @@ public partial class Player : Combatant
     public override void _ExitTree()
     {
         LocalPlayer = null;
-        World.Loader.RemoveChunkLoader(this);
+        World?.Loader.RemoveChunkLoader(this);
         base._ExitTree();
     }
 
@@ -68,9 +75,13 @@ public partial class Player : Combatant
             }
             else if (key.Keycode == Key.P)
             {
-                LootBlock b = (LootBlock)BlockTypes.Get("loot");
-                b.Drops = new ItemStack[] {new ItemStack{Item=ItemTypes.Get("marp_rod"),Size=1}};
-                World.SetBlock((BlockCoord)GlobalPosition, b);
+                if (BlockTypes.TryGet("loot", out Block? b))
+                {
+                    //temp idc
+                    ItemTypes.TryGet("marp_rod", out Item? marp_rod);
+                    (b as LootBlock)!.Drops = new ItemStack[] {new ItemStack{Item=marp_rod!,Size=1}};
+                    World!.SetBlock((BlockCoord)GlobalPosition, b);
+                }
             } else if (key.Keycode == Key.T) {
                 Collides = !Collides;
             }
@@ -97,10 +108,15 @@ public partial class Player : Combatant
     //called by rotating camera
     public void Punch(Vector3 dir)
     {
-        BlockcastHit hit = World.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
+        BlockcastHit? hit = World?.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
         if (hit != null)
         {
-            ItemStack drop = World.BreakBlock(hit.BlockPos);
+            ItemStack drop = World!.BreakBlock(hit.BlockPos); //if hit isn't null, world isn't null
+            if (Inventory == null)
+            {
+                GD.PushError($"Player {Name} has null inventory!");
+                return;
+            }
             Inventory.AddItem(ref drop);
         }
     }
@@ -115,8 +131,8 @@ public partial class Player : Combatant
     //called by rotating camera
     public void Use(Vector3 dir)
     {
-        BlockcastHit hit = World.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
-        if (hit?.Block.Usable == true)
+        BlockcastHit? hit = World?.Blockcast(GlobalPosition + CameraOffset, dir * Reach);
+        if (hit?.Block?.Usable == true)
         {
             hit.Block.OnUse(this, hit.BlockPos);
         }
@@ -137,11 +153,6 @@ public partial class Player : Combatant
         {
             Jump();
         }
-    }
-
-    public static Player Deserialize(World world, BinaryReader br)
-    {
-        return PhysicsObject.Deserialize<Player>(world, br);
     }
     // public override void Serialize(BinaryWriter writer)
     // {

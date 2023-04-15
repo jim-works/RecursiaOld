@@ -3,12 +3,12 @@ using Godot;
 namespace Recursia;
 public class ShapingLayer : IChunkGenLayer
 {
-    private readonly Block stone;
-    private readonly Block grass;
+    private readonly Block? stone;
+    private readonly Block? grass;
     private const int noiseSampleInterval = 4;
     private const float freq = 0.1f, freqMult = 3f, scaleMult = 0.5f;
     private const int octaves = 5;
-    private SplineNoise densityNoise;
+    private readonly SplineNoise densityNoise;
     private readonly Spline continentHeightSpline = new(new Vector2[]{new Vector2(-50,-0.5f), new Vector2(25,0), new Vector2(50,0.5f), new Vector2(150,1)});
     private readonly Spline oceanHeightSpline = new(new Vector2[]{new Vector2(-75,-0.4f), new Vector2(-25,0.7f), new Vector2(25,0.7f), new Vector2(100,1)});
     private readonly Spline coastBlendingSpline = new(new Vector2[]{new Vector2(-0.5f,0), new Vector2(1,1)});
@@ -16,29 +16,24 @@ public class ShapingLayer : IChunkGenLayer
     //reduces density for (flattens) above ground terrain. low frequency
     private const float scaleFreq = 0.2f, scaleFreqMult = 1.5f, scaleScaleMult = 0.5f;
     private const int scaleOctaves = 3;
-    private SplineNoise scaleNoise;
+    private readonly SplineNoise scaleNoise;
 
     //noise that can create wacky effects by multiplying the density by a high value rarely
     private const float wackyFreq = 0.7f, wackyFreqMult = 1.5f, wackyScaleMult = 0.7f;
     private const int wackyOctaves = 3;
-    private SplineNoise wackyNoise;
+    private readonly SplineNoise wackyNoise;
 
     //noise that controls densityByHeight (continentialness)
     //TODO: this doesn't make oceans, but it could be a cool effect with the right splines/blending.
     private const float heightFreq = 0.2f, heightFreqMult = 2f, heightScaleMult = 0.5f;
     private const int heightOctaves = 2;
-    private SplineNoise heightNoise;
+    private readonly SplineNoise heightNoise;
 
-    public ShapingLayer()
+    public ShapingLayer(System.Func<int> seedFactory)
     {
-        stone = BlockTypes.Get("stone");
-        grass = BlockTypes.Get("grass");
-        DebugInfoLabel.Inputs.Add((pos) => $"Density: {densityNoise.Sample(pos.X, pos.Y, pos.Z):0.00}\n Scale: {scaleNoise.Sample(pos.X, pos.Z):0.00}\n Wacky: {wackyNoise.Sample(pos.X, pos.Y, pos.Z):0.00}"
-                                            + $"\n Oceanness: {coastBlendingSpline.Map(heightNoise.Sample(pos.X, pos.Z)):0.00}");
-    }
+        BlockTypes.TryGet("grass", out grass);
+        BlockTypes.TryGet("stone", out stone);
 
-    public void InitRandom(System.Func<int> seedFactory)
-    {
         LayeredNoise layeredNoise = new(seedFactory());
         layeredNoise.AddSumLayers(freq, freqMult, scaleMult, octaves);
         densityNoise = new SplineNoise(layeredNoise, new Spline(new Vector2[]{new Vector2(-1,-1), new Vector2(1,1)}));
@@ -54,6 +49,9 @@ public class ShapingLayer : IChunkGenLayer
         LayeredNoise heightLayers = new(seedFactory());
         heightLayers.AddSumLayers(heightFreq, heightFreqMult, heightScaleMult, heightOctaves);
         heightNoise = new SplineNoise(heightLayers, new Spline(new Vector2[]{new Vector2(-1,-1), new Vector2(heightLayers.Quantile(0.3f), -1), new Vector2(heightLayers.Quantile(0.4f),0), new Vector2(1,1)}));
+
+        DebugInfoLabel.Inputs.Add((pos) => $"Density: {densityNoise.Sample(pos.X, pos.Y, pos.Z):0.00}\n Scale: {scaleNoise.Sample(pos.X, pos.Z):0.00}\n Wacky: {wackyNoise.Sample(pos.X, pos.Y, pos.Z):0.00}"
+                                            + $"\n Oceanness: {coastBlendingSpline.Map(heightNoise.Sample(pos.X, pos.Z)):0.00}");
     }
 
     private float sample(float x, float y, float z) {
@@ -103,7 +101,7 @@ public class ShapingLayer : IChunkGenLayer
         return Mathf.Lerp(continentHeightSpline.Map(height), oceanHeightSpline.Map(height), coastBlendingSpline.Map(heightSample));
     }
 
-    public Block GetBlockType(float[,,] samples, BlockCoord worldCoords, int x, int y, int z)
+    public Block? GetBlockType(float[,,] samples, BlockCoord worldCoords, int x, int y, int z)
     {
         float heightSample = heightNoise.Sample(worldCoords.X+x, worldCoords.Z+z);
         float densitySample = Math.Trilerp(samples, x, y, z,noiseSampleInterval);

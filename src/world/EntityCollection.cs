@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Recursia;
 public class EntityCollection
@@ -23,16 +24,16 @@ public class EntityCollection
     }
     private void removePhysicsObject(PhysicsObject p, ChunkCoord from)
     {
-        if (physicsObjects.TryGetValue(from, out List<PhysicsObject> physics))
+        if (physicsObjects.TryGetValue(from, out List<PhysicsObject>? physics))
         {
             physics.Remove(p);
             if (physics.Count == 0) physicsObjects.Remove(from);
         }
-        if (world.GetChunk(from) is Chunk chunk)
+        if (world.Chunks.TryGetChunk(from, out Chunk? chunk))
         {
             chunk.PhysicsObjects.Remove(p);
         }
-        if (p is Combatant c && combatants.TryGetValue(from, out List<Combatant> comb))
+        if (p is Combatant c && combatants.TryGetValue(from, out List<Combatant>? comb))
         {
             comb.Remove(c);
             if (combatants.Count == 0) combatants.Remove(from);
@@ -45,11 +46,11 @@ public class EntityCollection
     private void addPhysicsObject(PhysicsObject p)
     {
         ChunkCoord to = (ChunkCoord)p.GlobalPosition;
-        if (world.GetChunk(to) is Chunk chunk)
+        if (world.Chunks.TryGetChunk(to, out Chunk? chunk))
         {
             chunk.PhysicsObjects.Add(p);
         }
-        if (physicsObjects.TryGetValue(to, out List<PhysicsObject> list))
+        if (physicsObjects.TryGetValue(to, out List<PhysicsObject>? list))
         {
             list.Add(p);
         }
@@ -59,7 +60,7 @@ public class EntityCollection
         }
         if (p is Combatant c)
         {
-            if (combatants.TryGetValue(to, out List<Combatant> list2))
+            if (combatants.TryGetValue(to, out List<Combatant>? list2))
             {
                 list2.Add(c);
             }
@@ -73,7 +74,7 @@ public class EntityCollection
 
     //init runs before object is added to scene tree
     //if will handle registering if T : PhysicsObject/Combatant
-    public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T> init=null) where T : Node3D
+    public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T>? init=null) where T : Node3D
     {
         T obj = prefab.Instantiate<T>();
         var c = obj as PhysicsObject;
@@ -106,7 +107,7 @@ public class EntityCollection
         addPhysicsObject(obj);
     }
 
-    public bool ClosestEnemy(Vector3 pos, Team team, float maxDist, out Combatant enemy)
+    public bool ClosestEnemy(Vector3 pos, Team? team, float maxDist, [MaybeNullWhen(false)] out Combatant enemy)
     {
         float minSqrDist = float.PositiveInfinity;
         enemy = null;
@@ -123,10 +124,9 @@ public class EntityCollection
                 }
             }
         }
-
         return enemy != null;
     }
-    public IEnumerable<Combatant> GetEnemiesInRange(Vector3 pos, float range, Team team)
+    public IEnumerable<Combatant> GetEnemiesInRange(Vector3 pos, float range, Team? team)
     {
         //TODO: only check chunks in range
         foreach (var l in combatants.Values)
@@ -148,7 +148,7 @@ public class EntityCollection
             }
         }
     }
-    public Combatant CollidesWithEnemy(Box box, Team team)
+    public Combatant? CollidesWithEnemy(Box box, Team? team)
     {
         //TODO: only check chunks in range
         foreach (var l in combatants.Values)

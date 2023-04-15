@@ -4,6 +4,5 @@
 namespace Recursia;
 public interface IChunkGenLayer
 {
-    void InitRandom(System.Func<int> seedFactory);
     void GenerateChunk(World world, Chunk chunk);
 }

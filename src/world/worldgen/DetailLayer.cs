@@ -3,20 +3,16 @@ using Godot;
 namespace Recursia;
 public class DetailLayer : IChunkGenLayer
 {
-    private readonly Block stone;
-    private readonly Block grass;
-    private readonly Block dirt;
+    private readonly Block? stone;
+    private readonly Block? grass;
+    private readonly Block? dirt;
     private const int dirtDepth = 2;
 
     public DetailLayer()
     {
-        stone = BlockTypes.Get("stone");
-        grass = BlockTypes.Get("grass");
-        dirt = BlockTypes.Get("dirt");
-    }
-
-    public void InitRandom(System.Func<int> seedFactory)
-    {
+        BlockTypes.TryGet("stone", out stone);
+        BlockTypes.TryGet("grass", out grass);
+        BlockTypes.TryGet("dirt", out dirt);
     }
 
     public void GenerateChunk(World world, Chunk chunk)

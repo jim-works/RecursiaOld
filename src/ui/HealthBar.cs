@@ -5,9 +5,9 @@ namespace Recursia;
 public partial class HealthBar : Node
 {
     [Export]
-    public Combatant Tracking;
+    public Combatant? Tracking;
 
-    private ColorRect healthbar;
+    private ColorRect healthbar = null!;
 
     public override void _Ready()
     {
@@ -20,7 +20,6 @@ public partial class HealthBar : Node
         if (Tracking == null) {
             return;
         }
-        float proportion = Tracking.GetHealth()/Tracking.GetMaxHealth();
-        healthbar.AnchorRight = proportion;
+        healthbar.AnchorRight = Tracking.GetHealth()/Tracking.GetMaxHealth();
     }
 }

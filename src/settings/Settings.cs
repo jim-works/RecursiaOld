@@ -18,7 +18,7 @@ public partial class Settings : Node
     public override void _Process(double delta)
     {
         if (Input.IsActionJustPressed("toggle_fullscreen")) DisplayServer.WindowSetMode(DisplayServer.WindowGetMode() == DisplayServer.WindowMode.Fullscreen ? DisplayServer.WindowMode.Windowed : DisplayServer.WindowMode.Fullscreen);
-        if (Input.IsActionJustPressed("toggle_debug")) DebugDraw.Singleton.Draw = !DebugDraw.Singleton.Draw;
+        if (Input.IsActionJustPressed("toggle_debug") && DebugDraw.Singleton != null) DebugDraw.Singleton.Draw = !DebugDraw.Singleton.Draw;
 
         if (Input.IsActionJustPressed("pause"))
         {

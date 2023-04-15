@@ -13,7 +13,7 @@ namespace Recursia
         [Export]
         public bool RotateParentPitch;
 
-        public static RotatingCamera Singleton { get; private set; }
+        public static RotatingCamera? Singleton { get; private set; }
 
         private float yaw;
         private float pitch;

@@ -1,40 +1,35 @@
 using Godot;
 
 namespace Recursia;
-public partial class Inventory
+public class Inventory
 {
     public ItemStack[] Items;
     public int Size {get => Items.Length;}
-    public event System.Action<Inventory> OnUpdate;
+    public event System.Action<Inventory>? OnUpdate;
 
     public Inventory(int slots)
     {
         Items = new ItemStack[slots];
+        GD.Print($"item in slot 0: {Items[0].Item?.DisplayName ?? "null"}");
     }
     public void TriggerUpdate()
     {
-        for (int i = 0; i < Items.Length; i++)
-        {
-            //make sure all items with stack size 0 are cleaned up.
-            if (Items[i].Size == 0) {
-                Items[i].Item = null;
-            }
-        }
         OnUpdate?.Invoke(this);
     }
     //auto stacks into existing items in inventory, then first free slot
     public void AddItem(ref ItemStack item)
     {
-        if (item.Item == null || item.Size < 1) return; //invalid item
+        if (item.IsEmpty) return; //invalid item
         int firstEmptySlot = -1;
         for(int i = 0; i < Items.Length; i++)
         {
-            if (Items[i].Item == null && firstEmptySlot == -1)
+            if (Items[i].IsEmpty)
             {
                 //keep empty slot for later, try to stack with existing items first.
-                firstEmptySlot = i;
+                if (firstEmptySlot == -1) firstEmptySlot = i;
             }
-            if (Items[i].Item == item.Item && Items[i].Item.MaxStack > Items[i].Size)
+            //Items[i].Item is not null because of first if statement, not sure why I need !.
+            else if (Items[i].Item == item.Item && Items[i].Item.MaxStack > Items[i].Size)
             {
                 //add to existing stack
                 int toAdd = Mathf.Min(item.Size, Items[i].Item.MaxStack-Items[i].Size);
@@ -65,6 +60,19 @@ public partial class Inventory
         }
         //not found
         return -1;
+    }
+
+    //selects the first slot containig an itemstack matching the query
+    //returns (item, slot) if found
+    //returns (Item.Empty, -1) if no match
+    public (Item, int) SelectItem(System.Func<ItemStack, bool> query)
+    {
+        for (int i = 0; i < Items.Length; i++)
+        {
+            if (query(Items[i])) return (Items[i].Item, i);
+        }
+        //not found
+        return (Item.Empty, -1);
     }
 
     public void SwapItems(int a, int b)
@@ -116,7 +124,7 @@ public partial class Inventory
     public bool TakeItems(int slot, int count, ref ItemStack into)
     {
         //cannot take from empty slot or into mismatched stack
-        if (Items[slot].Item == null || (into.Item != null && Items[slot].Item != into.Item)) return false;
+        if (Items[slot].IsEmpty || !into.IsEmpty && Items[slot].Item != into.Item) return false;
         into.Item = Items[slot].Item;
         int toTake = Mathf.Min(count, Items[slot].Size);
         into.Size += toTake;
@@ -130,7 +138,7 @@ public partial class Inventory
     //caller may have to clean up from's item if we take all the items in the stack
     public bool PutItem(int slot, ref ItemStack from)
     {
-        return PutItem(slot, ref from, from.Item?.MaxStack ?? 0);
+        return PutItem(slot, ref from, from.Item.MaxStack);
     }
 
     //returns true if successful, false if invalid operation (cannot take one item type into another)
@@ -139,7 +147,7 @@ public partial class Inventory
     public bool PutItem(int slot, ref ItemStack from, int count)
     {
         //cannot take from empty slot or into mismatched stack
-        if (from.Item == null || (Items[slot].Item != null && Items[slot].Item != from.Item)) return false;
+        if (from.IsEmpty || !Items[slot].IsEmpty && Items[slot].Item != from.Item) return false;
         Items[slot].Item = from.Item;
         int toPut = Mathf.Min(Mathf.Min(from.Item.MaxStack-Items[slot].Size,count),from.Size);
         from.Decrement(toPut);

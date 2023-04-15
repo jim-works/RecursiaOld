@@ -28,10 +28,14 @@ public partial class WorldGenerator
     {
         currSeed = Seed;
         this.world = world;
+    }
+
+    public void LoadLayers()
+    {
         //initialize worldgen threads
         Godot.GD.Print($"Starting world generator with {ShapingThreads} threads!");
-        shapingLayers.Add(initLayer(new ShapingLayer()));
-        shapingLayers.Add(initLayer(new DetailLayer()));
+        shapingLayers.Add(new ShapingLayer(getNextSeed));
+        shapingLayers.Add(new DetailLayer());
         //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
         //structureProviders.Add(new TreeStructureProvider());
         structureProviders.Add(new BoxStructureProvider());
@@ -49,12 +53,6 @@ public partial class WorldGenerator
             currSeed *= 0x8001AD;
         }
         return currSeed;
-    }
-
-    private IChunkGenLayer initLayer(IChunkGenLayer layer)
-    {
-        layer.InitRandom(getNextSeed);
-        return layer;
     }
 
     //multithreaded world generation, queues c to be generated
@@ -127,7 +125,7 @@ public partial class WorldGenerator
                 BlockCoord origin = chunk.LocalToWorld(new BlockCoord(dx, dy, dz));
                 if (!provider.SuitableLocation(world, origin)) continue;
                 await requestArea(chunk.Position, provider.MaxArea, area);
-                WorldStructure result = provider.PlaceStructure(area, origin);
+                WorldStructure? result = provider.PlaceStructure(area, origin);
                 if (result != null && provider.Record)
                 {
                     chunk.Structures.Add(result);
@@ -172,7 +170,7 @@ public partial class WorldGenerator
             await Task.Delay(POLL_INTERVAL_MS);
             needed.RemoveWhere(coord =>
             {
-                if (world.GetChunk(coord) is Chunk c && c.GenerationState >= ChunkGenerationState.SHAPED)
+                if (world.Chunks.TryGetChunk(coord, out Chunk? c) && c.GenerationState >= ChunkGenerationState.SHAPED)
                 {
                     collection.Add(c);
                     return true;

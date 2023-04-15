@@ -19,11 +19,7 @@ public partial class TextureAtlas
             mins[i] = new Vector2((float)x*cellWidthRatio, (float)y*cellHeightRatio);
             maxs[i] = new Vector2((float)(x+1)*cellWidthRatio, (float)(y+1)*cellHeightRatio);
         }
-        return new AtlasTextureInfo {
-            UVMin = mins,
-            UVMax = maxs,
-            Atlas = this
-        };
+        return new AtlasTextureInfo(mins, maxs, this);
     }
     //length xs and ys should equal 6
     //face in direction d is assigned the texture at xs[d],ys[d] in the atlas
@@ -39,10 +35,6 @@ public partial class TextureAtlas
             mins[i] = new Vector2((float)xs[i]*cellWidthRatio, (float)ys[i]*cellHeightRatio);
             maxs[i] = new Vector2((float)(xs[i]+1)*cellWidthRatio, (float)(ys[i]+1)*cellHeightRatio);
         }
-        return new AtlasTextureInfo {
-            UVMin = mins,
-            UVMax = maxs,
-            Atlas = this
-        };
+        return new AtlasTextureInfo(mins, maxs, this);
     }
 }

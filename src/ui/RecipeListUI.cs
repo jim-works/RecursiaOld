@@ -5,16 +5,20 @@ namespace Recursia;
 public partial class RecipeListUI : Control
 {
     [Export]
-    public PackedScene CraftingRecipeUI;
+    public PackedScene CraftingRecipeUI = null!;
     [Export]
     public int Padding;
 
     private readonly List<CraftingRecipeUI> recipeUIs = new();
-    private Control Parent; //scrollbox
+    private Control Parent = null!; //scrollbox
 
     public override void _Ready()
     {
         Parent = GetParentControl();
+        if (CraftingRecipeUI == null)
+        {
+            GD.PushError($"Null CraftingRecipeUI on RecipeListUI {Name}");
+        }
         base._Ready();
     }
     //TODO: pooling

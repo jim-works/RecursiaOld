@@ -4,6 +4,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies> <!-- needed for nuget packages to work in godot -->
     <AnalysisMode>Recommended</AnalysisMode>
     <NoWarn>IDE1006, RCS1123, CA1051, CA1707, CA1711</NoWarn>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MathNet.Numerics" Version="5.0.0" />

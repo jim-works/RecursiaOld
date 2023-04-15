@@ -5,12 +5,12 @@ public partial class ExplosiveProjectile : Projectile
 {
     [Export] public float ExplosionSize = 10;
     [Export] public float FlingFactor = 1;
-    [Export] public AudioStream ExplosionSound;
-    [Export] public NodePath AudioPlayerPath;
+    [Export] public AudioStream? ExplosionSound;
+    [Export] public NodePath? AudioPlayerPath;
     private bool exploded;
     private bool dying;
     private double dieTime = 2;
-    private AudioStreamPlayer3D audioStreamPlayer;
+    private AudioStreamPlayer3D? audioStreamPlayer;
 
     public override void _Ready()
     {
@@ -33,7 +33,7 @@ public partial class ExplosiveProjectile : Projectile
         }
         base._PhysicsProcess(delta);
     }
-    protected override void onHit(Combatant c)
+    protected override void onHit(Combatant? c)
     {
         if (exploded) return;
         Explode();
@@ -41,8 +41,16 @@ public partial class ExplosiveProjectile : Projectile
     }
     public void Explode()
     {
-        audioStreamPlayer.Stream = ExplosionSound;
-        audioStreamPlayer.Play();
+        if (World == null)
+        {
+            GD.PushError("Null world!");
+            return;
+        }
+        if (audioStreamPlayer != null)
+        {
+            audioStreamPlayer.Stream = ExplosionSound;
+            audioStreamPlayer.Play();
+        }
         exploded = true;
         SphereShaper.Shape3D(World, GlobalPosition, ExplosionSize);
         GpuParticles3D TrailParticles = GetNode<GpuParticles3D>("Trail");
