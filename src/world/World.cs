@@ -8,7 +8,7 @@ public partial class World : Node
 {
     [Export] public Texture2D? BlockTextureAtlas;
     [Export] public Vector3 SpawnPoint = new(0,10,0);
-    public ChunkCollection Chunks = new();
+    public ChunkCollection Chunks;
     public EntityCollection Entities;
 
     public WorldGenerator WorldGen;
@@ -23,6 +23,7 @@ public partial class World : Node
 
     public World()
     {
+        Chunks = new(this);
         Loader = new(this);
         Entities = new(this);
         WorldGen = new(this);
@@ -38,7 +39,7 @@ public partial class World : Node
     public override void _Ready()
     {
         saver = GetNode<WorldSaver>("WorldSaver");
-        ObjectTypes.GetInstance<Player>(this, "player", SpawnPoint);
+        ObjectTypes.TryGetInstance(this, "player", SpawnPoint, out Player _);
         _chunkLoadingTimer = 9999;
         Loader.UpdateChunkLoading();
         base._Ready();
@@ -248,7 +249,7 @@ public partial class World : Node
 
         for (float t = 0; t < lineLength; t += stepSize) {
             //only query world when we are in a new block
-            Vector3 testPoint = (origin + t*lineNorm);
+            Vector3 testPoint = origin + t*lineNorm;
             BlockCoord coords = (BlockCoord)testPoint;
             if (coords == oldCoords) continue;
             oldCoords=coords;

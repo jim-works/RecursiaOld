@@ -32,11 +32,11 @@ public class TreeStructureProvider : WorldStructureProvider
     {
         return world.GetBlock(coord) == grass; //tree must be planted on grass
     }
-    public override WorldStructure? PlaceStructure(AtomicChunkCollection c, BlockCoord position)
+    public override WorldStructure? PlaceStructure(ChunkCollection c, BlockCoord position)
     {
         for (int dy = 1; dy < TRUNK_HEIGHT; dy++)
         {
-            c.SetBlock(new BlockCoord(0,dy,0)+position, log);
+            c.QueueSetBlock(new BlockCoord(0,dy,0)+position, log);
         }
         for (int x = -LEAF_SIZE; x <= LEAF_SIZE; x++)
         {
@@ -45,7 +45,7 @@ public class TreeStructureProvider : WorldStructureProvider
                 for (int z = -LEAF_SIZE; z <= LEAF_SIZE; z++)
                 {
                     float sample = BASE_DIST+(Mathf.Abs(x)+Mathf.Abs(y)+Mathf.Abs(z))*(1+0.5f*leafNoise.GetNoise(FREQ*(position.X+x),FREQ*(position.Y+y),FREQ*(position.Z+z))); //0..3*LEAF_SIZE
-                    if (sample < CUTOFF) c.SetIfNull(new BlockCoord(x,y+TRUNK_HEIGHT,z)+position, leaves);
+                    if (sample < CUTOFF) c.QueueSetIfNull(new BlockCoord(x,y+TRUNK_HEIGHT,z)+position, leaves);
                 }
             }
         }

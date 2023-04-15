@@ -14,7 +14,7 @@ public partial class WorldGenerator
     //contains chunks requested from outside sources (world loading)
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> generating = new ();
     //finished chunks that are ready to be send to the mesher
-    private readonly ConcurrentBag<(Chunk, AtomicChunkCollection)> done = new();
+    private readonly ConcurrentBag<(Chunk, ChunkCollection)> done = new();
 
     private readonly List<IChunkGenLayer> shapingLayers = new();
     private readonly List<WorldStructureProvider> structureProviders = new();
@@ -78,7 +78,7 @@ public partial class WorldGenerator
             if (done.TryTake(out var item))
             {
                 Chunk c = item.Item1;
-                AtomicChunkCollection changes = item.Item2;
+                ChunkCollection changes = item.Item2;
                 toSend.Add(c);
                 c.AddEvent("sent to dest");
                 changes.Commit();
@@ -98,7 +98,7 @@ public partial class WorldGenerator
         toGenerate.AddEvent("do generation");
         ShapeChunk(toGenerate);
         toGenerate.AddEvent("shaped");
-        AtomicChunkCollection collection = await GenerateStructures(toGenerate);
+        ChunkCollection collection = await GenerateStructures(toGenerate);
         toGenerate.AddEvent("structured");
         done.Add((toGenerate, collection));
         toGenerate.AddEvent("sent to done");
@@ -113,10 +113,10 @@ public partial class WorldGenerator
         chunk.GenerationState = ChunkGenerationState.SHAPED;
     }
 
-    public async Task<AtomicChunkCollection> GenerateStructures(Chunk chunk)
+    public async Task<ChunkCollection> GenerateStructures(Chunk chunk)
     {
         chunk.GenerationState = ChunkGenerationState.PLACING_STRUCTURES;
-        AtomicChunkCollection area = new(world);
+        ChunkCollection area = new(world);
         foreach (var provider in structureProviders)
         {
                 int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
@@ -141,7 +141,7 @@ public partial class WorldGenerator
 
     //populates the expanding dictionary
     //returns a task that completes when the area is ready (all chunks are shaped)
-    private async Task<AtomicChunkCollection> requestArea(ChunkCoord center, ChunkCoord size, AtomicChunkCollection collection)
+    private async Task<ChunkCollection> requestArea(ChunkCoord center, ChunkCoord size, ChunkCollection collection)
     {
         //coord, need to stick
         HashSet<ChunkCoord> needed = new ();

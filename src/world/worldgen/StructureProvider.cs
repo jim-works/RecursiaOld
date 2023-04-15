@@ -21,5 +21,5 @@ public abstract class WorldStructureProvider
     //return true if spot is good for the structure
     public abstract bool SuitableLocation(World world, BlockCoord coord);
     //returns null if structure wasn't placed
-    public abstract WorldStructure? PlaceStructure(AtomicChunkCollection c, BlockCoord position);
+    public abstract WorldStructure? PlaceStructure(ChunkCollection c, BlockCoord position);
 }

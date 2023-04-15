@@ -25,7 +25,7 @@ public class BoxStructureProvider : WorldStructureProvider
     {
         return world.GetBlock(coord) == grass; //tree must be planted on grass
     }
-    public override WorldStructure? PlaceStructure(AtomicChunkCollection c, BlockCoord position)
+    public override WorldStructure? PlaceStructure(ChunkCollection c, BlockCoord position)
     {
         for (int x = -SIZE; x <= SIZE; x++)
         {
@@ -33,7 +33,7 @@ public class BoxStructureProvider : WorldStructureProvider
             {
                 for (int z = -SIZE; z <= SIZE; z++)
                 {
-                    c.SetIfNull(new BlockCoord(x,y,z)+position, boxBlock);
+                    c.QueueSetIfNull(new BlockCoord(x,y,z)+position, boxBlock);
                 }
             }
         }
