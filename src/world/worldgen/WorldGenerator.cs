@@ -154,7 +154,7 @@ public partial class WorldGenerator
                     ChunkCoord coord = new(x,y,z);
                     world.GetStickyChunkOrLoadFromDisk(coord, res => {
                         if (res?.GenerationState >= ChunkGenerationState.SHAPED) {
-                            collection.Add(res);
+                            collection.TryAdd(res);
                         }
                         else {
                             needed.Add(coord);
@@ -172,7 +172,7 @@ public partial class WorldGenerator
             {
                 if (world.Chunks.TryGetChunk(coord, out Chunk? c) && c.GenerationState >= ChunkGenerationState.SHAPED)
                 {
-                    collection.Add(c);
+                    collection.TryAdd(c);
                     return true;
                 }
                 return false;

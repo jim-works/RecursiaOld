@@ -33,7 +33,7 @@ public class BoxStructureProvider : WorldStructureProvider
             {
                 for (int z = -SIZE; z <= SIZE; z++)
                 {
-                    c.QueueSetIfNull(new BlockCoord(x,y,z)+position, boxBlock);
+                    c.QueueIfNull(new BlockCoord(x,y,z)+position, boxBlock);
                 }
             }
         }

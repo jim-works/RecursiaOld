@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -5,8 +6,8 @@ using System.Diagnostics.CodeAnalysis;
 namespace Recursia;
 public class ChunkCollection
 {
-    public event System.Action<Chunk>? OnChunkOverwritten;
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
+    private readonly object _loadUnloadLock = new();
     private readonly Dictionary<BlockCoord, Block?> changes = new();
     private readonly World world;
     public ChunkCollection(World world)
@@ -25,12 +26,6 @@ public class ChunkCollection
 
     public Chunk this[ChunkCoord index] {
         get { return chunks[index];}
-        set {
-            chunks.AddOrUpdate(index, (_) => value, (_, old) => {
-                OnChunkOverwritten?.Invoke(old);
-                return value;
-            });
-        }
     }
 
     public bool Contains(ChunkCoord c) => chunks.ContainsKey(c);
@@ -39,27 +34,48 @@ public class ChunkCollection
         TryGetChunk(c, out Chunk? chunk);
         return chunk;
     }
-    public bool TryGetAndStick(ChunkCoord coord, [MaybeNullWhen(false)] out Chunk c)
+    public bool TryGetAndStick(ChunkCoord coord, [MaybeNullWhen(false)] out Chunk c, Action? onNotFound=null)
     {
-        //TODO: there is still a race condition between here and the lock. switch to ReaderWriterLockSlim?
-        if (chunks.TryGetValue(coord, out c))
+        lock (_loadUnloadLock)
         {
-            lock (c)
+            if (chunks.TryGetValue(coord, out c))
             {
-                if (c.State == ChunkState.Unloaded)
-                {
-                    //c is going to be unloaded, return null.
-                    return false;
-                }
+                // if (c.State == ChunkState.Unloaded)
+                // {
+                //     //c is going to be unloaded, return null.
+                //     return false;
+                // }
                 c.Stick();
+                return true;
             }
+            onNotFound?.Invoke();
+            return false;
+        }
+    }
+
+    //returns true if chunk was created
+    //c is either the newly created chunk or chunk found.
+    public bool GetOrCreateChunk(ChunkCoord coord, bool sticky, out Chunk c)
+    {
+        lock (_loadUnloadLock)
+        {
+            //tmp to satisfy null checker, should get optimized out anyway.
+            if (chunks.TryGetValue(coord, out Chunk? tmp))
+            {
+                c = tmp;
+                if (sticky) c.Stick();
+                return false;
+            }
+            //need to create the chunk
+            c = new(coord);
+            if (sticky) c.Stick();
+            TryAdd(c);
             return true;
         }
-        return false;
     }
 
     //returns true if successful, false if destination chunk isn't present in the collection
-    public bool QueueSetBlock(BlockCoord coord, Block? to)
+    public bool QueueBlock(BlockCoord coord, Block? to)
     {
         if (TryGetChunk((ChunkCoord)coord, out Chunk _))
         {
@@ -70,7 +86,7 @@ public class ChunkCollection
     }
 
     //returns true if successful (block placed), false if destination chunk isn't present in the collection or the dest block isn't null
-    public bool QueueSetIfNull(BlockCoord coord, Block? to)
+    public bool QueueIfNull(BlockCoord coord, Block? to)
     {
         if (TryGetChunk((ChunkCoord)coord, out Chunk? c))
         {
@@ -91,9 +107,26 @@ public class ChunkCollection
         });
         changes.Clear();
     }
+    //returns true if added, false if already present in dictionary
+    public bool TryAdd(Chunk c) => chunks.TryAdd(c.Position, c);
 
-    public void TryRemove(ChunkCoord c, [MaybeNullWhen(false)]out Chunk chunk) => chunks.TryRemove(c,out chunk);
-    public void Add(Chunk c) => chunks[c.Position] = c;
+    public bool TryUnload(ChunkCoord coord, Action<Chunk> onUnload)
+    {
+        lock (_loadUnloadLock)
+        {
+            if (chunks.TryGetValue(coord, out Chunk? chunk))
+            {
+                if (chunk.State == ChunkState.Sticky) return false; //don't unload sticky
+                if (chunks.TryRemove(coord, out Chunk? c))
+                {
+                    c.ForceUnload();
+                    onUnload(c);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     public IEnumerator<KeyValuePair<ChunkCoord, Chunk>> GetEnumerator() => chunks.GetEnumerator();
 }
