@@ -98,6 +98,7 @@ public class SQLInterface : IDisposable
         }
 
         //run task to save/load on a single thread to avoid sqlite shenanigans
+        //TODO: can close program in middle of this and dispose connection
         Task.Run(() =>
         {
             while (true)
@@ -265,6 +266,7 @@ public class SQLInterface : IDisposable
 
     public void Dispose()
     {
+        emptySaveQueue();
         conn.Dispose();
         GC.SuppressFinalize(this);
     }
