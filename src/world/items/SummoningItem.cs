@@ -12,7 +12,7 @@ public partial class SummoningItem : Item
 
     public SummoningItem(string typeName, string displayname) : base(typeName, displayname){}
 
-    public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
+    public override bool OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         if (user.World == null) throw new System.FieldAccessException("User's world is null!");
         //summon randomly in a circle distance away from position
@@ -30,10 +30,12 @@ public partial class SummoningItem : Item
         {
             GD.PushWarning("ToSummon is null!");
             base.OnUse(user, position, dir, ref source);
-            return;
+            return false;
         }
         Combatant c = user.World.Entities.SpawnObject<Combatant>(ToSummon, new Vector3(position.X+offset.X,summonY,position.Z+offset.Z));
         if (SetToUserTeam) c.Team = user.Team;
         if (ConsumeOnUse) source.Size--;
+        base.OnUse(user, position, dir, ref source);
+        return true;
     }
 }

@@ -8,12 +8,12 @@ public partial class GunItem : WeaponItem
 
     public GunItem(string typeName, string displayname) : base(typeName, displayname) {}
 
-    public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
+    public override bool OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         //check for ammo
-        if (user.Inventory == null) return;
+        if (user.Inventory == null) return false;
         (Item item, int bulletSlot) = user.Inventory.SelectItem(stack => stack.Size >= AmmoPerShot && stack.Item is BulletItem);
-        if (bulletSlot == -1) return;
+        if (bulletSlot == -1) return false;
 
         //Get bullet and update inventory
         BulletItem bullet = (BulletItem)item;
@@ -22,6 +22,7 @@ public partial class GunItem : WeaponItem
         onFire(bullet,user,position,dir,ref source);
 
         base.OnUse(user, position, dir, ref source);
+        return true;
     }
 
     protected virtual void onFire(BulletItem bullet, Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)

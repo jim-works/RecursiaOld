@@ -10,7 +10,7 @@ public enum ChunkState
     Sticky = 2,
 }
 
-public class Chunk : ISerializable
+public partial class Chunk : ISerializable
 {
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
@@ -34,6 +34,7 @@ public class Chunk : ISerializable
     public Chunk(ChunkCoord chunkCoords)
     {
         Position = chunkCoords;
+        Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
     }
 
     public string GetMeshedHistory()
@@ -82,32 +83,19 @@ public class Chunk : ISerializable
     //sets chunk.state to max(Chunk.Loaded, chunk.state)
     public void Load()
     {
-        this.State = (ChunkState)System.Math.Max((int)ChunkState.Loaded, (int)this.State);
-    }
-    //sets state to unloaded, ignores stickiness
-    public void ForceUnload()
-    {
-        this.State = ChunkState.Unloaded;
-    }
-
-    //make chunk in sticky state, add 1 to the sticky count
-    public void Stick()
-    {
         lock (_stickyLock)
         {
-            this.State = ChunkState.Sticky;
-            stickyCount++;
-            AddEvent($"sticky {stickyCount}");
+            State = (ChunkState)System.Math.Max((int)ChunkState.Loaded, (int)State);
         }
     }
-    //stickyCount = max(0,stickCount-1). After, if sticky count is 0 and chunk was in sticky state, change to loaded state.
-    public void Unstick()
+    //tries to unload, if sticky, fails
+    public bool TryUnload()
     {
         lock (_stickyLock)
         {
-            stickyCount = System.Math.Max(0,stickyCount-1);
-            AddEvent($"unsticky {stickyCount}");
-            if (stickyCount == 0 && State == ChunkState.Sticky) State = ChunkState.Loaded;
+            if (stickyCount > 0) return false;
+            State = ChunkState.Unloaded;
+            return true;
         }
     }
 
@@ -118,7 +106,7 @@ public class Chunk : ISerializable
 
     public static BlockCoord WorldToLocal(BlockCoord coord)
     {
-        return coord % (int)CHUNK_SIZE;
+        return coord % CHUNK_SIZE;
     }
 
     public void Serialize(BinaryWriter bw)

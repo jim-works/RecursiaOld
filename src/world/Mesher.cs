@@ -82,14 +82,16 @@ public partial class Mesher : Node
             }
             int stickies = 0;
             int maxSticky = 0;
+            int minSticky = 99999999;
             foreach (var kvp in world.Chunks)
             {
                 if (kvp.Value.State == ChunkState.Sticky) {
                     maxSticky = System.Math.Max(kvp.Value.stickyCount, maxSticky);
+                    minSticky = System.Math.Min(kvp.Value.stickyCount, minSticky);
                     stickies ++;
                 }
             }
-            GD.Print($"{stickies} sticky chunks in the world, max stick {maxSticky}");
+            GD.Print($"{stickies} sticky chunks in the world, max stick {maxSticky}, min stick {minSticky}");
         }
         base._Input(@event);
     }

@@ -1,3 +1,5 @@
+#define NO_UNLOADING
+
 using System.Collections.Generic;
 using Godot;
 
@@ -34,6 +36,8 @@ public class WorldLoader
                 }
             }
         }
+#if NO_UNLOADING
+#else
         foreach (var kvp in world.Chunks) {
             if (!loadedChunks.Contains(kvp.Key)) {
                 toUnload.Add(kvp.Key);
@@ -42,6 +46,7 @@ public class WorldLoader
         foreach (var c in toUnload) {
             world.UnloadChunk(c);
         }
+#endif
         foreach (var c in loadedChunks) {
             world.LoadChunk(c);
         }

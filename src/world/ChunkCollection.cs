@@ -34,41 +34,59 @@ public class ChunkCollection
         TryGetChunk(c, out Chunk? chunk);
         return chunk;
     }
-    public bool TryGetAndStick(ChunkCoord coord, [MaybeNullWhen(false)] out Chunk c, Action? onNotFound=null)
+    public bool TryGetAndStick(ChunkCoord coord, [MaybeNullWhen(false)] out Chunk.StickyReference c)
     {
         lock (_loadUnloadLock)
         {
-            if (chunks.TryGetValue(coord, out c))
+            if (chunks.TryGetValue(coord, out var chunk))
             {
                 // if (c.State == ChunkState.Unloaded)
                 // {
                 //     //c is going to be unloaded, return null.
                 //     return false;
                 // }
-                c.Stick();
+                c = Chunk.StickyReference.Stick(chunk);
                 return true;
             }
-            onNotFound?.Invoke();
+            c = null;
             return false;
         }
     }
 
     //returns true if chunk was created
     //c is either the newly created chunk or chunk found.
-    public bool GetOrCreateChunk(ChunkCoord coord, bool sticky, out Chunk c)
+    public bool GetOrCreateStickyChunk(ChunkCoord coord, out Chunk.StickyReference c)
     {
         lock (_loadUnloadLock)
         {
             //tmp to satisfy null checker, should get optimized out anyway.
             if (chunks.TryGetValue(coord, out Chunk? tmp))
             {
+                c = Chunk.StickyReference.Stick(tmp);
+                return false;
+            }
+            //need to create the chunk
+            tmp = new(coord);
+            c = Chunk.StickyReference.Stick(tmp);
+            TryAdd(tmp);
+            return true;
+        }
+    }
+
+    //returns true if chunk was created
+    //c is either the newly created chunk or chunk found.
+    public bool GetOrCreateChunk(ChunkCoord coord, out Chunk c)
+    {
+        lock (_loadUnloadLock)
+        {
+            //tmp to satisfy null checker, should get optimized out anyway.
+            if (chunks.TryGetValue(coord, out var tmp))
+            {
                 c = tmp;
-                if (sticky) c.Stick();
                 return false;
             }
             //need to create the chunk
             c = new(coord);
-            if (sticky) c.Stick();
             TryAdd(c);
             return true;
         }
@@ -97,6 +115,7 @@ public class ChunkCollection
         return false;
     }
 
+    //need to commit on main thread
     public void Commit()
     {
         world.BatchSetBlock(setBlock => {
@@ -108,7 +127,11 @@ public class ChunkCollection
         changes.Clear();
     }
     //returns true if added, false if already present in dictionary
-    public bool TryAdd(Chunk c) => chunks.TryAdd(c.Position, c);
+    public bool TryAdd(Chunk c) {
+        bool res = chunks.TryAdd(c.Position, c);
+        if (!res) Godot.GD.PushWarning($"Adding duplicate chunk {c.Position}");
+        return res;
+    }
 
     public bool TryUnload(ChunkCoord coord, Action<Chunk> onUnload)
     {
@@ -116,13 +139,9 @@ public class ChunkCollection
         {
             if (chunks.TryGetValue(coord, out Chunk? chunk))
             {
-                if (chunk.State == ChunkState.Sticky) return false; //don't unload sticky
-                if (chunks.TryRemove(coord, out Chunk? c))
-                {
-                    c.ForceUnload();
-                    onUnload(c);
-                    return true;
-                }
+                if (!chunk.TryUnload()) return false; //don't unload sticky
+                chunks.TryRemove(coord, out Chunk? _); //_ should be the same as chunk, since we are in the _loadUnloadLock
+                onUnload(chunk);
             }
         }
         return false;

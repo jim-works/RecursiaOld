@@ -11,14 +11,16 @@ public partial class BlockItem : Item
         Placing = placing;
     }
 
-    public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
+    public override bool OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         BlockcastHit? hit = user.World!.Blockcast(position, dir*Reach);
         if (hit != null && hit.Normal != Vector3.Zero) { //zero normal means we are inside the block we are gonna place
             user.World.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, Placing);
+            source.Decrement(1);
+            return true;
         }
-        source.Decrement(1);
         base.OnUse(user, position, dir, ref source);
+        return false;
     }
 
     public override bool Equals(object? obj)

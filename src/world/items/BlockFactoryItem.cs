@@ -14,7 +14,7 @@ public partial class BlockFactoryItem : Item
         Reach = reach;
     }
 
-    public override void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
+    public override bool OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         BlockcastHit? hit = user.World!.Blockcast(position, dir*Reach);
         if (hit != null && hit.Normal != Vector3.Zero) { //zero normal means we are inside the block we are gonna place
@@ -30,6 +30,7 @@ public partial class BlockFactoryItem : Item
         }
         source.Decrement(1);
         base.OnUse(user, position, dir, ref source);
+        return true;
     }
 
     public override bool Equals(object? obj)

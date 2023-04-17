@@ -57,9 +57,7 @@ public partial class Combatant : PhysicsObject
     public void UseItem(int slot, Vector3 offset, Vector3 direction)
     {
         if (ItemCooldown > 0 || Inventory == null) return;
-        Inventory.Items[slot].Item.OnUse(this, offset, direction, ref Inventory.Items[slot]);
-        //play usage sound
-        PlaySound(Inventory.Items[slot].Item.UseSound);
+        if (Inventory.Items[slot].Item.OnUse(this, offset, direction, ref Inventory.Items[slot])) PlaySound(Inventory.Items[slot].Item.UseSound);
         Inventory.TriggerUpdate();
     }
 

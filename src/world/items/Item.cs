@@ -22,9 +22,10 @@ public partial class Item : Resource, ISerializable
         DisplayName = displayname;
     }
 
-    public virtual void OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
+    public virtual bool OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
         user.ItemCooldown = Cooldown;
+        return true;
     }
 
     public virtual void Serialize(BinaryWriter bw) {}
