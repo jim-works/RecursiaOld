@@ -16,11 +16,17 @@ public partial class Chunk : ISerializable
     public ChunkCoord Position;
     private Block?[,,]? Blocks;
     public ChunkMesh? Mesh;
+#if DEBUG
     public bool Meshed {get {
         return meshedHistory.Count != 0 && meshedHistory.Peek();
     } set {
         meshedHistory.Enqueue(value);
     }}
+    private readonly Queue<bool> meshedHistory = new();
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> eventHistory = new();
+#else
+    public bool Meshed {get; set;}
+#endif
     public ChunkGenerationState GenerationState {get; set;}
     public ChunkState State { get; private set; }
     public List<WorldStructure> Structures = new();
@@ -28,8 +34,6 @@ public partial class Chunk : ISerializable
     public bool SaveDirtyFlag = true;
     public int stickyCount;
     private readonly object _stickyLock = new();
-    private readonly Queue<bool> meshedHistory = new();
-    private readonly System.Collections.Concurrent.ConcurrentQueue<string> eventHistory = new();
 
     public Chunk(ChunkCoord chunkCoords)
     {
@@ -39,27 +43,37 @@ public partial class Chunk : ISerializable
 
     public string GetMeshedHistory()
     {
+#if DEBUG
         string res = "false ";
         foreach (var b in meshedHistory)
         {
             res += b;
         }
         return res;
+#else
+        return "mesh history not availble in release";
+#endif
     }
 
     public void AddEvent(string e)
     {
+#if DEBUG
         eventHistory.Enqueue(e);
+#endif
     }
 
     public string GetEventHistory()
     {
+#if DEBUG
         string res = "created\n";
         foreach (var b in eventHistory)
         {
             res += $"'{b}'\n";
         }
         return res;
+#else
+        return "event history not available in release";
+#endif
     }
 
     public Block? this[BlockCoord index]

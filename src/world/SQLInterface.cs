@@ -1,9 +1,11 @@
 using System.Data.SQLite;
 using System.IO;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using System;
+using System.Threading;
+using System.Collections.Generic;
 
 namespace Recursia;
 public class SQLInterface : IDisposable
@@ -37,6 +39,8 @@ public class SQLInterface : IDisposable
     private readonly SQLiteCommand loadChunkCommand;
     private readonly SQLiteCommand savePlayerCommand;
     private readonly SQLiteCommand loadPlayerCommand;
+    private readonly ConcurrentBag<(ChunkCoord, TaskCompletionSource<Chunk?>)> loadQueue = new();
+    private readonly ConcurrentBag<Chunk> saveQueue = new();
 
     public SQLInterface(string dbpath)
     {
@@ -93,6 +97,17 @@ public class SQLInterface : IDisposable
             return;
         }
 
+        //run task to save/load on a single thread to avoid sqlite shenanigans
+        Task.Run(() =>
+        {
+            while (true)
+            {
+                Task.Delay(Settings.SaveLoadIntervalMs);
+                emptySaveQueue();
+                emptyLoadQueue();
+            }
+        });
+
         //print number of chunks in database
         using SQLiteCommand command = conn.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM chunks";
@@ -148,11 +163,21 @@ public class SQLInterface : IDisposable
         loadChunkCommand.Dispose();
         conn.Close();
     }
-
-    public void SaveChunks(Func<Chunk?> getChunk)
+    public void Save(Chunk chunk)
     {
-        using SQLiteTransaction transaction = conn.BeginTransaction();
-        while (getChunk() is Chunk chunk)
+        saveQueue.Add(chunk);
+    }
+    public async Task<Chunk?> LoadChunk(ChunkCoord coord)
+    {
+        var waiting = new TaskCompletionSource<Chunk?>();
+        loadQueue.Add((coord, waiting));
+        return await waiting.Task;
+    }
+    private void emptySaveQueue()
+    {
+        int count = 0;
+        using SQLiteTransaction transaction = conn.BeginTransaction(System.Data.IsolationLevel.Serializable);
+        while (saveQueue.TryTake(out Chunk? chunk))
         {
             saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
             saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;
@@ -165,70 +190,78 @@ public class SQLInterface : IDisposable
                 saveChunkCommand.Parameters["@terrainData"].Value = ms.ToArray();
             }
             saveChunkCommand.ExecuteNonQuery();
+            count++;
         }
         transaction.Commit();
+        if (count > 0) Godot.GD.Print($"saved {count} chunks");
     }
-
-    public void LoadChunks(IEnumerable<ChunkCoord> chunks, List<Chunk?> placeInto)
+    private void emptyLoadQueue()
     {
-        foreach (ChunkCoord coord in chunks)
+        while (loadQueue.TryTake(out var item))
         {
-            loadChunkCommand.Parameters["@x"].Value = coord.X;
-            loadChunkCommand.Parameters["@y"].Value = coord.Y;
-            loadChunkCommand.Parameters["@z"].Value = coord.Z;
-            object result = loadChunkCommand.ExecuteScalar();
-            if (result == null)
+            (ChunkCoord coord, TaskCompletionSource<Chunk?> chunkTcs) = item;
+            try
             {
-                placeInto.Add(null);
-                continue;
+                chunkTcs.SetResult(loadFromDB(coord));
             }
-            using MemoryStream ms = new((byte[])result);
-            using GZipStream gz = new(ms, CompressionMode.Decompress);
-            using BinaryReader br = new(ms);
-            Chunk chunk = Chunk.Deserialize(br);
-            placeInto.Add(chunk);
+            catch (Exception e)
+            {
+                Godot.GD.PushError(e);
+                chunkTcs.TrySetResult(null);
+            }
         }
     }
-
-    public void SavePlayers(IEnumerable<Player> players)
+    private Chunk? loadFromDB(ChunkCoord coord)
     {
-        using SQLiteTransaction transaction = conn.BeginTransaction();
-        foreach (var p in players)
+        loadChunkCommand.Parameters["@x"].Value = coord.X;
+        loadChunkCommand.Parameters["@y"].Value = coord.Y;
+        loadChunkCommand.Parameters["@z"].Value = coord.Z;
+        object? result = loadChunkCommand.ExecuteScalar();
+        if (result == null)
         {
-            savePlayerCommand.Parameters["@name"].Value = p.Name;
-            using (MemoryStream ms = new())
-            using (BinaryWriter bw = new(ms))
-            using (GZipStream gz = new(ms, CompressionLevel.Fastest))
-            {
-                p.Serialize(bw);
-                savePlayerCommand.Parameters["@data"].Value = ms.ToArray();
-            }
-            savePlayerCommand.ExecuteNonQuery();
+            return null;
         }
-        transaction.Commit();
+        using MemoryStream ms = new((byte[])result);
+        using GZipStream gz = new(ms, CompressionMode.Decompress);
+        using BinaryReader br = new(ms);
+        return Chunk.Deserialize(br);
     }
-    public void LoadPlayers(World world, IEnumerable<string> names, List<Player?> placeInto)
-    {
-        foreach (string name in names)
-        {
-            loadPlayerCommand.Parameters["@name"].Value = name;
-            object result = loadPlayerCommand.ExecuteScalar();
-            if (result == null)
-            {
-                placeInto.Add(null);
-                continue;
-            }
-            using MemoryStream ms = new((byte[])result);
-            using GZipStream gz = new(ms, CompressionMode.Decompress);
-            using BinaryReader br = new(ms);
-            Player? player = PhysicsObject.Deserialize<Player>(world, br);
-            if (player == null)
-            {
-                throw new InvalidDataException($"Couldn't load data for player name: {name}! Data corrupted!");
-            }
-            placeInto.Add(player);
-        }
-    }
+    //TODO: locks
+    // public void SavePlayers(IEnumerable<Player> players)
+    // {
+    //     using SQLiteTransaction transaction = conn.BeginTransaction();
+    //     foreach (var p in players)
+    //     {
+    //         savePlayerCommand.Parameters["@name"].Value = p.Name;
+    //         using (MemoryStream ms = new())
+    //         using (BinaryWriter bw = new(ms))
+    //         using (GZipStream gz = new(ms, CompressionLevel.Fastest))
+    //         {
+    //             p.Serialize(bw);
+    //             savePlayerCommand.Parameters["@data"].Value = ms.ToArray();
+    //         }
+    //         savePlayerCommand.ExecuteNonQuery();
+    //     }
+    //     transaction.Commit();
+    // }
+    // public async Task<Player?> LoadPlayer(World world, string name)
+    // {
+    //     loadPlayerCommand.Parameters["@name"].Value = name;
+    //     object? result = await loadPlayerCommand.ExecuteScalarAsync();
+    //     if (result == null)
+    //     {
+    //         return null;
+    //     }
+    //     using MemoryStream ms = new((byte[])result);
+    //     using GZipStream gz = new(ms, CompressionMode.Decompress);
+    //     using BinaryReader br = new(ms);
+    //     Player? player = PhysicsObject.Deserialize<Player>(world, br);
+    //     if (player == null)
+    //     {
+    //         throw new InvalidDataException($"Couldn't load data for player name: {name}! Data corrupted!");
+    //     }
+    //     return player;
+    // }
 
     public void Dispose()
     {

@@ -37,8 +37,8 @@ public partial class WorldGenerator
         shapingLayers.Add(new ShapingLayer(getNextSeed));
         shapingLayers.Add(new DetailLayer());
         //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
-        //structureProviders.Add(new TreeStructureProvider());
-        structureProviders.Add(new BoxStructureProvider());
+        structureProviders.Add(new TreeStructureProvider());
+        //structureProviders.Add(new BoxStructureProvider());
     }
 
     private int getNextSeed()
@@ -161,55 +161,54 @@ public partial class WorldGenerator
                     ChunkCoord coord = new(x, y, z);
                     //no need to load/sticky for each structure if we already have the chunk in the collection
                     if (collection.ContainsKey(coord)) continue;
-                    world.GetStickyChunkOrLoadFromDisk(coord, res =>
+                    //TODO: test parallelization
+                    Chunk.StickyReference? res = await world.GetStickyChunkOrLoadFromDisk(coord);
+                    if (res == null)
                     {
-                        if (res == null)
+                        //we need to generate the chunk
+                        if (world.GenerateStickyChunkDeferred(coord) is Chunk.StickyReference chunkRef)
                         {
-                            //we need to generate the chunk
-                            if (world.GenerateStickyChunkDeferred(coord) is Chunk.StickyReference chunkRef)
+                            //we will unsticky this after changes are commited
+                            if (collection.TryAdd(chunkRef))
                             {
-                                //we will unsticky this after changes are commited
-                                if (collection.TryAdd(chunkRef))
-                                {
-                                    chunkRef.Chunk.AddEvent("genadd stickychunkcollection");
-                                    needed.Add(chunkRef.Chunk);
-                                }
-                                else
-                                {
-                                    //shoudn't happen
-                                    Godot.GD.PushError("Couldn't add sticky chunk ref");
-                                    chunkRef.Chunk.AddEvent("GENFAIL stickychunkcollection");
-                                    chunkRef.Dispose();
-                                }
+                                chunkRef.Chunk.AddEvent("genadd stickychunkcollection");
+                                needed.Add(chunkRef.Chunk);
+                            }
+                            else
+                            {
+                                //shoudn't happen
+                                Godot.GD.PushError("Couldn't add sticky chunk ref");
+                                chunkRef.Chunk.AddEvent("GENFAIL stickychunkcollection");
+                                chunkRef.Dispose();
                             }
                         }
-                        else if (!collection.TryAdd(res))
+                    }
+                    else if (!collection.TryAdd(res))
+                    {
+                        //chunk already exists, but another structure has added it to our collection.
+                        //we may need to wait on it, but shouldn't hold on to the sticky ref, since the collection won't be disposed until this structure is done with it.
+                        if (res.Chunk.GenerationState < ChunkGenerationState.SHAPED) needed.Add(res.Chunk);
+                        res.Chunk.AddEvent("FAIL stickychunkcollection");
+                        res.Dispose();
+                    }
+                    else
+                    {
+                        //chunk already exists, and we need to add it to the collection
+                        res.Chunk.AddEvent("add stickychunkcollection");
+                        //wait for this chunk to generate
+                        if (res.Chunk.GenerationState < ChunkGenerationState.SHAPED)
                         {
-                            //chunk already exists, but another structure has added it to our collection.
-                            //we may need to wait on it, but shouldn't hold on to the sticky ref, since the collection won't be disposed until this structure is done with it.
-                            if (res.Chunk.GenerationState < ChunkGenerationState.SHAPED) needed.Add(res.Chunk);
-                            res.Chunk.AddEvent("FAIL stickychunkcollection");
-                            res.Dispose();
-                        }
-                        else
-                        {
-                            //chunk already exists, and we need to add it to the collection
-                            res.Chunk.AddEvent("add stickychunkcollection");
-                            //wait for this chunk to generate
-                            if (res.Chunk.GenerationState < ChunkGenerationState.SHAPED)
+                            if (needed.Add(res.Chunk))
                             {
-                                if (needed.Add(res.Chunk))
-                                {
-                                    res.Chunk.AddEvent("add needed");
-                                }
-                                else
-                                {
-                                    res.Chunk.AddEvent("FAIL needed");
-                                    res.Dispose();
-                                }
+                                res.Chunk.AddEvent("add needed");
+                            }
+                            else
+                            {
+                                res.Chunk.AddEvent("FAIL needed");
+                                res.Dispose();
                             }
                         }
-                    });
+                    }
                 }
             }
         }

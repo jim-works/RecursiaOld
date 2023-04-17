@@ -1,6 +1,7 @@
-#define NO_UNLOADING
+//#define NO_UNLOADING
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Godot;
 
 namespace Recursia;
@@ -47,9 +48,7 @@ public class WorldLoader
             world.UnloadChunk(c);
         }
 #endif
-        foreach (var c in loadedChunks) {
-            world.LoadChunk(c);
-        }
+        Parallel.ForEach(loadedChunks, async c => await world.LoadChunk(c));
     }
     public void AddChunkLoader(Node3D loader)
     {

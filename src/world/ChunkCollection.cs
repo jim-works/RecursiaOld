@@ -8,12 +8,6 @@ public class ChunkCollection
 {
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
     private readonly object _loadUnloadLock = new();
-    private readonly Dictionary<BlockCoord, Block?> changes = new();
-    private readonly World world;
-    public ChunkCollection(World world)
-    {
-        this.world = world;
-    }
 
     public Block? GetBlock(BlockCoord coord)
     {
@@ -90,41 +84,6 @@ public class ChunkCollection
             TryAdd(c);
             return true;
         }
-    }
-
-    //returns true if successful, false if destination chunk isn't present in the collection
-    public bool QueueBlock(BlockCoord coord, Block? to)
-    {
-        if (TryGetChunk((ChunkCoord)coord, out Chunk _))
-        {
-            changes.Add(coord, to);
-            return true;
-        }
-        return false;
-    }
-
-    //returns true if successful (block placed), false if destination chunk isn't present in the collection or the dest block isn't null
-    public bool QueueIfNull(BlockCoord coord, Block? to)
-    {
-        if (TryGetChunk((ChunkCoord)coord, out Chunk? c))
-        {
-            BlockCoord pos = Chunk.WorldToLocal(coord);
-            if (c?[pos] == null) changes.Add(coord, to); else return false;
-            return true;
-        }
-        return false;
-    }
-
-    //need to commit on main thread
-    public void Commit()
-    {
-        world.BatchSetBlock(setBlock => {
-            foreach (var kvp in changes)
-            {
-                setBlock(kvp.Key, kvp.Value);
-            }
-        });
-        changes.Clear();
     }
     //returns true if added, false if already present in dictionary
     public bool TryAdd(Chunk c) {

@@ -1,5 +1,5 @@
 //saves annoyance
-#define NO_SAVING
+//#define NO_SAVING
 
 using Godot;
 using System.IO;
@@ -24,8 +24,6 @@ public partial class WorldSaver : Node
     private World? world;
 
     private SQLInterface? sql;
-    private readonly ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
-    private readonly ConcurrentDictionary<ChunkCoord, Action<Chunk.StickyReference?>> loadQueue = new();
     private readonly ConcurrentBag<(Chunk.StickyReference?, Action<Chunk.StickyReference?>)> callbackQueue = new();
 
     public override void _Ready()
@@ -35,23 +33,6 @@ public partial class WorldSaver : Node
         Directory.CreateDirectory(folder);
         sql = new SQLInterface(Path.Join(folder, "world.db"));
         GD.Print("World save folder is " + folder);
-        Task.Run(() =>
-        {
-            while (true)
-            {
-                Task.Delay(TimeSpan.FromSeconds(LoadIntervalSeconds)).Wait();
-                emptyLoadQueue();
-            }
-        });
-        Task.Run(() =>
-        {
-            while (true)
-            {
-                Task.Delay(TimeSpan.FromSeconds(SaveIntervalSeconds)).Wait();
-                emptySaveQueue();
-                //GC.Collect();
-            }
-        });
     }
 
     public override void _Process(double delta)
@@ -66,13 +47,9 @@ public partial class WorldSaver : Node
         if (loadTimer > LoadIntervalSeconds)
         {
             loadTimer = 0;
-            lock (callbackQueue)
+            while (callbackQueue.TryTake(out var pair))
             {
-                foreach (var (chunk, callback) in callbackQueue)
-                {
-                    callback?.Invoke(chunk);
-                }
-                callbackQueue.Clear();
+                pair.Item2?.Invoke(pair.Item1);
             }
         }
     }
@@ -80,16 +57,25 @@ public partial class WorldSaver : Node
     public override void _ExitTree()
     {
         Save(world!);
-        emptySaveQueue();
         sql!.Close();
     }
 
-    public void LoadAndStick(ChunkCoord coord, Action<Chunk.StickyReference?> callback)
+    public async Task<Chunk.StickyReference?> LoadAndStick(ChunkCoord coord)
     {
 #if NO_SAVING
-        callback(null);
+        return null;
 #else
-        loadQueue[coord] = callback;
+        try
+        {
+            Chunk? c = await sql!.LoadChunk(coord);
+            if (c == null) return null;
+            return Chunk.StickyReference.Stick(c);
+        }
+        catch (Exception e)
+        {
+            GD.PushError(e);
+            return null;
+        }
 #endif
     }
 
@@ -100,9 +86,7 @@ public partial class WorldSaver : Node
 #else
         foreach (var kvp in world.Chunks)
         {
-            if (!kvp.Value.SaveDirtyFlag || kvp.Value.State == ChunkState.Sticky) continue;
-            saveQueue[kvp.Key] = kvp.Value;
-            kvp.Value.SaveDirtyFlag = false;
+            Save(kvp.Value);
         }
         //sql!.SavePlayers(world.Entities.Players);
 #endif
@@ -113,48 +97,8 @@ public partial class WorldSaver : Node
         return;
 #else
         if (!c.SaveDirtyFlag) return;
-        saveQueue[c.Position] = c;
+        sql!.Save(c);
+        c.SaveDirtyFlag = false;
 #endif
-    }
-    private void emptySaveQueue()
-    {
-#if NO_SAVING
-        return;
-#else
-        GD.Print($"Saving {saveQueue.Count} groups...");
-        //TODO THIS ISN"T SAFE FOR SOME REASON
-        sql!.SaveChunks(() => {
-            foreach (var kvp in saveQueue.ToArray())
-                if (saveQueue.TryRemove(kvp.Key, out Chunk? val)) return val;
-            return null;
-        });
-        saveQueue.Clear();
-        GD.Print("Saved");
-#endif
-    }
-    private void emptyLoadQueue()
-    {
-        //copy to avoid race
-        try {
-        KeyValuePair<ChunkCoord, Action<Chunk.StickyReference?>>[] coords = loadQueue.ToArray();
-        List<Chunk?> results = new();
-        sql!.LoadChunks(coords.Select(kvp => kvp.Key), results);
-        for (int i = 0; i < coords.Length; i++)
-        {
-            Chunk? c = results[i];
-            if (c != null)
-            {
-                c.SaveDirtyFlag = false;
-                callbackQueue.Add((Chunk.StickyReference.Stick(c), coords[i].Value));
-            }
-            else
-            {
-                callbackQueue.Add((null, coords[i].Value));
-            }
-            loadQueue.TryRemove(coords[i].Key, out _);
-        }
-        } catch (Exception e) {
-            GD.Print(e);
-        }
     }
 }

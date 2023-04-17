@@ -19,7 +19,7 @@ public partial class Mesher : Node
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> toMesh = new();
     private readonly Dictionary<ChunkCoord, int> meshing = new();
     private readonly Dictionary<ChunkCoord, ChunkMesh> done = new();
-    private readonly Dictionary<ChunkCoord, Chunk> waitingToMesh = new();
+    private readonly ConcurrentDictionary<ChunkCoord, Chunk> waitingToMesh = new();
     private readonly ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new();
     private World world = null!;
     //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
@@ -99,7 +99,7 @@ public partial class Mesher : Node
     {
         if (chunk == null) return;
         chunk.Mesh?.ClearData();
-        waitingToMesh.Remove(chunk.Position);
+        waitingToMesh.TryRemove(chunk.Position, out Chunk _);
         chunk.Mesh = null;
         chunk.Meshed = false;
     }
@@ -109,7 +109,7 @@ public partial class Mesher : Node
         if (canMesh(c))
         {
             toMesh[c.Position] = c;
-            waitingToMesh.Remove(c.Position);
+            waitingToMesh.TryRemove(c.Position, out Chunk _);
         }
         else
         {

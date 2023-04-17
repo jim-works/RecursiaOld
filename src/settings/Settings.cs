@@ -9,6 +9,8 @@ public partial class Settings : Node
     public const int SAVE_FORMAT_VERSION = 1;
 
     public static bool Paused {get; set;}
+    //only one timer to make sure all queued saves happen before loads (well, most of them. there is a race condition but I don't think it matters that much)
+    public static readonly int SaveLoadIntervalMs = 1000;
 
     public override void _Ready()
     {

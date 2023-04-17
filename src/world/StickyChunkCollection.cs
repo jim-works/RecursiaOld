@@ -46,8 +46,7 @@ public class StickyChunkCollection : System.IDisposable
         if (stickies.TryGetValue((ChunkCoord)coord, out Chunk.StickyReference? c))
         {
             BlockCoord pos = Chunk.WorldToLocal(coord);
-            if (c.Chunk?[pos] == null) changes.Add(coord, to); else return false;
-            return true;
+            if (c.Chunk?[pos] == null) return changes.TryAdd(coord, to); else return false;
         }
         return false;
     }

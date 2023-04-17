@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 //Faces of blocks are on integral coordinates
 //Ex: Block at (0,0,0) has corners (0,0,0) and (1,1,1)
@@ -23,7 +24,7 @@ public partial class World : Node
 
     public World()
     {
-        Chunks = new(this);
+        Chunks = new();
         Loader = new(this);
         Entities = new(this);
         WorldGen = new(this);
@@ -68,15 +69,26 @@ public partial class World : Node
         base._Process(delta);
     }
 
-    public void LoadChunk(ChunkCoord coord) {
-        GetStickyChunkOrLoadFromDisk(coord, (Chunk.StickyReference? c) => {
-            if (c == null) {
+    public async Task LoadChunk(ChunkCoord coord)
+    {
+        if (Chunks.Contains(coord)) return;
+        try
+        {
+            Chunk.StickyReference? c = await GetStickyChunkOrLoadFromDisk(coord);
+            if (c == null)
+            {
                 GenerateChunkDeferred(coord);
-            } else {
+            }
+            else
+            {
                 //dont' want this to be sticky
                 c.Dispose();
             }
-        });
+        }
+        catch (System.Exception e)
+        {
+            GD.PushError(e);
+        }
     }
     public void UnloadChunk(ChunkCoord coord) {
         Chunks.TryUnload(coord, c => {
@@ -88,43 +100,41 @@ public partial class World : Node
     //calls callback when load is completed. returned chunk is sticky, call c.Unstick() when done.
     //doesn't generate a new chunk, callback is invoked with null if it doesn't exist
     //never returns a chunk in UNLOADED state
-    public void GetStickyChunkOrLoadFromDisk(ChunkCoord coord, System.Action<Chunk.StickyReference?>? callback)
+    public async Task<Chunk.StickyReference?> GetStickyChunkOrLoadFromDisk(ChunkCoord coord)
     {
         if (Chunks.TryGetAndStick(coord, out Chunk.StickyReference? c))
         {
-            callback?.Invoke(c);
+            return c;
         }
         else
         {
-            loadFromDiskAndStick(coord, callback);
+            return await loadFromDiskAndStick(coord);
         }
     }
-    private void loadFromDiskAndStick(ChunkCoord coord, System.Action<Chunk.StickyReference?>? callback)
+    private async Task<Chunk.StickyReference?> loadFromDiskAndStick(ChunkCoord coord)
     {
-        saver!.LoadAndStick(coord, r =>
+        Chunk.StickyReference? r = await saver!.LoadAndStick(coord);
+        //make sure is hasn't already been loaded since we went to the db
+        if (Chunks.TryGetAndStick(coord, out Chunk.StickyReference? loaded))
         {
-            //make sure is hasn't already been loaded since we went to the db
-            if (Chunks.TryGetAndStick(coord, out Chunk.StickyReference? loaded))
-            {
-                //we have already loaded this since the request was put out
-                callback?.Invoke(loaded);
-                r?.Dispose();
-            }
-            else if (r == null)
-            {
-                //chunk does not exist on disk
-                callback?.Invoke(null);
-            }
-            else
-            {
-                //exists on disk, but not in memory
-                //let's load it
-                Chunks.TryAdd(r.Chunk);
-                r.Chunk.AddEvent("loaded from disk");
-                OnChunkReady?.Invoke(r.Chunk);
-                callback?.Invoke(r);
-            }
-        });
+            //we have already loaded this since the request was put out
+            r?.Dispose();
+            return loaded;
+        }
+        else if (r == null)
+        {
+            //chunk does not exist on disk
+            return null;
+        }
+        else
+        {
+            //exists on disk, but not in memory
+            //let's load it
+            Chunks.TryAdd(r.Chunk);
+            r.Chunk.AddEvent("loaded from disk");
+            OnChunkReady?.Invoke(r.Chunk);
+            return r;
+        }
     }
     //generates a chunk if it doesn't exist, thread-safe
     //if stick, we sticky the chunk twice. it will get unstickied once when it spawns
