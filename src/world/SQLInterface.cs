@@ -40,7 +40,8 @@ public class SQLInterface : IDisposable
     private readonly SQLiteCommand savePlayerCommand;
     private readonly SQLiteCommand loadPlayerCommand;
     private readonly ConcurrentBag<(ChunkCoord, TaskCompletionSource<Chunk?>)> loadQueue = new();
-    private readonly ConcurrentBag<Chunk> saveQueue = new();
+    private readonly ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
+    private readonly List<Chunk> returnToSave = new();
 
     public SQLInterface(string dbpath)
     {
@@ -166,7 +167,7 @@ public class SQLInterface : IDisposable
     }
     public void Save(Chunk chunk)
     {
-        saveQueue.Add(chunk);
+        saveQueue[chunk.Position] = chunk;
     }
     public async Task<Chunk?> LoadChunk(ChunkCoord coord)
     {
@@ -178,22 +179,33 @@ public class SQLInterface : IDisposable
     {
         int count = 0;
         using SQLiteTransaction transaction = conn.BeginTransaction(System.Data.IsolationLevel.Serializable);
-        while (saveQueue.TryTake(out Chunk? chunk))
+        foreach (var kvp in saveQueue.ToArray())
         {
-            saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
-            saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;
-            saveChunkCommand.Parameters["@z"].Value = chunk.Position.Z;
-            using (MemoryStream ms = new())
-            using (BinaryWriter bw = new(ms))
-            using (GZipStream gz = new(ms, CompressionLevel.Fastest))
+            if (saveQueue.TryRemove(kvp.Key, out Chunk? chunk))
             {
-                chunk.Serialize(bw);
-                saveChunkCommand.Parameters["@terrainData"].Value = ms.ToArray();
+                if (chunk.State == ChunkState.Sticky || chunk.GenerationState < ChunkGenerationState.GENERATED)
+                {
+                    //these chunks aren't ready to be saved yet as they're still generating or being used by a another chunk which may spill over
+                    returnToSave.Add(chunk);
+                    continue;
+                }
+                saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
+                saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;
+                saveChunkCommand.Parameters["@z"].Value = chunk.Position.Z;
+                using (MemoryStream ms = new())
+                using (BinaryWriter bw = new(ms))
+                using (GZipStream gz = new(ms, CompressionLevel.Fastest))
+                {
+                    chunk.Serialize(bw);
+                    saveChunkCommand.Parameters["@terrainData"].Value = ms.ToArray();
+                }
+                saveChunkCommand.ExecuteNonQuery();
+                count++;
             }
-            saveChunkCommand.ExecuteNonQuery();
-            count++;
         }
         transaction.Commit();
+        foreach(var c in returnToSave) saveQueue[c.Position] = c;
+        returnToSave.Clear();
         if (count > 0) Godot.GD.Print($"saved {count} chunks");
     }
     private void emptyLoadQueue()
