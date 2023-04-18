@@ -135,7 +135,10 @@ public partial class Chunk : ISerializable
         }
         else
         {
-            Block? curr = Blocks[0, 0, 0];
+            //TODO: change to span and use stackalloc
+            Block[,,] saving = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
+            Array.Copy(Blocks, saving, Blocks.Length);
+            Block? curr = saving[0, 0, 0];
             int run = 0;
             for (int x = 0; x < CHUNK_SIZE; x++)
             {
@@ -143,7 +146,7 @@ public partial class Chunk : ISerializable
                 {
                     for (int z = 0; z < CHUNK_SIZE; z++)
                     {
-                        Block? b = Blocks[x, y, z];
+                        Block? b = saving[x, y, z];
                         if (curr == b)
                         {
                             run++;
