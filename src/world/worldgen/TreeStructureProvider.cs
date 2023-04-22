@@ -21,7 +21,7 @@ public class TreeStructureProvider : WorldStructureProvider
             Priority = 0
         })
     {
-        RollsPerChunk = 1;
+        RollsPerChunk = 10;
         BlockTypes.TryGet("grass", out grass);
         BlockTypes.TryGet("log", out log);
         BlockTypes.TryGet("leaves", out leaves);

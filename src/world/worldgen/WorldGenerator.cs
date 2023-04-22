@@ -8,7 +8,7 @@ namespace Recursia;
 public class WorldGenerator
 {
     public int ShapingThreads { get; } = Godot.Mathf.Max(1, Environment.ProcessorCount - 4); //seems reasonable
-    public int StructuresPerChunk = 10; //seems reasonable
+    public int StructuresPerChunk = 1; //seems reasonable
 
     //contains chunks requested from outside sources (world loading)
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> generating = new ();
@@ -37,6 +37,7 @@ public class WorldGenerator
         shapingLayers.Add(new DetailLayer());
         //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
         structureProviders.Add(new TreeStructureProvider());
+        structureProviders.Add(new SkyTreeStructureProvider());
         //structureProviders.Add(new BoxStructureProvider());
     }
 
@@ -119,14 +120,14 @@ public class WorldGenerator
     public void GenerateStructures(Chunk chunk)
     {
         chunk.GenerationState = ChunkGenerationState.PLACING_STRUCTURES;
-        for (int i = 0; i < StructuresPerChunk; i++)
+        foreach (var provider in structureProviders)
         {
-            foreach (var provider in structureProviders)
+            for (int i = 0; i < provider.RollsPerChunk; i++)
             {
                 int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
                 int dy = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
                 int dz = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
-                BlockCoord origin = new(System.Math.Min(dx,Chunk.CHUNK_SIZE-1), System.Math.Min(dy,Chunk.CHUNK_SIZE-1), System.Math.Min(dz,Chunk.CHUNK_SIZE-1));
+                BlockCoord origin = new(System.Math.Min(dx, Chunk.CHUNK_SIZE - 1), System.Math.Min(dy, Chunk.CHUNK_SIZE - 1), System.Math.Min(dz, Chunk.CHUNK_SIZE - 1));
                 if (!provider.SuitableLocation(chunk, origin)) continue;
                 WorldStructure? result = provider.PlaceStructure(world.Chunks, chunk.LocalToWorld(origin));
                 if (result != null && provider.Record)
@@ -135,7 +136,6 @@ public class WorldGenerator
                 }
             }
         }
-
         chunk.GenerationState = ChunkGenerationState.GENERATED;
     }
 }
