@@ -33,17 +33,16 @@ public partial class Mesher : Node
     }
     public override void _Ready()
     {
-        world.OnChunkUnload += Unload;
-        world.OnChunkUpdate += OnChunkUpdate;
-        world.OnChunkReady += MeshDeferred;
+        world.Chunks.OnChunkUnload += Unload;
+        world.Chunks.OnChunkUpdate += OnChunkUpdate;
+        world.Chunks.OnChunkLoad += MeshDeferred;
         GD.Print("Mesher initialized!");
         base._Ready();
     }
     public override void _Process(double delta)
     {
         //multithread chunk generation
-        var kvps = toMesh.ToArray();
-        foreach(var kvp in kvps)
+        foreach(var kvp in toMesh.ToArray())
         {
             if (toMesh.TryRemove(kvp.Key, out Chunk? c))
                 multithreadGenerateChunk(c);
@@ -83,7 +82,7 @@ public partial class Mesher : Node
         }
         base._Input(@event);
     }
-    public void Unload(Chunk chunk)
+    public void Unload(Chunk chunk, ChunkBuffer? _)
     {
         if (chunk == null) return;
         chunk.Mesh?.ClearData();

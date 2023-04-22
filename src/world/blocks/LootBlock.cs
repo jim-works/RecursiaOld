@@ -16,7 +16,7 @@ public class LootBlock : Block
         {
             c.Inventory.CopyItem(item);
         }
-        c.World!.SetBlock(pos, null);
+        c.World!.Chunks.SetBlock(pos, null);
     }
 
     public override void Serialize(BinaryWriter bw)

@@ -24,7 +24,7 @@ public partial class SummoningItem : Item
         for (int y = summonPos.Y; y < summonPos.Y+MaxCheckHeight; y++)
         {
             summonY=y;
-            if (user.World.GetBlock(new BlockCoord(summonPos.X,y,summonPos.Z)) == null) break; //open space found
+            if (user.World.Chunks.GetBlock(new BlockCoord(summonPos.X,y,summonPos.Z)) == null) break; //open space found
         }
         if (ToSummon == null)
         {

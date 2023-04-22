@@ -21,7 +21,7 @@ public partial class BlockFactoryItem : Item
             if(BlockTypes.TryGet(BlockName, out Block? placing))
             {
                 InitPlaced?.Invoke(placing);
-                user.World.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, placing);
+                user.World.Chunks.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, placing);
             }
             else
             {

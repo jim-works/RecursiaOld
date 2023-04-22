@@ -9,7 +9,7 @@ public static class SphereShaper
         BlockCoord minBounds = new((int)(origin.X-strength),(int)(origin.Y-strength),(int)(origin.Z-strength));
         BlockCoord maxBounds = new((int)(origin.X + strength), (int)(origin.Y + strength), (int)(origin.Z + strength));
         BlockCoord originInt = (BlockCoord)origin;
-        world.BatchSetBlock((setter) =>
+        world.Chunks.BatchSetBlock((setter) =>
         {
             for (int x = minBounds.X; x < maxBounds.X; x++)
             {

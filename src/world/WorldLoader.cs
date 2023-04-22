@@ -9,7 +9,7 @@ public class WorldLoader
 {
     private readonly World world;
     private readonly List<Node3D> chunkLoaders = new();
-    private readonly int loadDistance = 16;
+    private readonly int loadDistance = 10;
     private readonly HashSet<ChunkCoord> loadedChunks = new();
     private readonly List<ChunkCoord> toUnload = new();
 
@@ -45,7 +45,7 @@ public class WorldLoader
             }
         }
         foreach (var c in toUnload) {
-            world.UnloadChunk(c);
+            world.Chunks.TryUnload(c);
         }
 #endif
         Task.Run(() => Parallel.ForEach(loadedChunks, async c => await world.LoadChunk(c)));

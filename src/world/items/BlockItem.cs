@@ -15,7 +15,7 @@ public partial class BlockItem : Item
     {
         BlockcastHit? hit = user.World!.Blockcast(position, dir*Reach);
         if (hit != null && hit.Normal != Vector3.Zero) { //zero normal means we are inside the block we are gonna place
-            user.World.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, Placing);
+            user.World.Chunks.SetBlock(hit.BlockPos+(BlockCoord)hit.Normal, Placing);
             source.Decrement(1);
             return true;
         }

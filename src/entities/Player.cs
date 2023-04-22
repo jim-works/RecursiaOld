@@ -80,7 +80,7 @@ public partial class Player : Combatant
                     //temp idc
                     ItemTypes.TryGet("marp_rod", out Item? marp_rod);
                     (b as LootBlock)!.Drops = new ItemStack[] {new ItemStack{Item=marp_rod!,Size=1}};
-                    World!.SetBlock((BlockCoord)GlobalPosition, b);
+                    World!.Chunks.SetBlock((BlockCoord)GlobalPosition, b);
                 }
             } else if (key.Keycode == Key.T) {
                 Collides = !Collides;

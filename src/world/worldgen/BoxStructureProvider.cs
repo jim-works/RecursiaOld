@@ -28,16 +28,19 @@ public class BoxStructureProvider : WorldStructureProvider
     public override WorldStructure? PlaceStructure(ChunkCollection chunks, BlockCoord position)
     {
         GD.Print("placed structure");
-        for (int x = -SIZE; x <= SIZE; x++)
+        chunks.BatchSetBlock(set =>
         {
-            for (int y = -SIZE; y <= SIZE; y++)
+            for (int x = -SIZE; x <= SIZE; x++)
             {
-                for (int z = -SIZE; z <= SIZE; z++)
+                for (int y = -SIZE; y <= SIZE; y++)
                 {
-                    chunks.SetBlock(new BlockCoord(x, y, z) + position, boxBlock);
+                    for (int z = -SIZE; z <= SIZE; z++)
+                    {
+                        set(new BlockCoord(x, y, z) + position, boxBlock);
+                    }
                 }
             }
-        }
+        });
         return null;
     }
 }

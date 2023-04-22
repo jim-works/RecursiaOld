@@ -18,7 +18,7 @@ public static class Plane
             for (int z = min.Z; z < max.Z; z++)
             {
                 BlockCoord curr = new(max.X,y,z);
-                Block? test = world.GetBlock(curr);
+                Block? test = world.Chunks.GetBlock(curr);
                 if (test?.Collidable == true) return true;
             }
         }
@@ -39,7 +39,7 @@ public static class Plane
             for (int z = min.Z; z < max.Z; z++)
             {
                 BlockCoord curr = new(x,max.Y,z);
-                Block? test = world.GetBlock(curr);
+                Block? test = world.Chunks.GetBlock(curr);
                 if (test?.Collidable == true) return true;
             }
         }
@@ -60,7 +60,7 @@ public static class Plane
             for (int y = min.Y; y < max.Y; y++)
             {
                 BlockCoord curr = new(x,y,max.Z);
-                Block? test = world.GetBlock(curr);
+                Block? test = world.Chunks.GetBlock(curr);
                 if (test?.Collidable == true) return true;
             }
         }

@@ -6,6 +6,9 @@ using System.Diagnostics.CodeAnalysis;
 namespace Recursia;
 public class ChunkCollection
 {
+    public event Action<Chunk>? OnChunkLoad;
+    public event Action<Chunk>? OnChunkUpdate;
+    public event Action<Chunk, ChunkBuffer?>? OnChunkUnload;
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> chunks = new();
     //blocks to be placed when the chunk at chunkcoord generates
     private readonly ConcurrentDictionary<ChunkCoord, ChunkBuffer> buffers = new();
@@ -25,7 +28,8 @@ public class ChunkCollection
     }
     //returns the chunk if chunk is in collection, null otherwise
     //if chunk is not in the collection, sets the block in the chunk's chunkbuffer. Change will persist when chunk is generated/loaded again.
-    public Chunk? SetBlock(BlockCoord coord, Block? to)
+    //does not trigger OnChunkUpdate
+    public Chunk? SetBlockNoUpdate(BlockCoord coord, Block? to)
     {
         ChunkCoord cc = (ChunkCoord)coord;
         if (TryGetChunk(cc, out Chunk? chunk))
@@ -45,6 +49,34 @@ public class ChunkCollection
             });
         }
         return chunk;
+    }
+    //returns the chunk if chunk is in collection, null otherwise
+    //if chunk is not in the collection, sets the block in the chunk's chunkbuffer. Change will persist when chunk is generated/loaded again.
+    //triggers OnChunkUpdate
+    public Chunk? SetBlock(BlockCoord coord, Block? to)
+    {
+        if (SetBlockNoUpdate(coord, to) is Chunk c)
+        {
+            OnChunkUpdate?.Invoke(c);
+            return c;
+        }
+        return null;
+    }
+    //only updates chunks at the end of the batch. much more efficient for large batches than many SetBlock() calls.
+    //call batch(coord, block) to set the blocks
+    //will not create new chunks
+    public void BatchSetBlock(Action<Action<BlockCoord, Block?>> batch) {
+        List<Chunk> chunksToUpdate = new();
+        batch((coords, block) => {
+            if (SetBlockNoUpdate(coords, block) is Chunk c && !chunksToUpdate.Contains(c))
+            {
+                chunksToUpdate.Add(c);
+            }
+        });
+        foreach (Chunk c in chunksToUpdate) {
+            if (c.State == ChunkState.Loaded) OnChunkUpdate?.Invoke(c);
+            c.AddEvent("batch set block");
+        }
     }
 
     public Chunk this[ChunkCoord index]
@@ -81,16 +113,17 @@ public class ChunkCollection
             b.AddToChunk(c);
         }
         c.Load();
+        OnChunkLoad?.Invoke(c);
         return true;
     }
 
-    public bool TryUnload(ChunkCoord coord, Action<Chunk, ChunkBuffer?> onUnload)
+    public bool TryUnload(ChunkCoord coord)
     {
         if (chunks.TryRemove(coord, out Chunk? chunk))
         {
             chunk.Unload();
             buffers.TryRemove(coord, out ChunkBuffer? buf);
-            onUnload(chunk, buf);
+            OnChunkUnload?.Invoke(chunk, buf);
         }
         return false;
     }

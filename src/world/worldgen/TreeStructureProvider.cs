@@ -34,21 +34,24 @@ public class TreeStructureProvider : WorldStructureProvider
     }
     public override WorldStructure? PlaceStructure(ChunkCollection chunks, BlockCoord position)
     {
-        for (int dy = 1; dy < TRUNK_HEIGHT; dy++)
+        chunks.BatchSetBlock(set =>
         {
-            chunks.SetBlock(new BlockCoord(0, dy, 0) + position, log);
-        }
-        for (int x = -LEAF_SIZE; x <= LEAF_SIZE; x++)
-        {
-            for (int y = -LEAF_SIZE; y <= LEAF_SIZE; y++)
+            for (int dy = 1; dy < TRUNK_HEIGHT; dy++)
             {
-                for (int z = -LEAF_SIZE; z <= LEAF_SIZE; z++)
+                set(new BlockCoord(0, dy, 0) + position, log);
+            }
+            for (int x = -LEAF_SIZE; x <= LEAF_SIZE; x++)
+            {
+                for (int y = -LEAF_SIZE; y <= LEAF_SIZE; y++)
                 {
-                    float sample = BASE_DIST + (Mathf.Abs(x) + Mathf.Abs(y) + Mathf.Abs(z)) * (1 + 0.5f * leafNoise.GetNoise(FREQ * (position.X + x), FREQ * (position.Y + y), FREQ * (position.Z + z))); //0..3*LEAF_SIZE
-                    if (sample < CUTOFF) chunks.SetBlock(new BlockCoord(x, y + TRUNK_HEIGHT, z) + position, leaves);
+                    for (int z = -LEAF_SIZE; z <= LEAF_SIZE; z++)
+                    {
+                        float sample = BASE_DIST + (Mathf.Abs(x) + Mathf.Abs(y) + Mathf.Abs(z)) * (1 + 0.5f * leafNoise.GetNoise(FREQ * (position.X + x), FREQ * (position.Y + y), FREQ * (position.Z + z))); //0..3*LEAF_SIZE
+                        if (sample < CUTOFF) set(new BlockCoord(x, y + TRUNK_HEIGHT, z) + position, leaves);
+                    }
                 }
             }
-        }
+        });
         return null;
     }
 }

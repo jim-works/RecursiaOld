@@ -29,7 +29,7 @@ public static class Exploder
                         if (item.Block != null) power -= item.Block.ExplosionResistance;
                     }
                     buffer.Clear();
-                    if (power > 0) world.SetBlock(p, null);
+                    if (power > 0) world.Chunks.SetBlock(p, null);
                 }
             }
         }

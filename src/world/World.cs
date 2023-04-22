@@ -14,9 +14,6 @@ public partial class World : Node
 
     public WorldGenerator WorldGen;
     public WorldLoader Loader;
-    public event System.Action<Chunk>? OnChunkUpdate;
-    public event System.Action<Chunk>? OnChunkReady;
-    public event System.Action<Chunk>? OnChunkUnload;
 
     private double chunkLoadingInterval = 0.5f; //seconds per chunk loading update
     private double _chunkLoadingTimer;
@@ -50,13 +47,9 @@ public partial class World : Node
         WorldGen.GetFinishedChunks(fromWorldGen => {
             foreach (Chunk c in fromWorldGen)
             {
-                if (OnChunkReady == null) GD.PrintErr("no subscriber!");
-                c.AddEvent("on chunk ready");
                 if (!Chunks.TryLoad(c)) {
                     GD.PushWarning($"Couldn't add chunk from world gen at {c.Position}");
-                    continue;
                 }
-                OnChunkReady?.Invoke(c);
             }
         });
 
@@ -91,12 +84,6 @@ public partial class World : Node
             GD.PushError(e);
         }
     }
-    public void UnloadChunk(ChunkCoord coord) {
-        Chunks.TryUnload(coord, (c, buf) => {
-            saver!.Save(c, buf);
-            OnChunkUnload?.Invoke(c);
-        });
-    }
     //generates a chunk if it doesn't exist, thread-safe
     //ONLY GENERATES IF THE CHUNK IF NEWLY CREATED
     public void GenerateChunkDeferred(ChunkCoord coord)
@@ -107,35 +94,13 @@ public partial class World : Node
             WorldGen.GenerateDeferred(Chunks.GetOrCreateChunk(coord));
         }
     }
-    public Block? GetBlock(BlockCoord coords) => Chunks.GetBlock(coords);
     public ItemStack BreakBlock(BlockCoord coords) {
-        DropTable? dt = GetBlock(coords)?.DropTable;
+        DropTable? dt = Chunks.GetBlock(coords)?.DropTable;
         if (dt == null) {
             GD.PushWarning("Null droptable!");
         }
-        SetBlock(coords, null);
+        Chunks.SetBlock(coords, null);
         return dt?.GetDrop() ?? new ItemStack();
-    }
-    //only updates chunks at the end of the batch
-    //call batch(coord, block) to set the blocks
-    //will not create new chunks
-    public void BatchSetBlock(System.Action<System.Action<BlockCoord, Block?>> batch) {
-        List<Chunk> chunksToUpdate = new();
-        batch((coords, block) => {
-            if (Chunks.SetBlock(coords, block) is Chunk c && !chunksToUpdate.Contains(c))
-            {
-                chunksToUpdate.Add(c);
-            }
-        });
-        foreach (Chunk c in chunksToUpdate) {
-            OnChunkUpdate?.Invoke(c);
-            c.AddEvent("batch set block");
-        }
-    }
-    public void SetBlock(BlockCoord coords, Block? block) {
-        if (Chunks.SetBlock(coords, block) is Chunk c && c.State >= ChunkState.Loaded) {
-            OnChunkUpdate?.Invoke(c);
-        }
     }
     //returns the block closest to origin that intersects the line segment from origin to (origin + line)
     public BlockcastHit? Blockcast(Vector3 origin, Vector3 line) {
@@ -144,7 +109,7 @@ public partial class World : Node
         float lineLength = line.Length();
         Vector3 lineNorm = line/lineLength;
         BlockCoord oldCoords = (BlockCoord)origin;
-        Block? b = GetBlock(oldCoords);
+        Block? b = Chunks.GetBlock(oldCoords);
         if (b != null)
         {
             return new BlockcastHit
@@ -162,7 +127,7 @@ public partial class World : Node
             BlockCoord coords = (BlockCoord)testPoint;
             if (coords == oldCoords) continue;
             oldCoords=coords;
-            b = GetBlock((BlockCoord)testPoint);
+            b = Chunks.GetBlock((BlockCoord)testPoint);
             if (b != null)
             {
                 return new BlockcastHit
@@ -185,7 +150,7 @@ public partial class World : Node
         float lineLength = d.Length();
         Vector3 lineNorm = d/lineLength;
         BlockCoord oldCoords = (BlockCoord)origin;
-        Block? b = GetBlock(oldCoords);
+        Block? b = Chunks.GetBlock(oldCoords);
         if (b != null)
         {
             buffer.Add(new BlockcastHit
@@ -203,7 +168,7 @@ public partial class World : Node
             BlockCoord coords = (BlockCoord)testPoint;
             if (coords == oldCoords) continue;
             oldCoords=coords;
-            b = GetBlock((BlockCoord)testPoint);
+            b = Chunks.GetBlock((BlockCoord)testPoint);
             if (b != null)
             {
                 buffer.Add(new BlockcastHit

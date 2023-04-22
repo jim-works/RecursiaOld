@@ -86,7 +86,7 @@ public partial class PatrickQuack : BipedalCombatant
         }
         LootBlock l = (LootBlock)b;
         l.Drops = new ItemStack[] {new ItemStack{Item=item,Size=MinDrops+Mathf.RoundToInt(GD.Randf()*RandomDrops)}};
-        World!.SetBlock((BlockCoord)GlobalPosition, b);
+        World!.Chunks.SetBlock((BlockCoord)GlobalPosition, b);
         base.Die();
     }
     private void doWalk(float dt)

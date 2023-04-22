@@ -41,7 +41,7 @@ public partial class Combatant : PhysicsObject
             {
                 for (int z = -1; z <= 1; z++)
                 {
-                    Block? b = World?.GetBlock((BlockCoord)GlobalPosition+new BlockCoord(x,y,z));
+                    Block? b = World?.Chunks.GetBlock((BlockCoord)GlobalPosition+new BlockCoord(x,y,z));
                     if (b?.Name == "lava")
                     {
                         TakeDamage(new Damage{

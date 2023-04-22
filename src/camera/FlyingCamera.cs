@@ -43,7 +43,7 @@ public partial class FlyingCamera : Node3D
             Vector3 dir = -Basis.Z*PunchDistance;
             BlockcastHit? hit = world!.Blockcast(GlobalPosition, dir);
             if (hit != null) {
-                world.SetBlock(hit.BlockPos, null);
+                world.Chunks.SetBlock(hit.BlockPos, null);
             }
         }
         if (Input.IsActionJustPressed("use")) {

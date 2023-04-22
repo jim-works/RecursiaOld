@@ -1,6 +1,6 @@
 using System.IO;
 using System.Collections.Generic;
-using System;
+using System.Collections.Concurrent;
 namespace Recursia;
 public enum ChunkState
 {
@@ -16,12 +16,12 @@ public class Chunk : ISerializable
     public ChunkMesh? Mesh;
 #if DEBUG
     public bool Meshed {get {
-        return meshedHistory.Count != 0 && meshedHistory.Peek();
+        return meshedHistory.TryPeek(out bool b) && b;
     } set {
         meshedHistory.Enqueue(value);
     }}
-    private readonly Queue<bool> meshedHistory = new();
-    private readonly System.Collections.Concurrent.ConcurrentQueue<string> eventHistory = new();
+    private readonly ConcurrentQueue<bool> meshedHistory = new();
+    private readonly ConcurrentQueue<string> eventHistory = new();
 #else
     public bool Meshed {get; set;}
 #endif
