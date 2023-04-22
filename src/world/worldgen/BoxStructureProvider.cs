@@ -21,19 +21,20 @@ public class BoxStructureProvider : WorldStructureProvider
 
         leafNoise.SetNoiseType(FastNoiseLite.NoiseType.Value);
     }
-    public override bool SuitableLocation(World world, BlockCoord coord)
+    public override bool SuitableLocation(Chunk c, BlockCoord coord)
     {
-        return world.GetBlock(coord) == grass; //tree must be planted on grass
+        return c[coord] == grass;
     }
-    public override WorldStructure? PlaceStructure(StickyChunkCollection c, BlockCoord position)
+    public override WorldStructure? PlaceStructure(ChunkCollection chunks, BlockCoord position)
     {
+        GD.Print("placed structure");
         for (int x = -SIZE; x <= SIZE; x++)
         {
             for (int y = -SIZE; y <= SIZE; y++)
             {
                 for (int z = -SIZE; z <= SIZE; z++)
                 {
-                    c.QueueIfNull(new BlockCoord(x,y,z)+position, boxBlock);
+                    chunks.SetBlock(new BlockCoord(x, y, z) + position, boxBlock);
                 }
             }
         }

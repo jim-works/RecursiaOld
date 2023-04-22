@@ -80,18 +80,6 @@ public partial class Mesher : Node
                 string info = $"Meshed: {c.GetMeshedHistory()}, waiting to be meshed: {waitingToMesh.ContainsKey(cpos)}, state: {c.State}, generation state: {c.GenerationState}\nevent hist: {c.GetEventHistory()}";
                 GD.Print($"Chunk at {cpos}: {info}");
             }
-            int stickies = 0;
-            int maxSticky = 0;
-            int minSticky = 99999999;
-            foreach (var kvp in world.Chunks)
-            {
-                if (kvp.Value.State == ChunkState.Sticky) {
-                    maxSticky = System.Math.Max(kvp.Value.stickyCount, maxSticky);
-                    minSticky = System.Math.Min(kvp.Value.stickyCount, minSticky);
-                    stickies ++;
-                }
-            }
-            GD.Print($"{stickies} sticky chunks in the world, max stick {maxSticky}, min stick {minSticky}");
         }
         base._Input(@event);
     }
@@ -148,7 +136,7 @@ public partial class Mesher : Node
     public bool canMesh(Chunk c)
     {
         //only mesh if all adjacent chunks are generated
-        return c.State >= ChunkState.Loaded
+        return c.GenerationState >= ChunkGenerationState.GENERATED && c.State >= ChunkState.Loaded
         && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(1,0,0), out Chunk? c1) && c1.GenerationState == ChunkGenerationState.GENERATED
         && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(-1,0,0), out Chunk? c2) && c2.GenerationState == ChunkGenerationState.GENERATED
         && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,1,0), out Chunk? c3) && c3.GenerationState == ChunkGenerationState.GENERATED

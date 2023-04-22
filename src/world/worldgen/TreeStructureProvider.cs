@@ -6,9 +6,9 @@ public class TreeStructureProvider : WorldStructureProvider
 {
     private const int LEAF_SIZE = 4;
     private const int TRUNK_HEIGHT = 7;
-    private const float CUTOFF=20;
-    private const float FREQ=12.384f;
-    private const float BASE_DIST=15;
+    private const float CUTOFF = 20;
+    private const float FREQ = 12.384f;
+    private const float BASE_DIST = 15;
     private readonly Block? log;
     private readonly Block? grass;
     private readonly Block? leaves;
@@ -28,15 +28,15 @@ public class TreeStructureProvider : WorldStructureProvider
 
         leafNoise.SetNoiseType(FastNoiseLite.NoiseType.Value);
     }
-    public override bool SuitableLocation(World world, BlockCoord coord)
+    public override bool SuitableLocation(Chunk c, BlockCoord coord)
     {
-        return world.GetBlock(coord) == grass; //tree must be planted on grass
+        return c[coord] == grass; //tree must be planted on grass
     }
-    public override WorldStructure? PlaceStructure(StickyChunkCollection c, BlockCoord position)
+    public override WorldStructure? PlaceStructure(ChunkCollection chunks, BlockCoord position)
     {
         for (int dy = 1; dy < TRUNK_HEIGHT; dy++)
         {
-            c.QueueBlock(new BlockCoord(0,dy,0)+position, log);
+            chunks.SetBlock(new BlockCoord(0, dy, 0) + position, log);
         }
         for (int x = -LEAF_SIZE; x <= LEAF_SIZE; x++)
         {
@@ -44,8 +44,8 @@ public class TreeStructureProvider : WorldStructureProvider
             {
                 for (int z = -LEAF_SIZE; z <= LEAF_SIZE; z++)
                 {
-                    float sample = BASE_DIST+(Mathf.Abs(x)+Mathf.Abs(y)+Mathf.Abs(z))*(1+0.5f*leafNoise.GetNoise(FREQ*(position.X+x),FREQ*(position.Y+y),FREQ*(position.Z+z))); //0..3*LEAF_SIZE
-                    if (sample < CUTOFF) c.QueueIfNull(new BlockCoord(x,y+TRUNK_HEIGHT,z)+position, leaves);
+                    float sample = BASE_DIST + (Mathf.Abs(x) + Mathf.Abs(y) + Mathf.Abs(z)) * (1 + 0.5f * leafNoise.GetNoise(FREQ * (position.X + x), FREQ * (position.Y + y), FREQ * (position.Z + z))); //0..3*LEAF_SIZE
+                    if (sample < CUTOFF) chunks.SetBlock(new BlockCoord(x, y + TRUNK_HEIGHT, z) + position, leaves);
                 }
             }
         }

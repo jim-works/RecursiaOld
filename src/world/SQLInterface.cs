@@ -165,7 +165,7 @@ public class SQLInterface : IDisposable
         loadChunkCommand.Dispose();
         conn.Close();
     }
-    public void Save(Chunk chunk)
+    public void Save(Chunk chunk, ChunkBuffer? buf)
     {
         saveQueue[chunk.Position] = chunk;
     }
@@ -183,9 +183,9 @@ public class SQLInterface : IDisposable
         {
             if (saveQueue.TryRemove(kvp.Key, out Chunk? chunk))
             {
-                if (chunk.State == ChunkState.Sticky || chunk.GenerationState < ChunkGenerationState.GENERATED)
+                if (chunk.GenerationState < ChunkGenerationState.GENERATED)
                 {
-                    //these chunks aren't ready to be saved yet as they're still generating or being used by a another chunk which may spill over
+                    //these chunks aren't ready to be saved yet as they're still generating
                     returnToSave.Add(chunk);
                     continue;
                 }

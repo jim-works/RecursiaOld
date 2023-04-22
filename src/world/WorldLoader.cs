@@ -9,7 +9,7 @@ public class WorldLoader
 {
     private readonly World world;
     private readonly List<Node3D> chunkLoaders = new();
-    private readonly int loadDistance = 10;
+    private readonly int loadDistance = 16;
     private readonly HashSet<ChunkCoord> loadedChunks = new();
     private readonly List<ChunkCoord> toUnload = new();
 
@@ -39,7 +39,7 @@ public class WorldLoader
         }
 #if NO_UNLOADING
 #else
-        foreach (var kvp in world.Chunks) {
+        foreach (var kvp in world.Chunks.GetChunkEnumerator()) {
             if (!loadedChunks.Contains(kvp.Key)) {
                 toUnload.Add(kvp.Key);
             }
@@ -48,7 +48,7 @@ public class WorldLoader
             world.UnloadChunk(c);
         }
 #endif
-        Parallel.ForEach(loadedChunks, async c => await world.LoadChunk(c));
+        Task.Run(() => Parallel.ForEach(loadedChunks, async c => await world.LoadChunk(c)));
     }
     public void AddChunkLoader(Node3D loader)
     {

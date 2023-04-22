@@ -41,20 +41,22 @@ public partial class World : Node
         saver = GetNode<WorldSaver>("WorldSaver");
         ObjectTypes.TryGetInstance(this, "player", SpawnPoint, out Player _);
         _chunkLoadingTimer = 9999;
-        Loader.UpdateChunkLoading();
+        //Loader.UpdateChunkLoading();
         base._Ready();
     }
 
     public override void _Process(double delta)
     {
         WorldGen.GetFinishedChunks(fromWorldGen => {
-            foreach (var item in fromWorldGen)
+            foreach (Chunk c in fromWorldGen)
             {
                 if (OnChunkReady == null) GD.PrintErr("no subscriber!");
-                Chunk c = item.Chunk;
                 c.AddEvent("on chunk ready");
+                if (!Chunks.TryLoad(c)) {
+                    GD.PushWarning($"Couldn't add chunk from world gen at {c.Position}");
+                    continue;
+                }
                 OnChunkReady?.Invoke(c);
-                item.Dispose(); //we keep chunk sticky until it's done generating
             }
         });
 
@@ -74,15 +76,14 @@ public partial class World : Node
         if (Chunks.Contains(coord)) return;
         try
         {
-            Chunk.StickyReference? c = await GetStickyChunkOrLoadFromDisk(coord);
+            (Chunk? c, _) = await saver!.LoadChunk(coord);
             if (c == null)
             {
                 GenerateChunkDeferred(coord);
             }
             else
             {
-                //dont' want this to be sticky
-                c.Dispose();
+                Chunks.TryLoad(c);
             }
         }
         catch (System.Exception e)
@@ -91,83 +92,19 @@ public partial class World : Node
         }
     }
     public void UnloadChunk(ChunkCoord coord) {
-        Chunks.TryUnload(coord, c => {
-            saver!.Save(c);
+        Chunks.TryUnload(coord, (c, buf) => {
+            saver!.Save(c, buf);
             OnChunkUnload?.Invoke(c);
         });
     }
-    //gets a chunk from memory, or loads it from disk if it's not in memory
-    //calls callback when load is completed. returned chunk is sticky, call c.Unstick() when done.
-    //doesn't generate a new chunk, callback is invoked with null if it doesn't exist
-    //never returns a chunk in UNLOADED state
-    public async Task<Chunk.StickyReference?> GetStickyChunkOrLoadFromDisk(ChunkCoord coord)
-    {
-        if (Chunks.TryGetAndStick(coord, out Chunk.StickyReference? c))
-        {
-            return c;
-        }
-        else
-        {
-            return await loadFromDiskAndStick(coord);
-        }
-    }
-    private async Task<Chunk.StickyReference?> loadFromDiskAndStick(ChunkCoord coord)
-    {
-        Chunk.StickyReference? r = await saver!.LoadAndStick(coord);
-        //make sure is hasn't already been loaded since we went to the db
-        if (Chunks.TryGetAndStick(coord, out Chunk.StickyReference? loaded))
-        {
-            //we have already loaded this since the request was put out
-            r?.Dispose();
-            return loaded;
-        }
-        else if (r == null)
-        {
-            //chunk does not exist on disk
-            return null;
-        }
-        else
-        {
-            //exists on disk, but not in memory
-            //let's load it
-            Chunks.TryAdd(r.Chunk);
-            r.Chunk.AddEvent("loaded from disk");
-            OnChunkReady?.Invoke(r.Chunk);
-            return r;
-        }
-    }
     //generates a chunk if it doesn't exist, thread-safe
-    //if stick, we sticky the chunk twice. it will get unstickied once when it spawns
-    //IF STICK, YOU HAVE TO UNSTICKY
-    public Chunk.StickyReference? GenerateStickyChunkDeferred(ChunkCoord coord)
-    {
-        //don't need to check if worldgen is in the process of generating the chunk since it will already be in World.Chunks before it gets sent to generator
-        if (Chunks.GetOrCreateStickyChunk(coord, out Chunk.StickyReference c))
-        {
-            //we will unstick when this chunk in generated when we call WorldGen.GetFinishedChunks
-            //this second stick is unstickied by the caller
-            if (WorldGen.GenerateDeferred(c))
-            {
-                return Chunk.StickyReference.Stick(c.Chunk);
-            }
-        }
-        c.Dispose(); //not doing anything, don't hold sticky
-        return null;
-    }
-    //generates a chunk if it doesn't exist, thread-safe
-    //we sticky the chunk once. it will get unstickied once when it spawns
     //ONLY GENERATES IF THE CHUNK IF NEWLY CREATED
     public void GenerateChunkDeferred(ChunkCoord coord)
     {
-        //don't need to check if worldgen is in the process of generating the chunk since it will already be in World.Chunks before it gets sent to generator
-        if (Chunks.GetOrCreateStickyChunk(coord, out Chunk.StickyReference c))
+        if (!Chunks.Contains(coord))
         {
             //we will unstick when this chunk in generated when we call WorldGen.GetFinishedChunks
-            WorldGen.GenerateDeferred(c);
-        }
-        else
-        {
-            c.Dispose();
+            WorldGen.GenerateDeferred(Chunks.GetOrCreateChunk(coord));
         }
     }
     public Block? GetBlock(BlockCoord coords) => Chunks.GetBlock(coords);
@@ -185,27 +122,18 @@ public partial class World : Node
     public void BatchSetBlock(System.Action<System.Action<BlockCoord, Block?>> batch) {
         List<Chunk> chunksToUpdate = new();
         batch((coords, block) => {
-            ChunkCoord chunkCoords = (ChunkCoord)coords;
-            BlockCoord blockCoords = Chunk.WorldToLocal(coords);
-            if (Chunks.TryGetChunk(chunkCoords, out Chunk? c))
+            if (Chunks.SetBlock(coords, block) is Chunk c && !chunksToUpdate.Contains(c))
             {
-                c[blockCoords] = block;
-                if (!chunksToUpdate.Contains(c)) chunksToUpdate.Add(c);
+                chunksToUpdate.Add(c);
             }
         });
         foreach (Chunk c in chunksToUpdate) {
             OnChunkUpdate?.Invoke(c);
             c.AddEvent("batch set block");
-            //c.Unstick();
         }
     }
-    public void SetBlock(BlockCoord coords, Block? block, bool updateChunk=true) {
-        ChunkCoord chunkCoords = (ChunkCoord)coords;
-        BlockCoord blockCoords = Chunk.WorldToLocal(coords);
-        Chunks.GetOrCreateChunk(chunkCoords, out Chunk c);
-        c[blockCoords] = block;
-        c.AddEvent("set block");
-        if (updateChunk && c.State >= ChunkState.Loaded) {
+    public void SetBlock(BlockCoord coords, Block? block) {
+        if (Chunks.SetBlock(coords, block) is Chunk c && c.State >= ChunkState.Loaded) {
             OnChunkUpdate?.Invoke(c);
         }
     }

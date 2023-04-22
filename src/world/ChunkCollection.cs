@@ -6,105 +6,94 @@ using System.Diagnostics.CodeAnalysis;
 namespace Recursia;
 public class ChunkCollection
 {
-    private readonly ConcurrentDictionary<ChunkCoord, Chunk> chunks = new ();
-    private readonly object _loadUnloadLock = new();
+    private readonly ConcurrentDictionary<ChunkCoord, Chunk> chunks = new();
+    //blocks to be placed when the chunk at chunkcoord generates
+    private readonly ConcurrentDictionary<ChunkCoord, ChunkBuffer> buffers = new();
 
     public Block? GetBlock(BlockCoord coord)
     {
-        if (TryGetChunk((ChunkCoord)coord, out Chunk? c))
+        ChunkCoord cc = (ChunkCoord)coord;
+        if (TryGetChunk(cc, out Chunk? c))
         {
             return c?[Chunk.WorldToLocal(coord)];
         }
+        else if (buffers.TryGetValue(cc, out ChunkBuffer? buf))
+        {
+            return buf?[Chunk.WorldToLocal(coord)];
+        }
         return null;
     }
+    //returns the chunk if chunk is in collection, null otherwise
+    //if chunk is not in the collection, sets the block in the chunk's chunkbuffer. Change will persist when chunk is generated/loaded again.
+    public Chunk? SetBlock(BlockCoord coord, Block? to)
+    {
+        ChunkCoord cc = (ChunkCoord)coord;
+        if (TryGetChunk(cc, out Chunk? chunk))
+        {
+            chunk[Chunk.WorldToLocal(coord)] = to;
+        }
+        else
+        {
+            buffers.AddOrUpdate(cc, c => {
+                ChunkBuffer buf = new(c);
+                buf[Chunk.WorldToLocal(coord)] = to;
+                return buf;
+            },
+            (_, buf) => {
+                buf[Chunk.WorldToLocal(coord)] = to;
+                return buf;
+            });
+        }
+        return chunk;
+    }
 
-    public Chunk this[ChunkCoord index] {
-        get { return chunks[index];}
+    public Chunk this[ChunkCoord index]
+    {
+        get { return chunks[index]; }
     }
 
     public bool Contains(ChunkCoord c) => chunks.ContainsKey(c);
     public bool TryGetChunk(ChunkCoord c, [MaybeNullWhen(false)] out Chunk chunk) => chunks.TryGetValue(c, out chunk);
-    public Chunk? GetChunkOrNull(ChunkCoord c) {
+    public Chunk? GetChunkOrNull(ChunkCoord c)
+    {
         TryGetChunk(c, out Chunk? chunk);
         return chunk;
     }
-    public bool TryGetAndStick(ChunkCoord coord, [MaybeNullWhen(false)] out Chunk.StickyReference c)
+
+    //returns true if chunk was created
+    //c is either the newly created chunk or chunk found.
+    //must add c to collection when ready, beware that it may be unloaded whenever after its added
+    public Chunk GetOrCreateChunk(ChunkCoord coord)
     {
-        lock (_loadUnloadLock)
+        if (chunks.TryGetValue(coord, out Chunk? c)) return c;
+        return new(coord);
+    }
+    //tries to add the chunk to the collection and load it
+    //returns true if added, false if already present in dictionary. Will not load if already present.
+    public bool TryLoad(Chunk c)
+    {
+        if(!chunks.TryAdd(c.Position,c))
         {
-            if (chunks.TryGetValue(coord, out var chunk))
-            {
-                // if (c.State == ChunkState.Unloaded)
-                // {
-                //     //c is going to be unloaded, return null.
-                //     return false;
-                // }
-                c = Chunk.StickyReference.Stick(chunk);
-                return true;
-            }
-            c = null;
             return false;
         }
-    }
-
-    //returns true if chunk was created
-    //c is either the newly created chunk or chunk found.
-    public bool GetOrCreateStickyChunk(ChunkCoord coord, out Chunk.StickyReference c)
-    {
-        lock (_loadUnloadLock)
+        if (buffers.TryRemove(c.Position, out ChunkBuffer? b))
         {
-            //tmp to satisfy null checker, should get optimized out anyway.
-            if (chunks.TryGetValue(coord, out Chunk? tmp))
-            {
-                c = Chunk.StickyReference.Stick(tmp);
-                return false;
-            }
-            //need to create the chunk
-            tmp = new(coord);
-            c = Chunk.StickyReference.Stick(tmp);
-            TryAdd(tmp);
-            return true;
+            b.AddToChunk(c);
         }
+        c.Load();
+        return true;
     }
 
-    //returns true if chunk was created
-    //c is either the newly created chunk or chunk found.
-    public bool GetOrCreateChunk(ChunkCoord coord, out Chunk c)
+    public bool TryUnload(ChunkCoord coord, Action<Chunk, ChunkBuffer?> onUnload)
     {
-        lock (_loadUnloadLock)
+        if (chunks.TryRemove(coord, out Chunk? chunk))
         {
-            //tmp to satisfy null checker, should get optimized out anyway.
-            if (chunks.TryGetValue(coord, out var tmp))
-            {
-                c = tmp;
-                return false;
-            }
-            //need to create the chunk
-            c = new(coord);
-            TryAdd(c);
-            return true;
-        }
-    }
-    //returns true if added, false if already present in dictionary
-    public bool TryAdd(Chunk c) {
-        bool res = chunks.TryAdd(c.Position, c);
-        if (!res) Godot.GD.PushWarning($"Adding duplicate chunk {c.Position}");
-        return res;
-    }
-
-    public bool TryUnload(ChunkCoord coord, Action<Chunk> onUnload)
-    {
-        lock (_loadUnloadLock)
-        {
-            if (chunks.TryGetValue(coord, out Chunk? chunk))
-            {
-                if (!chunk.TryUnload()) return false; //don't unload sticky
-                chunks.TryRemove(coord, out Chunk? _); //_ should be the same as chunk, since we are in the _loadUnloadLock
-                onUnload(chunk);
-            }
+            chunk.Unload();
+            buffers.TryRemove(coord, out ChunkBuffer? buf);
+            onUnload(chunk, buf);
         }
         return false;
     }
-
-    public IEnumerator<KeyValuePair<ChunkCoord, Chunk>> GetEnumerator() => chunks.GetEnumerator();
+    public IEnumerable<KeyValuePair<ChunkCoord, ChunkBuffer>> GetBufferEnumerator() => buffers;
+    public IEnumerable<KeyValuePair<ChunkCoord, Chunk>> GetChunkEnumerator() => chunks;
 }

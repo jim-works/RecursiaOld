@@ -5,12 +5,10 @@ namespace Recursia;
 public enum ChunkState
 {
     Unloaded = 0,
-    Loaded = 1,
-    //Sticky chunks will not be unloaded. They are used for structures in worldgen that require neighboring chunks to be loaded
-    Sticky = 2,
+    Loaded = 1
 }
 
-public partial class Chunk : ISerializable
+public class Chunk : ISerializable
 {
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
@@ -32,13 +30,16 @@ public partial class Chunk : ISerializable
     public List<WorldStructure> Structures = new();
     public List<PhysicsObject> PhysicsObjects = new();
     public bool SaveDirtyFlag = true;
-    public int stickyCount;
-    private readonly object _stickyLock = new();
 
     public Chunk(ChunkCoord chunkCoords)
     {
         Position = chunkCoords;
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
+    }
+        public Chunk(ChunkCoord chunkCoords, Block?[,,]? blocks)
+    {
+        Position = chunkCoords;
+        Blocks = blocks;
     }
 
     public string GetMeshedHistory()
@@ -97,20 +98,12 @@ public partial class Chunk : ISerializable
     //sets chunk.state to max(Chunk.Loaded, chunk.state)
     public void Load()
     {
-        lock (_stickyLock)
-        {
-            State = (ChunkState)System.Math.Max((int)ChunkState.Loaded, (int)State);
-        }
+        State = ChunkState.Loaded;
     }
     //tries to unload, if sticky, fails
-    public bool TryUnload()
+    public void Unload()
     {
-        lock (_stickyLock)
-        {
-            if (stickyCount > 0) return false;
-            State = ChunkState.Unloaded;
-            return true;
-        }
+        State = ChunkState.Unloaded;
     }
 
     public BlockCoord LocalToWorld(BlockCoord local)
@@ -127,60 +120,7 @@ public partial class Chunk : ISerializable
     {
         Position.Serialize(bw);
         //serialize blocks
-        if (Blocks == null)
-        {
-            //this case doesn't need to exist, but should be faster than the other
-            bw.Write(CHUNK_SIZE*CHUNK_SIZE*CHUNK_SIZE);
-            bw.Write(0);
-        }
-        else
-        {
-            //TODO: change to span and use stackalloc
-            Block[,,] saving = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
-            Array.Copy(Blocks, saving, Blocks.Length);
-            Block? curr = saving[0, 0, 0];
-            int run = 0;
-            for (int x = 0; x < CHUNK_SIZE; x++)
-            {
-                for (int y = 0; y < CHUNK_SIZE; y++)
-                {
-                    for (int z = 0; z < CHUNK_SIZE; z++)
-                    {
-                        Block? b = saving[x, y, z];
-                        if (curr == b)
-                        {
-                            run++;
-                            continue;
-                        }
-                        bw.Write(run);
-                        if (curr == null)
-                        {
-                            bw.Write(0);
-                        }
-                        else
-                        {
-                            bw.Write(1);
-                            bw.Write(curr.Name);
-                            curr.Serialize(bw);
-                        }
-                        run = 1;
-                        curr = b;
-                    }
-                }
-            }
-
-            bw.Write(run);
-            if (curr == null)
-            {
-                bw.Write(0);
-            }
-            else
-            {
-                bw.Write(1);
-                bw.Write(curr.Name);
-                curr.Serialize(bw);
-            }
-        }
+        SerializationExtensions.Serialize(Blocks, bw);
         //serialize physics objects
         // bw.Write(PhysicsObjects.Count);
         // foreach (var p in PhysicsObjects)
@@ -192,54 +132,18 @@ public partial class Chunk : ISerializable
     public static Chunk Deserialize(BinaryReader br)
     {
         var pos = ChunkCoord.Deserialize(br);
-        Chunk c = new(pos);
-        int run = 0;
-        //deserialize blocks
-        Block? read = null;
-        for (int x = 0; x < CHUNK_SIZE; x++)
+        return new(pos, SerializationExtensions.DeserializeBlockArray(br))
         {
-            for (int y = 0; y < CHUNK_SIZE; y++)
-            {
-                for (int z = 0; z < CHUNK_SIZE; z++)
-                {
-                    if (run == 0)
-                    {
-                        run = br.ReadInt32();
-                        bool nullBlock = br.ReadInt32() == 0;
-                        if (nullBlock)
-                        {
-                            read = null;
-                        }
-                        else
-                        {
-                            string blockName = br.ReadString();
-                            try
-                            {
-                                BlockTypes.TryGet(blockName, out read);
-                                read!.Deserialize(br);
-                            }
-                            catch (Exception e)
-                            {
-                                Godot.GD.PushError($"Error deserializing block {blockName} at {pos} {x} {y} {z}: {e}");
-                                read = null;
-                            }
-                        }
-                    }
-                    c[x, y, z] = read;
-                    run--;
-                }
-            }
-        }
-        //deserialize physics objects
-        // int count = br.ReadInt32();
-        // for (int i = 0; i < count; i++)
-        // {
-        //     var name = br.ReadString();
-        //     var p = ObjectTypes.GetInstance<PhysicsObject>(name);
-        //     c.PhysicsObjects.Add(p);
-        // }
-        c.GenerationState = ChunkGenerationState.GENERATED;
-        return c;
+            //deserialize physics objects
+            // int count = br.ReadInt32();
+            // for (int i = 0; i < count; i++)
+            // {
+            //     var name = br.ReadString();
+            //     var p = ObjectTypes.GetInstance<PhysicsObject>(name);
+            //     c.PhysicsObjects.Add(p);
+            // }
+            GenerationState = ChunkGenerationState.GENERATED
+        };
     }
 
     public override string ToString()

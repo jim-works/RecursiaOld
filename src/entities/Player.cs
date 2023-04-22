@@ -29,7 +29,7 @@ public partial class Player : Combatant
         Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
         Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
         Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
-        Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 1 });
+        Inventory.CopyItem(new ItemStack { Item = explosive_bullet!, Size = 100 });
         if (ItemTypes.TryGetBlockItem("loot", out BlockFactoryItem? lootBlockItem))
         {
             lootBlockItem.InitPlaced = (Block block) =>

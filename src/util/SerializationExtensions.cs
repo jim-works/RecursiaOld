@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.IO;
 
 namespace Recursia;
@@ -15,6 +16,106 @@ public static class SerializationExtensions
         v.X = br.ReadSingle();
         v.Y = br.ReadSingle();
         v.Z = br.ReadSingle();
+    }
+    public static void Serialize(Block?[,,]? blocks, BinaryWriter bw)
+    {
+        if (blocks == null)
+        {
+            //this case doesn't need to exist, but should be faster than the other
+            bw.Write(Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE);
+            bw.Write(0);
+        }
+        else
+        {
+            //TODO: change to span and use stackalloc
+            Block?[,,] saving = new Block[Chunk.CHUNK_SIZE,Chunk.CHUNK_SIZE,Chunk.CHUNK_SIZE];
+            Array.Copy(blocks, saving, blocks.Length);
+            Block? curr = saving[0, 0, 0];
+            int run = 0;
+            for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+            {
+                for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+                {
+                    for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                    {
+                        Block? b = saving[x, y, z];
+                        if (curr == b)
+                        {
+                            run++;
+                            continue;
+                        }
+                        bw.Write(run);
+                        if (curr == null)
+                        {
+                            bw.Write(0);
+                        }
+                        else
+                        {
+                            bw.Write(1);
+                            bw.Write(curr.Name);
+                            curr.Serialize(bw);
+                        }
+                        run = 1;
+                        curr = b;
+                    }
+                }
+            }
+
+            bw.Write(run);
+            if (curr == null)
+            {
+                bw.Write(0);
+            }
+            else
+            {
+                bw.Write(1);
+                bw.Write(curr.Name);
+                curr.Serialize(bw);
+            }
+        }
+    }
+
+    public static Block?[,,] DeserializeBlockArray(BinaryReader br)
+    {
+        Block?[,,] b = new Block[Chunk.CHUNK_SIZE,Chunk.CHUNK_SIZE,Chunk.CHUNK_SIZE];
+        int run = 0;
+        //deserialize blocks
+        Block? read = null;
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+        {
+            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            {
+                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                {
+                    if (run == 0)
+                    {
+                        run = br.ReadInt32();
+                        bool nullBlock = br.ReadInt32() == 0;
+                        if (nullBlock)
+                        {
+                            read = null;
+                        }
+                        else
+                        {
+                            string blockName = br.ReadString();
+                            try
+                            {
+                                BlockTypes.TryGet(blockName, out read);
+                                read!.Deserialize(br);
+                            }
+                            catch (Exception e)
+                            {
+                                GD.PushError($"Error deserializing block {blockName} at {x} {y} {z}: {e}");
+                                read = null;
+                            }
+                        }
+                    }
+                    b[x, y, z] = read;
+                    run--;
+                }
+            }
+        }
+        return b;
     }
 
     public static void Serialize<T>(this T[] arr, BinaryWriter bw) where T : ISerializable

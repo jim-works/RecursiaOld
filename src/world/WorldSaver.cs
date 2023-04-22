@@ -1,5 +1,5 @@
 //saves annoyance
-//#define NO_SAVING
+#define NO_SAVING
 
 using Godot;
 using System.IO;
@@ -7,12 +7,6 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System;
-using System.Linq;
-
-//encode path using coordinate of chunk group:
-//-1,0,0.group -> group containing chunks from -GROUP_SIZE,0,0 through -1,0,0
-//xxx.dat contains info like region origin, level, structures, etc
-//if the region has level < Region.ATOMIC_LOAD_LEVEL, we serialize the entire region and all of its children into the .dat file
 namespace Recursia;
 public partial class WorldSaver : Node
 {
@@ -24,7 +18,7 @@ public partial class WorldSaver : Node
     private World? world;
 
     private SQLInterface? sql;
-    private readonly ConcurrentBag<(Chunk.StickyReference?, Action<Chunk.StickyReference?>)> callbackQueue = new();
+    private readonly ConcurrentBag<(Chunk, Action<Chunk>)> callbackQueue = new();
 
     public override void _Ready()
     {
@@ -60,21 +54,21 @@ public partial class WorldSaver : Node
         sql!.Close();
     }
 
-    public async Task<Chunk.StickyReference?> LoadAndStick(ChunkCoord coord)
+    public async Task<(Chunk?, ChunkBuffer?)> LoadChunk(ChunkCoord coord)
     {
 #if NO_SAVING
-        return null;
+        return (null, null);
 #else
         try
         {
             Chunk? c = await sql!.LoadChunk(coord);
-            if (c == null) return null;
-            return Chunk.StickyReference.Stick(c);
+            if (c == null) return (c, null);
+            return (c, null);
         }
         catch (Exception e)
         {
             GD.PushError(e);
-            return null;
+            return (null, null);
         }
 #endif
     }
@@ -84,20 +78,20 @@ public partial class WorldSaver : Node
 #if NO_SAVING
         return;
 #else
-        foreach (var kvp in world.Chunks)
-        {
-            Save(kvp.Value);
-        }
+        // foreach (var kvp in world.Chunks)
+        // {
+        //     Save(kvp.Value);
+        // }
         //sql!.SavePlayers(world.Entities.Players);
 #endif
     }
-    public void Save(Chunk c)
+    public void Save(Chunk c, ChunkBuffer? buf)
     {
 #if NO_SAVING
         return;
 #else
         if (!c.SaveDirtyFlag) return;
-        sql!.Save(c);
+        sql!.Save(c, buf);
         c.SaveDirtyFlag = false;
 #endif
     }
