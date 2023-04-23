@@ -69,7 +69,8 @@ public partial class World : Node
         if (Chunks.Contains(coord)) return;
         try
         {
-            Chunk? c = await saver!.LoadChunk(coord);
+            (Chunk? c, ChunkBuffer? b) = await saver!.LoadChunk(coord);
+            if (b != null) Chunks.AddBuffer(b);
             if (c == null)
             {
                 GenerateChunkDeferred(coord);

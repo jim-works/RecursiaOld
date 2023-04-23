@@ -10,6 +10,11 @@ using System;
 namespace Recursia;
 public partial class WorldSaver : Node
 {
+    public enum DataTableIDs
+    {
+        Terrain=0,
+        TerrainBuffers=1
+    }
     [Export] public double SaveIntervalSeconds = 5;
     [Export] public double LoadIntervalSeconds = 0.100f;
     [Export] public string WorldsFolder = Path.Join(OS.GetUserDataDir(), "worlds");
@@ -26,7 +31,15 @@ public partial class WorldSaver : Node
         string folder = Path.Join(WorldsFolder, world.Name);
         Directory.CreateDirectory(folder);
         sql = new SQLInterface(Path.Join(folder, "world.db"));
+        sql.RegisterDataTable("terrain", (int)DataTableIDs.Terrain, br => new Chunk(br));
+        sql.RegisterDataTable("terrainBuffers", (int)DataTableIDs.TerrainBuffers, br => new ChunkBuffer(br));
         GD.Print("World save folder is " + folder);
+
+        world.Chunks.OnChunkUnload += (c,b) => {
+            Save(c);
+            if (b != null) Save(b);
+        };
+        sql.BeginPolling();
     }
 
     public override void _Process(double delta)
@@ -36,7 +49,11 @@ public partial class WorldSaver : Node
         if (saveTimer > SaveIntervalSeconds)
         {
             saveTimer = 0;
-            Save(world!);
+            GD.Print("Saving...");
+            Task.Run(() => {
+                Save(world!);
+                GD.Print("Saved the world.");
+            });
         }
         if (loadTimer > LoadIntervalSeconds)
         {
@@ -50,23 +67,29 @@ public partial class WorldSaver : Node
 
     public override void _ExitTree()
     {
-        Save(world!);
+        //Save(world!);
         sql!.Close();
     }
 
-    public async Task<Chunk?> LoadChunk(ChunkCoord coord)
+    public async Task<(Chunk?, ChunkBuffer?)> LoadChunk(ChunkCoord coord)
     {
 #if NO_SAVING
         return null;
 #else
         try
         {
-            return await sql!.LoadChunk(coord);
+            var cTask = sql!.LoadData((int)DataTableIDs.Terrain, coord);
+            var bTask = sql!.LoadData((int)DataTableIDs.TerrainBuffers, coord);
+            Chunk? resChunk = (Chunk?)await cTask;
+            ChunkBuffer? resBuf = (ChunkBuffer?)await bTask;
+            if (resChunk != null) resChunk.SaveDirtyFlag = false;
+            if (resBuf != null) resBuf.SaveDirtyFlag = false;
+            return (resChunk, resBuf);
         }
         catch (Exception e)
         {
             GD.PushError(e);
-            return null;
+            return (null,null);
         }
 #endif
     }
@@ -80,6 +103,10 @@ public partial class WorldSaver : Node
         {
             Save(kvp.Value);
         }
+        foreach (var kvp in world.Chunks.GetBufferEnumerator())
+        {
+            Save(kvp.Value);
+        }
         //sql!.SavePlayers(world.Entities.Players);
 #endif
     }
@@ -89,7 +116,18 @@ public partial class WorldSaver : Node
         return;
 #else
         if (!c.SaveDirtyFlag) return;
-        sql!.Save(c);
+        sql!.Save((int)DataTableIDs.Terrain, c.Position, c);
+        c.SaveDirtyFlag = false;
+#endif
+    }
+//TODO: need to combine buffer if one already exists on disk (or design so that this can't happen)
+        public void Save(ChunkBuffer c)
+    {
+#if NO_SAVING
+        return;
+#else
+        if (!c.SaveDirtyFlag) return;
+        sql!.Save((int)DataTableIDs.TerrainBuffers, c.Position, c);
         c.SaveDirtyFlag = false;
 #endif
     }

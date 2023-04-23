@@ -110,11 +110,15 @@ public class ChunkCollection
         }
         if (buffers.TryRemove(c.Position, out ChunkBuffer? b))
         {
-            b.AddToChunk(c);
+            b.AddTo(c);
         }
         c.Load();
         OnChunkLoad?.Invoke(c);
         return true;
+    }
+    public void AddBuffer(ChunkBuffer buf)
+    {
+        buffers.AddOrUpdate(buf.Position, _ => buf, (_,b) => {buf.AddTo(b); return b;});
     }
 
     public bool TryUnload(ChunkCoord coord)

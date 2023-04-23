@@ -6,20 +6,23 @@ using System.Threading.Tasks;
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Recursia;
 public class SQLInterface : IDisposable
 {
+    private struct DataKey
+    {
+        public int Tid;
+        public ChunkCoord Pos;
+
+        public override int GetHashCode() => HashCode.Combine(Tid,Pos);
+        public override bool Equals([NotNullWhen(true)] object? obj)
+        {
+            return obj is DataKey k && k.Tid == Tid && k.Pos == Pos;
+        }
+    }
     private readonly SQLiteConnection conn;
-    private const string createChunkTable = @"
-        CREATE TABLE chunks (
-            x INTEGER NOT NULL,
-            y INTEGER NOT NULL,
-            z INTEGER NOT NULL,
-            terrainData BLOB NOT NULL,
-            PRIMARY KEY (x, y, z)
-        ) STRICT
-    ";
     private const string createWorldInfoTable = @"
         CREATE TABLE worldInfo (
             key TEXT NOT NULL,
@@ -33,15 +36,27 @@ public class SQLInterface : IDisposable
             PRIMARY KEY (name)
         ) STRICT
     ";
+    private const string createChunkDataTable = @"
+        CREATE TABLE data (
+            tid INTEGER NOT NULL,
+            x INTEGER NOT NULL,
+            y INTEGER NOT NULL,
+            z INTEGER NOT NULL,
+            data BLOB NOT NULL,
+            PRIMARY KEY (tid,x,y,z)
+        ) STRICT";
     private const string worldFormatVersion = "1";
 
-    private readonly SQLiteCommand saveChunkCommand;
-    private readonly SQLiteCommand loadChunkCommand;
+    private readonly SQLiteCommand createDataTableCommand;
+    private readonly SQLiteCommand saveDataCommand;
+    private readonly SQLiteCommand loadDataCommand;
     private readonly SQLiteCommand savePlayerCommand;
     private readonly SQLiteCommand loadPlayerCommand;
-    private readonly ConcurrentBag<(ChunkCoord, TaskCompletionSource<Chunk?>)> loadQueue = new();
-    private readonly ConcurrentDictionary<ChunkCoord, Chunk> saveQueue = new();
-    private readonly List<Chunk> returnToSave = new();
+    private readonly ConcurrentBag<(DataKey, TaskCompletionSource<ISerializable?>)> dataLoadQueue = new();
+    private readonly ConcurrentDictionary<DataKey, ISerializable> dataSaveQueue = new();
+    private readonly Dictionary<string, int> dataNameMap = new();
+    private readonly Dictionary<int, Func<BinaryReader,ISerializable>> deserializers = new();
+    private readonly List<(DataKey,ISerializable)> returnToSave = new();
 
     public SQLInterface(string dbpath)
     {
@@ -61,27 +76,35 @@ public class SQLInterface : IDisposable
         conn.Open();
 
         //prepare save/load commands
-        saveChunkCommand = conn.CreateCommand();
-        saveChunkCommand.CommandText = @"
-            INSERT OR REPLACE INTO chunks (x, y, z, terrainData)
-            VALUES (@x, @y, @z, @terrainData)";
-        saveChunkCommand.Parameters.Add("@x", System.Data.DbType.Int32);
-        saveChunkCommand.Parameters.Add("@y", System.Data.DbType.Int32);
-        saveChunkCommand.Parameters.Add("@z", System.Data.DbType.Int32);
-        saveChunkCommand.Parameters.Add("@terrainData", System.Data.DbType.Binary);
-        loadChunkCommand = conn.CreateCommand();
-        loadChunkCommand.CommandText = @"
-            SELECT terrainData FROM chunks
-            WHERE x = @x AND y = @y AND z = @z";
-        loadChunkCommand.Parameters.Add("@x", System.Data.DbType.Int32);
-        loadChunkCommand.Parameters.Add("@y", System.Data.DbType.Int32);
-        loadChunkCommand.Parameters.Add("@z", System.Data.DbType.Int32);
+        createDataTableCommand = conn.CreateCommand();
+        createDataTableCommand.CommandText = createChunkDataTable;
+
+        saveDataCommand = conn.CreateCommand();
+        saveDataCommand.CommandText = @"
+            INSERT OR REPLACE INTO data (tid,x, y, z, data)
+            VALUES (@name,@x, @y, @z, @data)";
+        saveDataCommand.Parameters.Add("@name", System.Data.DbType.Int32);
+        saveDataCommand.Parameters.Add("@x", System.Data.DbType.Int32);
+        saveDataCommand.Parameters.Add("@y", System.Data.DbType.Int32);
+        saveDataCommand.Parameters.Add("@z", System.Data.DbType.Int32);
+        saveDataCommand.Parameters.Add("@data", System.Data.DbType.Binary);
+
+        loadDataCommand = conn.CreateCommand();
+        loadDataCommand.CommandText = @"
+            SELECT data FROM data
+            WHERE tid = @name AND x = @x AND y = @y AND z = @z";
+        loadDataCommand.Parameters.Add("@name", System.Data.DbType.Int32);
+        loadDataCommand.Parameters.Add("@x", System.Data.DbType.Int32);
+        loadDataCommand.Parameters.Add("@y", System.Data.DbType.Int32);
+        loadDataCommand.Parameters.Add("@z", System.Data.DbType.Int32);
+
         savePlayerCommand = conn.CreateCommand();
         savePlayerCommand.CommandText = @"
             INSERT OR REPLACE INTO players (name, data)
             VALUES (@name, @data)";
         savePlayerCommand.Parameters.Add("@name", System.Data.DbType.String);
         savePlayerCommand.Parameters.Add("@data", System.Data.DbType.Binary);
+
         loadPlayerCommand = conn.CreateCommand();
         loadPlayerCommand.CommandText = @"
             SELECT data FROM players WHERE name=@name";
@@ -97,7 +120,17 @@ public class SQLInterface : IDisposable
             conn = null!;
             return;
         }
-
+        //print number of chunks in database
+        using SQLiteCommand command = conn.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM data WHERE tid=0";
+        using SQLiteDataReader reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            Godot.GD.Print("Database contains " + reader.GetInt32(0) + " chunks");
+        }
+    }
+    public void BeginPolling()
+    {
         //run task to save/load on a single thread to avoid sqlite shenanigans
         //TODO: can close program in middle of this and dispose connection
         Task.Run(() =>
@@ -109,15 +142,14 @@ public class SQLInterface : IDisposable
                 emptyLoadQueue();
             }
         });
-
-        //print number of chunks in database
-        using SQLiteCommand command = conn.CreateCommand();
-        command.CommandText = "SELECT COUNT(*) FROM chunks";
-        using SQLiteDataReader reader = command.ExecuteReader();
-        if (reader.Read())
+    }
+    public void RegisterDataTable(string dataTable, int id, Func<BinaryReader,ISerializable> deserializer)
+    {
+        if (!dataNameMap.TryAdd(dataTable, id))
         {
-            Godot.GD.Print("Database contains " + reader.GetInt32(0) + " chunks");
+            throw new System.Data.DataException($"Table {dataTable} already exists!");
         }
+        deserializers[id] = deserializer;
     }
 
     private bool verifyDB()
@@ -146,7 +178,7 @@ public class SQLInterface : IDisposable
     {
         Godot.GD.Print("Initializing tables");
         using SQLiteCommand command = conn.CreateCommand();
-        command.CommandText = createChunkTable;
+        command.CommandText = createChunkDataTable;
         command.ExecuteNonQuery();
         command.CommandText = createWorldInfoTable;
         command.ExecuteNonQuery();
@@ -161,75 +193,80 @@ public class SQLInterface : IDisposable
 
     public void Close()
     {
-        saveChunkCommand.Dispose();
-        loadChunkCommand.Dispose();
+        saveDataCommand.Dispose();
+        loadDataCommand.Dispose();
+        savePlayerCommand.Dispose();
+        loadPlayerCommand.Dispose();
+        createDataTableCommand.Dispose();
         conn.Close();
     }
-    public void Save(Chunk chunk)
+    public void Save(int dataTable, ChunkCoord pos, ISerializable obj)
     {
-        saveQueue[chunk.Position] = chunk;
+        dataSaveQueue[new DataKey{Tid=dataTable,Pos=pos}] = obj;
     }
-    public async Task<Chunk?> LoadChunk(ChunkCoord coord)
+    public async Task<ISerializable?> LoadData(int dataTable, ChunkCoord pos)
     {
-        var waiting = new TaskCompletionSource<Chunk?>();
-        loadQueue.Add((coord, waiting));
+        var waiting = new TaskCompletionSource<ISerializable?>();
+        dataLoadQueue.Add((new DataKey{Tid=dataTable,Pos=pos}, waiting));
         return await waiting.Task;
     }
     private void emptySaveQueue()
     {
         int count = 0;
         using SQLiteTransaction transaction = conn.BeginTransaction(System.Data.IsolationLevel.Serializable);
-        foreach (var kvp in saveQueue.ToArray())
+        foreach (var kvp in dataSaveQueue.ToArray())
         {
-            if (saveQueue.TryRemove(kvp.Key, out Chunk? chunk))
+            if (dataSaveQueue.TryRemove(kvp.Key, out ISerializable? obj))
             {
-                if (chunk.GenerationState < ChunkGenerationState.GENERATED)
+                if (obj.NoSerialize)
                 {
                     //these chunks aren't ready to be saved yet as they're still generating
-                    returnToSave.Add(chunk);
+                    returnToSave.Add((kvp.Key,obj));
                     continue;
                 }
-                saveChunkCommand.Parameters["@x"].Value = chunk.Position.X;
-                saveChunkCommand.Parameters["@y"].Value = chunk.Position.Y;
-                saveChunkCommand.Parameters["@z"].Value = chunk.Position.Z;
+                saveDataCommand.Parameters["@x"].Value = kvp.Key.Pos.X;
+                saveDataCommand.Parameters["@y"].Value = kvp.Key.Pos.Y;
+                saveDataCommand.Parameters["@z"].Value = kvp.Key.Pos.Z;
+                saveDataCommand.Parameters["@name"].Value =kvp.Key.Tid;
                 using (MemoryStream ms = new())
                 using (BinaryWriter bw = new(ms))
                 using (GZipStream gz = new(ms, CompressionLevel.Fastest))
                 {
-                    chunk.Serialize(bw);
-                    saveChunkCommand.Parameters["@terrainData"].Value = ms.ToArray();
+                    obj.Serialize(bw);
+                    saveDataCommand.Parameters["@data"].Value = ms.ToArray();
                 }
-                saveChunkCommand.ExecuteNonQuery();
+                saveDataCommand.ExecuteNonQuery();
                 count++;
             }
         }
         transaction.Commit();
-        foreach(var c in returnToSave) saveQueue[c.Position] = c;
+        foreach (var c in returnToSave) dataSaveQueue[c.Item1] = c.Item2;
         returnToSave.Clear();
-        if (count > 0) Godot.GD.Print($"saved {count} chunks");
+        if (count > 0) Godot.GD.Print($"saved {count} objects!");
     }
     private void emptyLoadQueue()
     {
-        while (loadQueue.TryTake(out var item))
+        while (dataLoadQueue.TryTake(out var item))
         {
-            (ChunkCoord coord, TaskCompletionSource<Chunk?> chunkTcs) = item;
+            (DataKey k, TaskCompletionSource<ISerializable?> objTcs) = item;
             try
             {
-                chunkTcs.SetResult(loadFromDB(coord));
+                objTcs.SetResult(loadFromDB(k));
             }
             catch (Exception e)
             {
                 Godot.GD.PushError(e);
-                chunkTcs.TrySetResult(null);
+                objTcs.TrySetResult(null);
             }
         }
     }
-    private Chunk? loadFromDB(ChunkCoord coord)
+    private ISerializable? loadFromDB(DataKey key)
     {
-        loadChunkCommand.Parameters["@x"].Value = coord.X;
-        loadChunkCommand.Parameters["@y"].Value = coord.Y;
-        loadChunkCommand.Parameters["@z"].Value = coord.Z;
-        object? result = loadChunkCommand.ExecuteScalar();
+        loadDataCommand.Parameters["@x"].Value = key.Pos.X;
+        loadDataCommand.Parameters["@y"].Value = key.Pos.Y;
+        loadDataCommand.Parameters["@z"].Value = key.Pos.Z;
+        loadDataCommand.Parameters["@name"].Value = key.Tid;
+        object? result = loadDataCommand.ExecuteScalar();
         if (result == null)
         {
             return null;
@@ -237,7 +274,7 @@ public class SQLInterface : IDisposable
         using MemoryStream ms = new((byte[])result);
         using GZipStream gz = new(ms, CompressionMode.Decompress);
         using BinaryReader br = new(ms);
-        return new(br);
+        return deserializers[key.Tid](br);
     }
     //TODO: locks
     // public void SavePlayers(IEnumerable<Player> players)

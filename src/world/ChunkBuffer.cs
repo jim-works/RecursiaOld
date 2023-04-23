@@ -8,6 +8,11 @@ public class ChunkBuffer : ISerializable
     public ChunkMesh? Mesh;
     public bool SaveDirtyFlag;
 
+    public ChunkBuffer(BinaryReader br)
+    {
+        Deserialize(br);
+        if (Blocks == null) Blocks = new Block[Chunk.CHUNK_SIZE,Chunk.CHUNK_SIZE,Chunk.CHUNK_SIZE];
+    }
     public ChunkBuffer(ChunkCoord chunkCoords)
     {
         Position = chunkCoords;
@@ -29,7 +34,7 @@ public class ChunkBuffer : ISerializable
     }
 
     //places the blocks in the buffer on the chunk
-    public void AddToChunk(Chunk c)
+    public void AddTo(Chunk c)
     {
         for (int x=0; x < Chunk.CHUNK_SIZE; x++)
         {
@@ -38,6 +43,19 @@ public class ChunkBuffer : ISerializable
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
                     if (Blocks[x,y,z] != null) c[x,y,z] = Blocks[x,y,z];
+                }
+            }
+        }
+    }
+    public void AddTo(ChunkBuffer b)
+    {
+        for (int x=0; x < Chunk.CHUNK_SIZE; x++)
+        {
+            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            {
+                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                {
+                    if (Blocks[x,y,z] != null) b[x,y,z] = Blocks[x,y,z];
                 }
             }
         }

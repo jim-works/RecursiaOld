@@ -14,6 +14,7 @@ public class Chunk : ISerializable
     public ChunkCoord Position;
     private Block?[,,]? Blocks;
     public ChunkNodeData? Data;
+    public bool NoSerialize => GenerationState != ChunkGenerationState.GENERATED;
 #if DEBUG
     public bool Meshed {get {
         return meshedHistory.TryPeek(out bool b) && b;

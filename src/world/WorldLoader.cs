@@ -1,4 +1,4 @@
-#define NO_UNLOADING
+//#define NO_UNLOADING
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,6 +13,8 @@ public class WorldLoader
     private readonly HashSet<ChunkCoord> loadedChunks = new();
     private readonly List<ChunkCoord> toUnload = new();
 
+    private bool running;
+
     public WorldLoader(World world)
     {
         this.world = world;
@@ -20,6 +22,28 @@ public class WorldLoader
 
     public void UpdateChunkLoading()
     {
+        lock(loadedChunks)
+        {
+            if (running) return;
+        }
+        Task.Run(()=> doLoading());
+    }
+    public void AddChunkLoader(Node3D loader)
+    {
+        chunkLoaders.Add(loader);
+    }
+
+    public void RemoveChunkLoader(Node3D loader)
+    {
+        chunkLoaders.Remove(loader);
+    }
+
+    private void doLoading()
+    {
+        lock(loadedChunks)
+        {
+            running = true;
+        }
         loadedChunks.Clear();
         toUnload.Clear();
         foreach (Node3D loader in chunkLoaders)
@@ -32,31 +56,29 @@ public class WorldLoader
                     for (int z = -loadDistance; z <= loadDistance; z++)
                     {
                         if (x * x + y * y + z + z > loadDistance * loadDistance) continue; //load in a sphere instead of cube
-                        loadedChunks.Add(center + new ChunkCoord(x,y,z));
+                        loadedChunks.Add(center + new ChunkCoord(x, y, z));
                     }
                 }
             }
         }
 #if NO_UNLOADING
 #else
-        foreach (var kvp in world.Chunks.GetChunkEnumerator()) {
-            if (!loadedChunks.Contains(kvp.Key)) {
+        foreach (var kvp in world.Chunks.GetChunkEnumerator())
+        {
+            if (!loadedChunks.Contains(kvp.Key))
+            {
                 toUnload.Add(kvp.Key);
             }
         }
-        foreach (var c in toUnload) {
+        foreach (var c in toUnload)
+        {
             world.Chunks.TryUnload(c);
         }
 #endif
-        Task.Run(() => Parallel.ForEach(loadedChunks, async c => await world.LoadChunk(c)));
-    }
-    public void AddChunkLoader(Node3D loader)
-    {
-        chunkLoaders.Add(loader);
-    }
-
-    public void RemoveChunkLoader(Node3D loader)
-    {
-        chunkLoaders.Remove(loader);
+        Parallel.ForEach(loadedChunks, async c => await world.LoadChunk(c));
+        lock(loadedChunks)
+        {
+            running = false;
+        }
     }
 }

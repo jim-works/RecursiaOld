@@ -13,7 +13,7 @@ public class SkyTreeStructureProvider : WorldStructureProvider
     private const int TOP_THICKNESS = 3;
     private const float CUTOFF = LEAF_SIZE * LEAF_SIZE / 2;
     private const float FREQ = 0.1f;
-    private readonly float ODDS = 0.05f;
+    private readonly float ODDS = 0.10f;
     private const float BASE_NOISE = 1f;
     private const int MAX_BRANCHES = 3;
     private const int MAX_BRANCH_DEPTH = 3;
