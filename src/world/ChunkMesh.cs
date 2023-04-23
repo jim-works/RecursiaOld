@@ -16,8 +16,6 @@ public sealed class ChunkMesh : IDisposable
 
     public MeshInstance3D? Node {get;private set;}
 
-    public ulong Timestamp;
-
     public ChunkMesh()
     {
         //setup mesh array
@@ -37,6 +35,17 @@ public sealed class ChunkMesh : IDisposable
         node.Mesh = arrayMesh;
         if (mat != null) node.SetSurfaceOverrideMaterial(0, mat);
         Node = node;
+    }
+    public void Spawn(Node parent, Material? mat)
+    {
+        if (Verts.Count == 0)
+        {
+            //no need to spawn in a new MeshInstance3D if the chunk is empty
+            return;
+        }
+        MeshInstance3D meshNode = new();
+        ApplyTo(meshNode, mat);
+        parent.AddChild(Node);
     }
     public void ClearData()
     {

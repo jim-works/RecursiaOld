@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://dfov2mnvy22wv"]
+
+[ext_resource type="Texture2D" uid="uid://678tt83wlmqe" path="res://textures/tileset.png" id="1_82ljc"]
+
+[resource]
+transparency = 1
+depth_draw_mode = 1
+albedo_texture = ExtResource("1_82ljc")
+texture_filter = 0

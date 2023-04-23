@@ -165,7 +165,7 @@ public class SQLInterface : IDisposable
         loadChunkCommand.Dispose();
         conn.Close();
     }
-    public void Save(Chunk chunk, ChunkBuffer? buf)
+    public void Save(Chunk chunk)
     {
         saveQueue[chunk.Position] = chunk;
     }
@@ -237,7 +237,7 @@ public class SQLInterface : IDisposable
         using MemoryStream ms = new((byte[])result);
         using GZipStream gz = new(ms, CompressionMode.Decompress);
         using BinaryReader br = new(ms);
-        return Chunk.Deserialize(br);
+        return new(br);
     }
     //TODO: locks
     // public void SavePlayers(IEnumerable<Player> players)

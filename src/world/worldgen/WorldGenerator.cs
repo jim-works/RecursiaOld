@@ -36,6 +36,7 @@ public class WorldGenerator
         shapingLayers.Add(new ShapingLayer(getNextSeed));
         shapingLayers.Add(new DetailLayer());
         //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
+        structureProviders.Add(new CherryBlossomStructureProvider());
         structureProviders.Add(new TreeStructureProvider());
         structureProviders.Add(new SkyTreeStructureProvider());
         //structureProviders.Add(new BoxStructureProvider());

@@ -12,6 +12,13 @@ public struct BlockCoord : ISerializable
         this.Y = Y;
         this.Z = Z;
     }
+    public BlockCoord(BinaryReader br)
+    {
+        X=0;
+        Y=0;
+        Z=0;
+        Deserialize(br);
+    }
     public int sqrMag() { return X * X + Y * Y + Z*Z; }
     public void Serialize(BinaryWriter bw)
     {
@@ -19,9 +26,11 @@ public struct BlockCoord : ISerializable
         bw.Write(Y);
         bw.Write(Z);
     }
-    public static BlockCoord Deserialize(BinaryReader br)
+    public void Deserialize(BinaryReader br)
     {
-        return new BlockCoord(br.ReadInt32(),br.ReadInt32(),br.ReadInt32());
+        X=br.ReadInt32();
+        Y=br.ReadInt32();
+        Z=br.ReadInt32();
     }
     public static BlockCoord operator +(BlockCoord lhs, BlockCoord rhs)
     {

@@ -13,7 +13,7 @@ public class Chunk : ISerializable
     public const int CHUNK_SIZE = 16;
     public ChunkCoord Position;
     private Block?[,,]? Blocks;
-    public ChunkMesh? Mesh;
+    public ChunkNodeData? Data;
 #if DEBUG
     public bool Meshed {get {
         return meshedHistory.TryPeek(out bool b) && b;
@@ -31,12 +31,16 @@ public class Chunk : ISerializable
     public List<PhysicsObject> PhysicsObjects = new();
     public bool SaveDirtyFlag = true;
 
+    public Chunk(BinaryReader br)
+    {
+        Deserialize(br);
+    }
     public Chunk(ChunkCoord chunkCoords)
     {
         Position = chunkCoords;
         Blocks = new Block[CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE];
     }
-        public Chunk(ChunkCoord chunkCoords, Block?[,,]? blocks)
+    public Chunk(ChunkCoord chunkCoords, Block?[,,]? blocks)
     {
         Position = chunkCoords;
         Blocks = blocks;
@@ -128,12 +132,11 @@ public class Chunk : ISerializable
         //     p.Serialize(bw);
         // }
     }
-
-    public static Chunk Deserialize(BinaryReader br)
+    public void Deserialize(BinaryReader br)
     {
-        var pos = ChunkCoord.Deserialize(br);
-        return new(pos, SerializationExtensions.DeserializeBlockArray(br))
-        {
+        Position.Deserialize(br);
+        Blocks = SerializationExtensions.DeserializeBlockArray(br);
+        GenerationState = ChunkGenerationState.GENERATED;
             //deserialize physics objects
             // int count = br.ReadInt32();
             // for (int i = 0; i < count; i++)
@@ -142,8 +145,6 @@ public class Chunk : ISerializable
             //     var p = ObjectTypes.GetInstance<PhysicsObject>(name);
             //     c.PhysicsObjects.Add(p);
             // }
-            GenerationState = ChunkGenerationState.GENERATED
-        };
     }
 
     public override string ToString()

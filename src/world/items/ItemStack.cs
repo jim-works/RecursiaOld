@@ -1,3 +1,4 @@
+using System.IO;
 namespace Recursia;
 public struct ItemStack : ISerializable
 {
@@ -8,6 +9,12 @@ public struct ItemStack : ISerializable
     }
     private Item? _item;
     public bool IsEmpty => Size == 0 || ReferenceEquals(Item, Item.Empty);
+    public ItemStack(BinaryReader br)
+    {
+        Size = 0;
+        _item = null;
+        Deserialize(br);
+    }
 
     //returns number of items decremented
     //sets Item to null if stack is depleted
@@ -29,25 +36,23 @@ public struct ItemStack : ISerializable
         Item = Item.Empty;
     }
 
-    public void Serialize(System.IO.BinaryWriter bw) {
+    public void Serialize(BinaryWriter bw) {
         bw.Write(Item.TypeName);
         Item.Serialize(bw);
         bw.Write(Size);
     }
-    public static ItemStack Deserialize(System.IO.BinaryReader br) {
+    public void Deserialize(BinaryReader br)
+    {
         string name = br.ReadString();
         if (string.IsNullOrEmpty(name)) {
-            return new ItemStack();
+            return;
         }
         int size = br.ReadInt32();
         if (ItemTypes.TryGet(name, out Item? item))
         {
             item.Deserialize(br);
-            return new ItemStack {
-                Item = item,
-                Size = size
-            };
+            Item = item;
+            Size = size;
         }
-        return new ItemStack();
     }
 }

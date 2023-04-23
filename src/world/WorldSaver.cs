@@ -1,5 +1,5 @@
 //saves annoyance
-#define NO_SAVING
+//#define NO_SAVING
 
 using Godot;
 using System.IO;
@@ -54,21 +54,19 @@ public partial class WorldSaver : Node
         sql!.Close();
     }
 
-    public async Task<(Chunk?, ChunkBuffer?)> LoadChunk(ChunkCoord coord)
+    public async Task<Chunk?> LoadChunk(ChunkCoord coord)
     {
 #if NO_SAVING
-        return (null, null);
+        return null;
 #else
         try
         {
-            Chunk? c = await sql!.LoadChunk(coord);
-            if (c == null) return (c, null);
-            return (c, null);
+            return await sql!.LoadChunk(coord);
         }
         catch (Exception e)
         {
             GD.PushError(e);
-            return (null, null);
+            return null;
         }
 #endif
     }
@@ -78,20 +76,20 @@ public partial class WorldSaver : Node
 #if NO_SAVING
         return;
 #else
-        // foreach (var kvp in world.Chunks)
-        // {
-        //     Save(kvp.Value);
-        // }
+        foreach (var kvp in world.Chunks.GetChunkEnumerator())
+        {
+            Save(kvp.Value);
+        }
         //sql!.SavePlayers(world.Entities.Players);
 #endif
     }
-    public void Save(Chunk c, ChunkBuffer? buf)
+    public void Save(Chunk c)
     {
 #if NO_SAVING
         return;
 #else
         if (!c.SaveDirtyFlag) return;
-        sql!.Save(c, buf);
+        sql!.Save(c);
         c.SaveDirtyFlag = false;
 #endif
     }

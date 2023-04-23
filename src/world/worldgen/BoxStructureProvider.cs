@@ -18,6 +18,7 @@ public class BoxStructureProvider : WorldStructureProvider
     {
         BlockTypes.TryGet("water", out boxBlock);
         BlockTypes.TryGet("grass", out grass);
+        RollsPerChunk = 10;
 
         leafNoise.SetNoiseType(FastNoiseLite.NoiseType.Value);
     }

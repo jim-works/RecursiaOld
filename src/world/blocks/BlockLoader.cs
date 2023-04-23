@@ -23,8 +23,11 @@ public static class BlockLoader
         createBasic("copper_ore", standard, 3, 0,100);
         createBasic("silicon_ore", standard, 3, 1,100);
         createBasic("log", standard, 4, 1,100);
-        createBasic("leaves", standard, 4, 2,100,transparent:true);
+        createBasic("leaves", standard, 4, 2,100);
         createBasic("water", standard, 0,2,transparent:true);
+        createBasic("glass", standard, 3,2,transparent:true);
+        createBasic("cherry_blossom_leaves", standard, 5,2);
+        createBasic("cherry_blossom_leaves2", standard, 5,1);
         createFactory("loot", standard, new int[]{2,2,2,2,2,2}, new int[]{1,2,1,1,2,1}, (n,i,t) => {
             return new LootBlock(n, i, t, System.Array.Empty<ItemStack>())
             {

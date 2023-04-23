@@ -1,9 +1,10 @@
-[gd_scene load_steps=33 format=3 uid="uid://dyc42ayat11tg"]
+[gd_scene load_steps=34 format=3 uid="uid://dyc42ayat11tg"]
 
 [ext_resource type="Script" path="res://src/world/Mesher.cs" id="1"]
 [ext_resource type="Texture2D" uid="uid://678tt83wlmqe" path="res://textures/tileset.png" id="2_gf4u7"]
 [ext_resource type="Material" uid="uid://k1gkdkelwcjg" path="res://materials/chunkmaterial.tres" id="3"]
 [ext_resource type="Script" path="res://src/world/World.cs" id="5"]
+[ext_resource type="Material" uid="uid://dfov2mnvy22wv" path="res://materials/chunktransparentmaterial.tres" id="5_35wnd"]
 [ext_resource type="Script" path="res://src/world/items/ItemLoader.cs" id="7"]
 [ext_resource type="Script" path="res://src/settings/Settings.cs" id="8"]
 [ext_resource type="Texture2D" uid="uid://b1hx352bixgap" path="res://textures/marp_rod.png" id="9"]
@@ -39,7 +40,8 @@ BlockTextureAtlas = ExtResource("2_gf4u7")
 
 [node name="Mesher" type="Node" parent="."]
 script = ExtResource("1")
-ChunkMaterial = ExtResource("3")
+OpaqueMaterial = ExtResource("3")
+TransparentMaterial = ExtResource("5_35wnd")
 
 [node name="DebugDrawer" type="Node" parent="."]
 script = ExtResource("11")

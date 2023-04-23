@@ -1,7 +1,7 @@
 using System.IO;
 
 namespace Recursia;
-public struct ChunkCoord
+public struct ChunkCoord : ISerializable
 {
     public int X, Y,Z;
     public ChunkCoord(int X, int Y, int Z)
@@ -10,6 +10,13 @@ public struct ChunkCoord
         this.Y = Y;
         this.Z = Z;
     }
+    public ChunkCoord(BinaryReader br)
+    {
+        X=0;
+        Y=0;
+        Z=0;
+        Deserialize(br);
+    }
     public int SqrMag() { return X * X + Y * Y + Z*Z; }
     public void Serialize(BinaryWriter bw)
     {
@@ -17,9 +24,11 @@ public struct ChunkCoord
         bw.Write(Y);
         bw.Write(Z);
     }
-    public static ChunkCoord Deserialize(BinaryReader br)
+    public void Deserialize(BinaryReader br)
     {
-        return new ChunkCoord(br.ReadInt32(),br.ReadInt32(),br.ReadInt32());
+        X=br.ReadInt32();
+        Y=br.ReadInt32();
+        Z=br.ReadInt32();
     }
     public static ChunkCoord operator +(ChunkCoord lhs, ChunkCoord rhs)
     {

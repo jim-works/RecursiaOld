@@ -49,14 +49,10 @@ public class ChunkBuffer : ISerializable
         //serialize blocks
         SerializationExtensions.Serialize(Blocks, bw);
     }
-
-    public static ChunkBuffer Deserialize(BinaryReader br)
+    public void Deserialize(BinaryReader br)
     {
-        var pos = ChunkCoord.Deserialize(br);
-        return new(pos)
-        {
-            Blocks = SerializationExtensions.DeserializeBlockArray(br)
-        };
+        Position.Deserialize(br);
+        Blocks = SerializationExtensions.DeserializeBlockArray(br);
     }
 
     public override string ToString()

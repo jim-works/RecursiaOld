@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Godot;
 
 namespace Recursia;
-public class TreeStructureProvider : WorldStructureProvider
+public class CherryBlossomStructureProvider : WorldStructureProvider
 {
     private const int LEAF_SIZE = 4;
     private const int TRUNK_HEIGHT = 7;
@@ -12,19 +12,21 @@ public class TreeStructureProvider : WorldStructureProvider
     private readonly Block? log;
     private readonly Block? grass;
     private readonly Block? leaves;
+    private readonly Block? leaves2;
     private readonly FastNoiseLite leafNoise = new();
 
-    public TreeStructureProvider() : base(new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
-        new WorldStructure("Tree")
+    public CherryBlossomStructureProvider() : base(new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
+        new WorldStructure("CherryBlossomTree")
         {
             Mutex = false,
             Priority = 0
         })
     {
-        RollsPerChunk = 10;
+        RollsPerChunk = 1;
         BlockTypes.TryGet("grass", out grass);
         BlockTypes.TryGet("log", out log);
-        BlockTypes.TryGet("leaves", out leaves);
+        BlockTypes.TryGet("cherry_blossom_leaves", out leaves);
+        BlockTypes.TryGet("cherry_blossom_leaves2", out leaves2);
 
         leafNoise.SetNoiseType(FastNoiseLite.NoiseType.Value);
     }
@@ -43,7 +45,7 @@ public class TreeStructureProvider : WorldStructureProvider
                     for (int z = -LEAF_SIZE; z <= LEAF_SIZE; z++)
                     {
                         float sample = BASE_DIST + (Mathf.Abs(x) + Mathf.Abs(y) + Mathf.Abs(z)) * (1 + 0.5f * leafNoise.GetNoise(FREQ * (position.X + x), FREQ * (position.Y + y), FREQ * (position.Z + z))); //0..3*LEAF_SIZE
-                        if (sample < CUTOFF) set(new BlockCoord(x, y + TRUNK_HEIGHT, z) + position, leaves);
+                        if (sample < CUTOFF) set(new BlockCoord(x, y + TRUNK_HEIGHT, z) + position, GD.Randf() > 0.5f ? leaves : leaves2);
                     }
                 }
             }

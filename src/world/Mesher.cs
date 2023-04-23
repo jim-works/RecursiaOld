@@ -8,19 +8,17 @@ using System.Collections.Concurrent;
 namespace Recursia;
 public partial class Mesher : Node
 {
-    [Export]
-    public Material? ChunkMaterial;
-    [Export]
-    public float MaxMeshTime = 0.1f;
-    [Export]
-    public int MeshIntervalMs = 1000;
+    [Export] public Material? OpaqueMaterial;
+    [Export] public Material? TransparentMaterial;
+    [Export] public float MaxMeshTime = 0.1f;
+    [Export] public int MeshIntervalMs = 1000;
     private float meshTimer;
     public static Mesher? Singleton {get; private set;}
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> toMesh = new();
     private readonly Dictionary<ChunkCoord, int> meshing = new();
-    private readonly Dictionary<ChunkCoord, ChunkMesh> done = new();
+    private readonly Dictionary<ChunkCoord, ChunkNodeData> done = new();
     private readonly ConcurrentDictionary<ChunkCoord, Chunk> waitingToMesh = new();
-    private readonly ConcurrentBag<(ChunkMesh, ChunkCoord)> finishedMeshes = new();
+    private readonly ConcurrentBag<(ChunkNodeData, ChunkCoord)> finishedMeshes = new();
     private World world = null!;
     //private Pool<ChunkMesh> meshPool = new Pool<ChunkMesh>(() => new ChunkMesh(), m => m.Node != null, m => m.ClearData(), 100);
     // Called when the node enters the scene tree for the first time.
@@ -50,13 +48,13 @@ public partial class Mesher : Node
         //spawn all on single thread to avoid a million race conditions
         while (!finishedMeshes.IsEmpty)
         {
-            if (finishedMeshes.TryTake(out (ChunkMesh, ChunkCoord) pair))
+            if (finishedMeshes.TryTake(out (ChunkNodeData, ChunkCoord) pair))
             {
                 //keep track of number of times this chunk is being meshed atm
                 meshing[pair.Item2]--;
                 if (meshing[pair.Item2] == 0) meshing.Remove(pair.Item2);
                 //only spawn chunks if they're not being meshed again, and only spawn the most up to date mesh
-                if (!meshing.ContainsKey(pair.Item2) && (!done.TryGetValue(pair.Item2, out ChunkMesh? other) || other.Timestamp <= pair.Item1.Timestamp))
+                if (!meshing.ContainsKey(pair.Item2) && (!done.TryGetValue(pair.Item2, out ChunkNodeData? other) || other.Timestamp <= pair.Item1.Timestamp))
                 {
                     done[pair.Item2] = pair.Item1;
                 }
@@ -85,9 +83,9 @@ public partial class Mesher : Node
     public void Unload(Chunk chunk, ChunkBuffer? _)
     {
         if (chunk == null) return;
-        chunk.Mesh?.ClearData();
+        chunk.Data?.ClearData();
         waitingToMesh.TryRemove(chunk.Position, out Chunk _);
-        chunk.Mesh = null;
+        chunk.Data = null;
         chunk.Meshed = false;
     }
     public void MeshDeferred(Chunk c)
@@ -144,21 +142,14 @@ public partial class Mesher : Node
         && world.Chunks.TryGetChunk(c.Position + new ChunkCoord(0,0,-1), out Chunk? c6) && c6.GenerationState == ChunkGenerationState.GENERATED;
     }
     //applies mesh to chunk, removes old mesh if needed, spawns chunk in scene as a child as this node
-    private void spawnChunk(ChunkMesh mesh, ChunkCoord coord)
+    private void spawnChunk(ChunkNodeData data, ChunkCoord coord)
     {
         if (!world.Chunks.TryGetChunk(coord, out Chunk? chunk)) return;
         chunk.Meshed = true;
-        chunk.Mesh?.ClearData();
-        chunk.Mesh = mesh;
+        chunk.Data?.ClearData();
+        chunk.Data = data;
         chunk.AddEvent("spawned");
-        if (mesh.Verts.Count == 0)
-        {
-            //no need to spawn in a new MeshInstance3D if the chunk is empty
-            return;
-        }
-        MeshInstance3D meshNode = new();
-        chunk.Mesh.ApplyTo(meshNode, ChunkMaterial);
-        AddChild(chunk.Mesh.Node);
+        data?.Spawn(this, OpaqueMaterial, TransparentMaterial);
     }
     //places finished chunk in finishedMeshes
     private void multithreadGenerateChunk(Chunk chunk) {
@@ -168,22 +159,22 @@ public partial class Mesher : Node
         Task.Run(() => generateAndQueueChunk(c));
     }
     private void generateAndQueueChunk(Chunk c) {
-        ChunkMesh mesh = generateMesh(c);
+        ChunkNodeData mesh = generateMesh(c);
         finishedMeshes.Add((mesh, c.Position));
     }
     private static ChunkMesh getMesh()
     {
         return new ChunkMesh();
     }
-    private ChunkMesh generateMesh(Chunk chunk)
+    private ChunkNodeData generateMesh(Chunk chunk)
     {
         chunk.AddEvent("mesh generated");
-        ChunkMesh chunkMesh = getMesh();
-        chunkMesh.Timestamp = Godot.Time.GetTicksUsec();
-        var vertices = chunkMesh.Verts;
-        var tris = chunkMesh.Tris;
-        var normals = chunkMesh.Norms;
-        var uvs = chunkMesh.UVs;
+        ChunkNodeData data = new()
+        {
+            OpaqueMesh = getMesh(),
+            TransparentMesh = getMesh(),
+            Timestamp = Time.GetTicksUsec()
+        };
 
         Chunk?[] neighbors = new Chunk?[6]; //we are in 3d
         neighbors[(int)Direction.PosX] = world.Chunks.GetChunkOrNull(chunk.Position + new ChunkCoord(1,0,0));
@@ -200,17 +191,17 @@ public partial class Mesher : Node
             {
                 for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
-                    meshBlock(chunk, neighbors, new BlockCoord(x,y,z), chunk[x,y,z], vertices, uvs, normals, tris);
+                    meshBlock(chunk, neighbors, new BlockCoord(x,y,z), chunk[x,y,z], data);
                 }
             }
         }
 
-        if (vertices.Count==0) {
-            chunkMesh.ClearData();
+        if (data.TransparentMesh.Verts.Count==0 && data.OpaqueMesh.Verts.Count == 0) {
+            data.ClearData();
         }
-        return chunkMesh;
+        return data;
     }
-    private static void meshBlock(Chunk chunk, Chunk?[] neighbors, BlockCoord localPos, Block? block, List<Vector3> verts, List<Vector2> uvs, List<Vector3> normals, List<int> tris)
+    private static void meshBlock(Chunk chunk, Chunk?[] neighbors, BlockCoord localPos, Block? block, ChunkNodeData data)
     {
         static bool shouldAddFace(Chunk? c, bool transparent, int x, int y, int z) => c == null || c[x,y,z] == null || !transparent && c[x,y,z]!.Transparent;
         if (block == null) return;
@@ -222,23 +213,65 @@ public partial class Mesher : Node
         //addFace if block is transparent and other is null
 
         //check if there's no block/a transparent block in each direction. only generate face if so.
-        if (localPos.X == 0 && shouldAddFace(neighbors[(int)Direction.NegX], transparent, (int)Chunk.CHUNK_SIZE-1,localPos.Y,localPos.Z) || localPos.X != 0 && shouldAddFace(chunk, transparent,localPos.X-1,localPos.Y,localPos.Z)) {
-            addFacePosX(pos, tex, verts, uvs, normals, tris);
+        if (localPos.X == 0 && shouldAddFace(neighbors[(int)Direction.NegX], transparent, Chunk.CHUNK_SIZE-1,localPos.Y,localPos.Z) || localPos.X != 0 && shouldAddFace(chunk, transparent,localPos.X-1,localPos.Y,localPos.Z)) {
+            if (transparent)
+            {
+                addFacePosX(pos, tex, data.TransparentMesh.Verts, data.TransparentMesh.UVs, data.TransparentMesh.Norms, data.TransparentMesh.Tris);
+            }
+            else
+            {
+                addFacePosX(pos, tex, data.OpaqueMesh.Verts, data.OpaqueMesh.UVs, data.OpaqueMesh.Norms, data.OpaqueMesh.Tris);
+            }
         }
-        if (localPos.Y == 0 && shouldAddFace(neighbors[(int)Direction.NegY], transparent, localPos.X, (int)Chunk.CHUNK_SIZE-1,localPos.Z) || localPos.Y != 0 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y-1,localPos.Z)) {
-            addFaceNegY(pos, tex, verts, uvs, normals, tris);
+        if (localPos.Y == 0 && shouldAddFace(neighbors[(int)Direction.NegY], transparent, localPos.X, Chunk.CHUNK_SIZE-1,localPos.Z) || localPos.Y != 0 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y-1,localPos.Z)) {
+            if (transparent)
+            {
+                addFaceNegY(pos, tex, data.TransparentMesh.Verts, data.TransparentMesh.UVs, data.TransparentMesh.Norms, data.TransparentMesh.Tris);
+            }
+            else
+            {
+                addFaceNegY(pos, tex, data.OpaqueMesh.Verts, data.OpaqueMesh.UVs, data.OpaqueMesh.Norms, data.OpaqueMesh.Tris);
+            }
         }
-        if (localPos.Z == 0 && shouldAddFace(neighbors[(int)Direction.NegZ], transparent, localPos.X,localPos.Y,(int)Chunk.CHUNK_SIZE-1) || localPos.Z != 0 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y,localPos.Z-1)) {
-            addFacePosZ(pos, tex, verts, uvs, normals, tris);
+        if (localPos.Z == 0 && shouldAddFace(neighbors[(int)Direction.NegZ], transparent, localPos.X,localPos.Y,Chunk.CHUNK_SIZE-1) || localPos.Z != 0 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y,localPos.Z-1)) {
+            if (transparent)
+            {
+                addFacePosZ(pos, tex, data.TransparentMesh.Verts, data.TransparentMesh.UVs, data.TransparentMesh.Norms, data.TransparentMesh.Tris);
+            }
+            else
+            {
+                addFacePosZ(pos, tex, data.OpaqueMesh.Verts, data.OpaqueMesh.UVs, data.OpaqueMesh.Norms, data.OpaqueMesh.Tris);
+            }
         }
         if (localPos.X == Chunk.CHUNK_SIZE-1 && shouldAddFace(neighbors[(int)Direction.PosX], transparent, 0,localPos.Y,localPos.Z) || localPos.X != Chunk.CHUNK_SIZE-1 && shouldAddFace(chunk, transparent,localPos.X+1,localPos.Y,localPos.Z)) {
-            addFaceNegX(pos, tex, verts, uvs, normals, tris);
+            if (transparent)
+            {
+                addFaceNegX(pos, tex, data.TransparentMesh.Verts, data.TransparentMesh.UVs, data.TransparentMesh.Norms, data.TransparentMesh.Tris);
+            }
+            else
+            {
+                addFaceNegX(pos, tex, data.OpaqueMesh.Verts, data.OpaqueMesh.UVs, data.OpaqueMesh.Norms, data.OpaqueMesh.Tris);
+            }
         }
         if (localPos.Y == Chunk.CHUNK_SIZE-1 && shouldAddFace(neighbors[(int)Direction.PosY], transparent, localPos.X,0,localPos.Z) || localPos.Y != Chunk.CHUNK_SIZE-1 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y+1,localPos.Z)) {
-            addFacePosY(pos, tex, verts, uvs, normals, tris);
+            if (transparent)
+            {
+                addFacePosY(pos, tex, data.TransparentMesh.Verts, data.TransparentMesh.UVs, data.TransparentMesh.Norms, data.TransparentMesh.Tris);
+            }
+            else
+            {
+                addFacePosY(pos, tex, data.OpaqueMesh.Verts, data.OpaqueMesh.UVs, data.OpaqueMesh.Norms, data.OpaqueMesh.Tris);
+            }
         }
         if (localPos.Z == Chunk.CHUNK_SIZE-1 && shouldAddFace(neighbors[(int)Direction.PosZ], transparent, localPos.X,localPos.Y,0) || localPos.Z != Chunk.CHUNK_SIZE-1 && shouldAddFace(chunk, transparent,localPos.X,localPos.Y,localPos.Z+1)) {
-            addFaceNegZ(pos, tex, verts, uvs, normals, tris);
+            if (transparent)
+            {
+                addFaceNegZ(pos, tex, data.TransparentMesh.Verts, data.TransparentMesh.UVs, data.TransparentMesh.Norms, data.TransparentMesh.Tris);
+            }
+            else
+            {
+                addFaceNegZ(pos, tex, data.OpaqueMesh.Verts, data.OpaqueMesh.UVs, data.OpaqueMesh.Norms, data.OpaqueMesh.Tris);
+            }
         }
     }
     private static void finishFace(Vector3 normalDir, List<Vector3> normals, List<int> tris)

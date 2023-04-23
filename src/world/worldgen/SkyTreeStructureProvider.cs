@@ -65,6 +65,18 @@ public class SkyTreeStructureProvider : WorldStructureProvider
         int branchCount = 0;
         int branchStarti = (int)(length*BRANCH_START_PROPORTION);
         int leafHeight = (int)(length * LEAF_START_PROPORTION);
+        for (int x = -leafSize; x <= leafSize; x++)
+        {
+            for (int y = -leafSize; y <= leafSize; y++)
+            {
+                for (int z = -leafSize; z <= leafSize; z++)
+                {
+                    //remap sample from -1..1 to 0..1
+                    float sample = (x * x + y * y + z * z) * (BASE_NOISE/trunkLengthMult + 0.5f * (1 + leafNoise.GetNoise(start.X + x, start.Y + y, start.Z + z)));
+                    if (sample < CUTOFF*leafMult) set(new BlockCoord(x, y, z)+leafHeight*delta + start, leaves);
+                }
+            }
+        }
         for (int i = 0; i < length; i++)
         {
             int thickness = Mathf.RoundToInt(Mathf.Lerp(maxThickness, minThickness, (float)i / length));
@@ -80,18 +92,6 @@ public class SkyTreeStructureProvider : WorldStructureProvider
                 for (int y = -thickness; y <= thickness; y++)
                 {
                     set(start + i * delta + x * basisX + y * basisY, log);
-                }
-            }
-        }
-        for (int x = -leafSize; x <= leafSize; x++)
-        {
-            for (int y = -leafSize; y <= leafSize; y++)
-            {
-                for (int z = -leafSize; z <= leafSize; z++)
-                {
-                    //remap sample from -1..1 to 0..1
-                    float sample = (x * x + y * y + z * z) * (BASE_NOISE/trunkLengthMult + 0.5f * (1 + leafNoise.GetNoise(start.X + x, start.Y + y, start.Z + z)));
-                    if (sample < CUTOFF*leafMult) set(new BlockCoord(x, y, z)+leafHeight*delta + start, leaves);
                 }
             }
         }
