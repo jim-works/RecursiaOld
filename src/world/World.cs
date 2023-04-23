@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 //Faces of blocks are on integral coordinates
@@ -36,7 +37,7 @@ public partial class World : Node
     public override void _Ready()
     {
         saver = GetNode<WorldSaver>("WorldSaver");
-        ObjectTypes.TryGetInstance(this, "player", SpawnPoint, out Player _);
+        PlayerJoin("jim-works");
         _chunkLoadingTimer = 9999;
         //Loader.UpdateChunkLoading();
         base._Ready();
@@ -64,13 +65,36 @@ public partial class World : Node
         base._Process(delta);
     }
 
+    public void PlayerJoin(string name)
+    {
+        Task.Run(() =>
+        {
+            var t = saver!.LoadPlayer(name);
+            t.Wait();
+            Player? p = t.Result;
+            if (p == null)
+            {
+                //player not found, so spawn new one
+                if (!ObjectTypes.TryGetInstance<Player>(this, "player", SpawnPoint, out Player? inst, x => x.Name = name))
+                {
+                    GD.PushError("Couldn't create new player");
+                }
+            }
+            //player was found in db
+            GD.Print(p == null ? $"Player {name} joined for the first time!" : $"Player {name} joined. WB.");
+        });
+    }
+
     public async Task LoadChunk(ChunkCoord coord)
     {
         if (Chunks.Contains(coord)) return;
         try
         {
-            (Chunk? c, ChunkBuffer? b) = await saver!.LoadChunk(coord);
+            var tchunk = saver!.Load<Chunk>(coord, (int)WorldSaver.DataTableIDs.Terrain);
+            var tbuf = saver!.Load<ChunkBuffer>(coord, (int)WorldSaver.DataTableIDs.TerrainBuffers);
+            ChunkBuffer? b = await tbuf;
             if (b != null) Chunks.AddBuffer(b);
+            Chunk? c = await tchunk;
             if (c == null)
             {
                 GenerateChunkDeferred(coord);

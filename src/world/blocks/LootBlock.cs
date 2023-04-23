@@ -25,6 +25,6 @@ public class LootBlock : Block
     }
     public override void Deserialize(BinaryReader br)
     {
-        Drops = SerializationExtensions.DeserializeArray<ItemStack>(br,br => new(br));
+        Drops = SerializationExtensions.DeserializeArray<ItemStack>(br);
     }
 }

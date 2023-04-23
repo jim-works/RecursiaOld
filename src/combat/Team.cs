@@ -1,5 +1,7 @@
+using System.IO;
+
 namespace Recursia;
-public class Team
+public class Team : ISerializable
 {
     public string TeamName;
 
@@ -32,5 +34,13 @@ public class Team
     public override string ToString()
     {
         return TeamName;
+    }
+    public void Serialize(BinaryWriter bw)
+    {
+        bw.Write(TeamName);
+    }
+    public void Deserialize(BinaryReader br)
+    {
+        TeamName = br.ReadString();
     }
 }

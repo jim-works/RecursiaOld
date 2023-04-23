@@ -1,7 +1,8 @@
+using System.IO;
 using Godot;
 
 namespace Recursia;
-public class Inventory
+public class Inventory : ISerializable
 {
     public ItemStack[] Items;
     public int Size {get => Items.Length;}
@@ -10,7 +11,6 @@ public class Inventory
     public Inventory(int slots)
     {
         Items = new ItemStack[slots];
-        GD.Print($"item in slot 0: {Items[0].Item?.DisplayName ?? "null"}");
     }
     public void TriggerUpdate()
     {
@@ -179,5 +179,14 @@ public class Inventory
             if (stack.Item == item) count += stack.Size;
         }
         return count;
+    }
+
+    public void Serialize(BinaryWriter bw)
+    {
+        Items.Serialize(bw);
+    }
+    public void Deserialize(BinaryReader br)
+    {
+        Items = SerializationExtensions.DeserializeArray<ItemStack>(br);
     }
 }

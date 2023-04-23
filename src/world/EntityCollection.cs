@@ -8,9 +8,9 @@ public class EntityCollection
     private readonly World world;
     private readonly Dictionary<ChunkCoord, List<PhysicsObject>> physicsObjects = new();
     private readonly Dictionary<ChunkCoord, List<Combatant>> combatants = new ();
-    private readonly List<Player> players = new();
+    private readonly Dictionary<string, Player> players = new();
 
-    public IEnumerable<Player> Players => players;
+    public IEnumerable<KeyValuePair<string,Player>> Players => players;
 
     public EntityCollection(World world)
     {
@@ -40,7 +40,7 @@ public class EntityCollection
         }
         if (p is Player player)
         {
-            players.Remove(player);
+            players.Remove(player.Name);
         }
     }
     private void addPhysicsObject(PhysicsObject p)
@@ -68,7 +68,7 @@ public class EntityCollection
             {
                 combatants[to] = new List<Combatant> { c };
             }
-            if (p is Player player) players.Add(player);
+            if (p is Player player) players.Add(player.Name, player);
         }
     }
 
@@ -76,6 +76,7 @@ public class EntityCollection
     //if will handle registering if T : PhysicsObject/Combatant
     public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T>? init=null) where T : Node3D
     {
+        GD.Print($"Spawning object at {position}");
         T obj = prefab.Instantiate<T>();
         var c = obj as PhysicsObject;
         if (c != null)

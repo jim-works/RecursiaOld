@@ -30,7 +30,11 @@ public partial class WorldSaver : Node
         world = GetParent<World>();
         string folder = Path.Join(WorldsFolder, world.Name);
         Directory.CreateDirectory(folder);
-        sql = new SQLInterface(Path.Join(folder, "world.db"));
+        sql = new SQLInterface(Path.Join(folder, "world.db"), (br, name) => {
+            Player p = PhysicsObject.Deserialize<Player>(world, br)!;
+            p.Name = name;
+            return p;
+        });
         sql.RegisterDataTable("terrain", (int)DataTableIDs.Terrain, br => new Chunk(br));
         sql.RegisterDataTable("terrainBuffers", (int)DataTableIDs.TerrainBuffers, br => new ChunkBuffer(br));
         GD.Print("World save folder is " + folder);
@@ -71,25 +75,35 @@ public partial class WorldSaver : Node
         sql!.Close();
     }
 
-    public async Task<(Chunk?, ChunkBuffer?)> LoadChunk(ChunkCoord coord)
+    public async Task<T?> Load<T>(ChunkCoord coord, int tableId)
     {
 #if NO_SAVING
         return null;
 #else
         try
         {
-            var cTask = sql!.LoadData((int)DataTableIDs.Terrain, coord);
-            var bTask = sql!.LoadData((int)DataTableIDs.TerrainBuffers, coord);
-            Chunk? resChunk = (Chunk?)await cTask;
-            ChunkBuffer? resBuf = (ChunkBuffer?)await bTask;
-            if (resChunk != null) resChunk.SaveDirtyFlag = false;
-            if (resBuf != null) resBuf.SaveDirtyFlag = false;
-            return (resChunk, resBuf);
+            return (T?)await sql!.LoadData(tableId, coord);
         }
         catch (Exception e)
         {
             GD.PushError(e);
-            return (null,null);
+            return default;
+        }
+#endif
+    }
+    public async Task<Player?> LoadPlayer(string name)
+    {
+#if NO_SAVING
+        return null;
+#else
+        try
+        {
+            return await sql!.LoadPlayer(name);
+        }
+        catch (Exception e)
+        {
+            GD.PushError(e);
+            return default;
         }
 #endif
     }
@@ -106,6 +120,10 @@ public partial class WorldSaver : Node
         foreach (var kvp in world.Chunks.GetBufferEnumerator())
         {
             Save(kvp.Value);
+        }
+        foreach (var p in world.Entities.Players)
+        {
+            Save(p.Value);
         }
         //sql!.SavePlayers(world.Entities.Players);
 #endif
@@ -129,6 +147,14 @@ public partial class WorldSaver : Node
         if (!c.SaveDirtyFlag) return;
         sql!.Save((int)DataTableIDs.TerrainBuffers, c.Position, c);
         c.SaveDirtyFlag = false;
+#endif
+    }
+    public void Save(Player p)
+    {
+#if NO_SAVING
+        return;
+#else
+        sql!.Save(p);
 #endif
     }
 }

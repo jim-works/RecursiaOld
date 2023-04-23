@@ -4,10 +4,10 @@ using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using System;
-using System.Threading;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+//TODO: check gzip is actually doing anything
 namespace Recursia;
 public class SQLInterface : IDisposable
 {
@@ -54,13 +54,17 @@ public class SQLInterface : IDisposable
     private readonly SQLiteCommand loadPlayerCommand;
     private readonly ConcurrentBag<(DataKey, TaskCompletionSource<ISerializable?>)> dataLoadQueue = new();
     private readonly ConcurrentDictionary<DataKey, ISerializable> dataSaveQueue = new();
+    private readonly ConcurrentBag<(string, TaskCompletionSource<Player?>)> playerLoadQueue = new();
+    private readonly ConcurrentDictionary<string, Player> playerSaveQueue = new();
     private readonly Dictionary<string, int> dataNameMap = new();
-    private readonly Dictionary<int, Func<BinaryReader,ISerializable>> deserializers = new();
+    private readonly Dictionary<int, Func<BinaryReader,ISerializable>> dataDeserializers = new();
+    private readonly Func<BinaryReader, string, Player> playerDeserializer;
     private readonly List<(DataKey,ISerializable)> returnToSave = new();
 
-    public SQLInterface(string dbpath)
+    public SQLInterface(string dbpath, Func<BinaryReader, string, Player> playerDeserializer)
     {
         Godot.GD.Print("Opening database at " + dbpath);
+        this.playerDeserializer = playerDeserializer;
         bool init = false;
         if (!File.Exists(dbpath))
         {
@@ -149,7 +153,7 @@ public class SQLInterface : IDisposable
         {
             throw new System.Data.DataException($"Table {dataTable} already exists!");
         }
-        deserializers[id] = deserializer;
+        dataDeserializers[id] = deserializer;
     }
 
     private bool verifyDB()
@@ -204,16 +208,53 @@ public class SQLInterface : IDisposable
     {
         dataSaveQueue[new DataKey{Tid=dataTable,Pos=pos}] = obj;
     }
+    public void Save(Player p)
+    {
+        playerSaveQueue[p.Name] = p;
+    }
     public async Task<ISerializable?> LoadData(int dataTable, ChunkCoord pos)
     {
         var waiting = new TaskCompletionSource<ISerializable?>();
         dataLoadQueue.Add((new DataKey{Tid=dataTable,Pos=pos}, waiting));
         return await waiting.Task;
     }
+        public async Task<Player?> LoadPlayer(string name)
+    {
+        var waiting = new TaskCompletionSource<Player?>();
+        playerLoadQueue.Add((name, waiting));
+        return await waiting.Task;
+    }
     private void emptySaveQueue()
     {
-        int count = 0;
         using SQLiteTransaction transaction = conn.BeginTransaction(System.Data.IsolationLevel.Serializable);
+        emptyDataSaveQueue();
+        emptyPlayerSaveQueue();
+        transaction.Commit();
+        foreach (var c in returnToSave) dataSaveQueue[c.Item1] = c.Item2;
+        returnToSave.Clear();
+    }
+    private void emptyPlayerSaveQueue()
+    {
+        foreach (var kvp in playerSaveQueue.ToArray())
+        {
+            if (playerSaveQueue.TryRemove(kvp.Key, out Player? p))
+            {
+                savePlayerCommand.Parameters["@name"].Value = p.Name;
+                using (MemoryStream ms = new())
+                using (BinaryWriter bw = new(ms))
+                using (GZipStream gz = new(ms, CompressionLevel.Fastest))
+                {
+                    p.Serialize(bw);
+                    Godot.GD.Print($"memory stream size {ms.Length}");
+                    savePlayerCommand.Parameters["@data"].Value = ms.ToArray();
+                }
+                savePlayerCommand.ExecuteNonQuery();
+                Godot.GD.Print($"saved player {kvp.Key} in position {kvp.Value.Position}");
+            }
+        }
+    }
+    private void emptyDataSaveQueue()
+    {
         foreach (var kvp in dataSaveQueue.ToArray())
         {
             if (dataSaveQueue.TryRemove(kvp.Key, out ISerializable? obj))
@@ -236,22 +277,18 @@ public class SQLInterface : IDisposable
                     saveDataCommand.Parameters["@data"].Value = ms.ToArray();
                 }
                 saveDataCommand.ExecuteNonQuery();
-                count++;
             }
         }
-        transaction.Commit();
-        foreach (var c in returnToSave) dataSaveQueue[c.Item1] = c.Item2;
-        returnToSave.Clear();
-        if (count > 0) Godot.GD.Print($"saved {count} objects!");
     }
     private void emptyLoadQueue()
     {
+        //chunk data
         while (dataLoadQueue.TryTake(out var item))
         {
             (DataKey k, TaskCompletionSource<ISerializable?> objTcs) = item;
             try
             {
-                objTcs.SetResult(loadFromDB(k));
+                objTcs.SetResult(loadDataFromDB(k));
             }
             catch (Exception e)
             {
@@ -259,8 +296,22 @@ public class SQLInterface : IDisposable
                 objTcs.TrySetResult(null);
             }
         }
+        //players
+        while (playerLoadQueue.TryTake(out var item))
+        {
+            (string name, TaskCompletionSource<Player?> pTcs) = item;
+            try
+            {
+                pTcs.SetResult(loadPlayerFromDB(name));
+            }
+            catch (Exception e)
+            {
+                Godot.GD.PushError(e);
+                pTcs.SetResult(null);
+            }
+        }
     }
-    private ISerializable? loadFromDB(DataKey key)
+    private ISerializable? loadDataFromDB(DataKey key)
     {
         loadDataCommand.Parameters["@x"].Value = key.Pos.X;
         loadDataCommand.Parameters["@y"].Value = key.Pos.Y;
@@ -274,44 +325,23 @@ public class SQLInterface : IDisposable
         using MemoryStream ms = new((byte[])result);
         using GZipStream gz = new(ms, CompressionMode.Decompress);
         using BinaryReader br = new(ms);
-        return deserializers[key.Tid](br);
+        return dataDeserializers[key.Tid](br);
     }
-    //TODO: locks
-    // public void SavePlayers(IEnumerable<Player> players)
-    // {
-    //     using SQLiteTransaction transaction = conn.BeginTransaction();
-    //     foreach (var p in players)
-    //     {
-    //         savePlayerCommand.Parameters["@name"].Value = p.Name;
-    //         using (MemoryStream ms = new())
-    //         using (BinaryWriter bw = new(ms))
-    //         using (GZipStream gz = new(ms, CompressionLevel.Fastest))
-    //         {
-    //             p.Serialize(bw);
-    //             savePlayerCommand.Parameters["@data"].Value = ms.ToArray();
-    //         }
-    //         savePlayerCommand.ExecuteNonQuery();
-    //     }
-    //     transaction.Commit();
-    // }
-    // public async Task<Player?> LoadPlayer(World world, string name)
-    // {
-    //     loadPlayerCommand.Parameters["@name"].Value = name;
-    //     object? result = await loadPlayerCommand.ExecuteScalarAsync();
-    //     if (result == null)
-    //     {
-    //         return null;
-    //     }
-    //     using MemoryStream ms = new((byte[])result);
-    //     using GZipStream gz = new(ms, CompressionMode.Decompress);
-    //     using BinaryReader br = new(ms);
-    //     Player? player = PhysicsObject.Deserialize<Player>(world, br);
-    //     if (player == null)
-    //     {
-    //         throw new InvalidDataException($"Couldn't load data for player name: {name}! Data corrupted!");
-    //     }
-    //     return player;
-    // }
+    private Player? loadPlayerFromDB(string key)
+    {
+        loadPlayerCommand.Parameters["@name"].Value = key;
+        object? result = loadPlayerCommand.ExecuteScalar();
+        if (result == null)
+        {
+            Godot.GD.Print("result is null");
+            return null;
+        }
+        Godot.GD.Print("result is not null");
+        using MemoryStream ms = new((byte[])result);
+        //using GZipStream gz = new(ms, CompressionMode.Decompress);
+        using BinaryReader br = new(ms);
+        return playerDeserializer(br, key);
+    }
 
     public void Dispose()
     {

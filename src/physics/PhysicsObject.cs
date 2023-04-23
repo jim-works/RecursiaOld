@@ -207,7 +207,7 @@ public partial class PhysicsObject : Node3D, ISerializable
     public virtual void Serialize(BinaryWriter bw)
     {
         bw.Write(ObjectType);
-        GlobalPosition.Serialize(bw);
+        Position.Serialize(bw);
         Velocity.Serialize(bw);
     }
 
@@ -216,13 +216,11 @@ public partial class PhysicsObject : Node3D, ISerializable
     public static T? Deserialize<T>(World world, BinaryReader br) where T : PhysicsObject
     {
         string type = br.ReadString();
-        Vector3 initialPos = Vector3.Zero;
-        initialPos.Deserialize(br);
-        Vector3 initialV = Vector3.Zero;
-        initialV.Deserialize(br);
-        if (ObjectTypes.TryGetInstance<T>(world, type, initialPos, out T? obj, obj => obj.Velocity = initialV))
+        Vector3 initialPos = SerializationExtensions.DeserializeVec3(br);
+        Vector3 initialV = SerializationExtensions.DeserializeVec3(br);
+        GD.Print($"Deserialized {type} with position {initialPos} and velocity {initialV}");
+        if (ObjectTypes.TryGetInstance<T>(world, type, initialPos, out T? obj, obj => {obj.Velocity = initialV; obj.Deserialize(br);}))
         {
-            obj.Deserialize(br);
             return obj;
         }
         GD.PushError("couldn't instantiate object type " + type);

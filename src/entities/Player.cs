@@ -21,29 +21,32 @@ public partial class Player : Combatant
     public override void _Ready()
     {
         //temporary, so idc about nullable
-        Inventory = new Inventory(InitialInventorySize);
-        ItemTypes.TryGet("gun", out Item? gun);
-        ItemTypes.TryGet("marp_rod", out Item? marp_rod);
-        ItemTypes.TryGet("explosive_bullet", out Item? explosive_bullet);
-        ItemTypes.TryGet("cursed_idol", out Item? cursed_idol);
-        Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
-        Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
-        Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
-        Inventory.CopyItem(new ItemStack { Item = explosive_bullet!, Size = 100 });
-        if (ItemTypes.TryGetBlockItem("loot", out BlockFactoryItem? lootBlockItem))
+        if (Inventory == null)
         {
-            lootBlockItem.InitPlaced = (Block block) =>
+            Inventory = new Inventory(InitialInventorySize);
+            ItemTypes.TryGet("gun", out Item? gun);
+            ItemTypes.TryGet("marp_rod", out Item? marp_rod);
+            ItemTypes.TryGet("explosive_bullet", out Item? explosive_bullet);
+            ItemTypes.TryGet("cursed_idol", out Item? cursed_idol);
+            Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
+            Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
+            Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
+            Inventory.CopyItem(new ItemStack { Item = explosive_bullet!, Size = 100 });
+            if (ItemTypes.TryGetBlockItem("loot", out BlockFactoryItem? lootBlockItem))
             {
-                if (block is LootBlock b)
+                lootBlockItem.InitPlaced = (Block block) =>
                 {
-                    b.Drops = new ItemStack[] { new ItemStack { Item = marp_rod!, Size = 1 } };
-                }
-                else
-                {
-                    GD.PushError("Initplaced passed a block which is not a loot block!");
-                }
-            };
-            Inventory.CopyItem(new ItemStack {Item = lootBlockItem, Size = 1});
+                    if (block is LootBlock b)
+                    {
+                        b.Drops = new ItemStack[] { new ItemStack { Item = marp_rod!, Size = 1 } };
+                    }
+                    else
+                    {
+                        GD.PushError("Initplaced passed a block which is not a loot block!");
+                    }
+                };
+                Inventory.CopyItem(new ItemStack { Item = lootBlockItem, Size = 1 });
+            }
         }
         World?.Loader.AddChunkLoader(this);
         LocalPlayer = this;
@@ -84,6 +87,8 @@ public partial class Player : Combatant
                 }
             } else if (key.Keycode == Key.T) {
                 Collides = !Collides;
+            } else if (key.Keycode == Key.Y) {
+                TakeDamage(new Damage{Amount=1,Team=null});
             }
         }
 
@@ -154,8 +159,16 @@ public partial class Player : Combatant
             Jump();
         }
     }
-    // public override void Serialize(BinaryWriter writer)
-    // {
-    //     base.Serialize(writer);
-    // }
+    public override void Serialize(BinaryWriter bw)
+    {
+        base.Serialize(bw);
+        MouseInventory.Serialize(bw);
+        bw.Write(jumpsLeft);
+    }
+    public override void Deserialize(BinaryReader br)
+    {
+        base.Deserialize(br);
+        MouseInventory.Deserialize(br);
+        jumpsLeft = br.ReadInt32();
+    }
 }

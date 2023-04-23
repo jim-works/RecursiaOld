@@ -11,11 +11,13 @@ public static class SerializationExtensions
         bw.Write(v.Y);
         bw.Write(v.Z);
     }
-    public static void Deserialize(this Vector3 v, BinaryReader br)
+    public static Vector3 DeserializeVec3(BinaryReader br)
     {
+        Vector3 v;
         v.X = br.ReadSingle();
         v.Y = br.ReadSingle();
         v.Z = br.ReadSingle();
+        return v;
     }
     public static void Serialize(Block?[,,]? blocks, BinaryWriter bw)
     {
@@ -126,11 +128,34 @@ public static class SerializationExtensions
             item.Serialize(bw);
         }
     }
-    public static T[] DeserializeArray<T>(BinaryReader br, System.Func<BinaryReader, T> deserializer) {
+    public static void SerializeMaybeNull<T>(T? inst, BinaryWriter bw) where T : ISerializable
+    {
+        bw.Write(inst is null ? (byte)0 : (byte)1);
+        inst?.Serialize(bw);
+    }
+    //returns false if it read null, true otherwise
+    public static bool DeserializeMaybeNull<T>(T inst, BinaryReader br) where T : ISerializable
+    {
+        byte val = br.ReadByte();
+        if (val == 0) return false;
+        inst.Deserialize(br);
+        return true;
+    }
+    public static T[] DeserializeArray<T>(BinaryReader br, Func<BinaryReader, T> deserializer) {
         T[] arr = new T[br.ReadInt32()];
         for (int i = 0; i < arr.Length; i++)
         {
             arr[i] = deserializer(br);
+        }
+        return arr;
+    }
+    public static T[] DeserializeArray<T>(BinaryReader br) where T : ISerializable, new() {
+        T[] arr = new T[br.ReadInt32()];
+        for (int i = 0; i < arr.Length; i++)
+        {
+            T inst = new();
+            inst.Deserialize(br);
+            arr[i] = inst;
         }
         return arr;
     }
