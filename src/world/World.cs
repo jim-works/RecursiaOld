@@ -92,6 +92,7 @@ public partial class World : Node
         {
             var tchunk = saver!.Load<Chunk>(coord, (int)WorldSaver.DataTableIDs.Terrain);
             var tbuf = saver!.Load<ChunkBuffer>(coord, (int)WorldSaver.DataTableIDs.TerrainBuffers);
+            await saver!.Load<PhysicsObject[]>(coord, (int)WorldSaver.DataTableIDs.PhysicsObjects); //stuff gets spawned in automatically, no need to do anything else.
             ChunkBuffer? b = await tbuf;
             if (b != null) Chunks.AddBuffer(b);
             Chunk? c = await tchunk;

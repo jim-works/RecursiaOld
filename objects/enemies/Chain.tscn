@@ -15,5 +15,6 @@ AttackInterval = 2.0
 InitialTeamName = "enemy"
 InitialHealth = 10.0
 Size = Vector3(1, 1, 1)
+ObjectType = "chain"
 
 [node name="HealthBar3D" parent="." instance=ExtResource("3")]

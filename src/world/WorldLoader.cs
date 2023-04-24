@@ -72,6 +72,7 @@ public class WorldLoader
         }
         foreach (var c in toUnload)
         {
+            world.Entities.Unload(c);
             world.Chunks.TryUnload(c);
         }
 #endif

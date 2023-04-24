@@ -11,27 +11,28 @@ public class EntityCollection
     private readonly Dictionary<string, Player> players = new();
 
     public IEnumerable<KeyValuePair<string,Player>> Players => players;
+    public event System.Action<ChunkCoord, List<PhysicsObject>>? OnChunkUnload;
 
     public EntityCollection(World world)
     {
         this.world = world;
-        world.Chunks.OnChunkUnload += onChunkUnload;
     }
 
-    private void onChunkUnload(Chunk chunk, ChunkBuffer? _)
+    public void Unload(ChunkCoord pos)
     {
-        if (physicsObjects.TryGetValue(chunk.Position, out List<PhysicsObject>? objects))
+        if (physicsObjects.TryGetValue(pos, out List<PhysicsObject>? objects))
         {
+            OnChunkUnload?.Invoke(pos, objects);
             //in unloaded chunk, so remove all from scene
             foreach (var obj in objects)
             {
                 obj.OnCrossChunkBoundary -= physicsObjectCrossChunkBoundary;
-                obj.OnExitTree -= RemoveObject;
-                obj.QueueFree();
+                //obj.OnExitTree -= RemoveObject;
+                //obj.QueueFree();
             }
         }
-        physicsObjects.Remove(chunk.Position);
-        combatants.Remove(chunk.Position);
+        physicsObjects.Remove(pos);
+        combatants.Remove(pos);
     }
 
     private void physicsObjectCrossChunkBoundary(PhysicsObject p, ChunkCoord oldChunk)

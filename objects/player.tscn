@@ -23,6 +23,7 @@ InitialHealth = 10.0
 InvincibilitySeconds = 0.1
 Size = Vector3(0.7, 1.8, 0.7)
 InitialPosition = Vector3(0, 25, 0)
+ObjectType = "player"
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)

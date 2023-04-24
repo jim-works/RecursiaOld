@@ -24,14 +24,14 @@ public partial class Player : Combatant
         if (Inventory == null)
         {
              Inventory = new Inventory(InitialInventorySize);
-            //ItemTypes.TryGet("gun", out Item? gun);
-            // ItemTypes.TryGet("marp_rod", out Item? marp_rod);
-            // ItemTypes.TryGet("explosive_bullet", out Item? explosive_bullet);
-            // ItemTypes.TryGet("cursed_idol", out Item? cursed_idol);
-            // Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
-            // Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
-            // Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
-            // Inventory.CopyItem(new ItemStack { Item = explosive_bullet!, Size = 100 });
+            ItemTypes.TryGet("gun", out Item? gun);
+            ItemTypes.TryGet("marp_rod", out Item? marp_rod);
+            ItemTypes.TryGet("explosive_bullet", out Item? explosive_bullet);
+            ItemTypes.TryGet("cursed_idol", out Item? cursed_idol);
+            Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
+            Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
+            Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
+            Inventory.CopyItem(new ItemStack { Item = explosive_bullet!, Size = 100 });
             if (ItemTypes.GetBlockFactoryItem("loot.patrick") is BlockFactoryItem lootBlockItem)
             {
                 Inventory.CopyItem(new ItemStack { Item = lootBlockItem, Size = 3 });

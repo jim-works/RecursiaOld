@@ -7,13 +7,15 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System;
+using System.Linq;
 namespace Recursia;
 public partial class WorldSaver : Node
 {
     public enum DataTableIDs
     {
         Terrain=0,
-        TerrainBuffers=1
+        TerrainBuffers=1,
+        PhysicsObjects=2,
     }
     [Export] public double SaveIntervalSeconds = 5;
     [Export] public double LoadIntervalSeconds = 0.100f;
@@ -37,12 +39,14 @@ public partial class WorldSaver : Node
         });
         sql.RegisterDataTable("terrain", (int)DataTableIDs.Terrain, br => new Chunk(br));
         sql.RegisterDataTable("terrainBuffers", (int)DataTableIDs.TerrainBuffers, br => new ChunkBuffer(br));
+        sql.RegisterDataTable("physicsObjects", (int)DataTableIDs.PhysicsObjects, br => PhysicsObject.DeserializeArray(world, br));
         GD.Print("World save folder is " + folder);
 
         world.Chunks.OnChunkUnload += (c,b) => {
             Save(c);
             if (b != null) Save(b);
         };
+        world.Entities.OnChunkUnload += Save;
         sql.BeginPolling();
     }
 
@@ -156,5 +160,9 @@ public partial class WorldSaver : Node
 #else
         sql!.Save(p);
 #endif
+    }
+    public void Save(ChunkCoord coord, List<PhysicsObject> objs)
+    {
+        sql!.Save((int)DataTableIDs.PhysicsObjects, coord, new SerializableList<PhysicsObject>{List=objs.Where(obj => obj is not Player && !obj.NoSerialize()).ToList()});
     }
 }

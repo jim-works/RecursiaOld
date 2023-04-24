@@ -52,12 +52,12 @@ public class SQLInterface : IDisposable
     private readonly SQLiteCommand loadDataCommand;
     private readonly SQLiteCommand savePlayerCommand;
     private readonly SQLiteCommand loadPlayerCommand;
-    private readonly ConcurrentBag<(DataKey, TaskCompletionSource<ISerializable?>)> dataLoadQueue = new();
+    private readonly ConcurrentBag<(DataKey, TaskCompletionSource<object?>)> dataLoadQueue = new();
     private readonly ConcurrentDictionary<DataKey, ISerializable> dataSaveQueue = new();
     private readonly ConcurrentBag<(string, TaskCompletionSource<Player?>)> playerLoadQueue = new();
     private readonly ConcurrentDictionary<string, Player> playerSaveQueue = new();
     private readonly Dictionary<string, int> dataNameMap = new();
-    private readonly Dictionary<int, Func<BinaryReader,ISerializable>> dataDeserializers = new();
+    private readonly Dictionary<int, Func<BinaryReader,object?>> dataDeserializers = new();
     private readonly Func<BinaryReader, string, Player> playerDeserializer;
     private readonly List<(DataKey,ISerializable)> returnToSave = new();
 
@@ -147,7 +147,7 @@ public class SQLInterface : IDisposable
             }
         });
     }
-    public void RegisterDataTable(string dataTable, int id, Func<BinaryReader,ISerializable> deserializer)
+    public void RegisterDataTable(string dataTable, int id, Func<BinaryReader,object?> deserializer)
     {
         if (!dataNameMap.TryAdd(dataTable, id))
         {
@@ -212,9 +212,9 @@ public class SQLInterface : IDisposable
     {
         playerSaveQueue[p.Name] = p;
     }
-    public async Task<ISerializable?> LoadData(int dataTable, ChunkCoord pos)
+    public async Task<object?> LoadData(int dataTable, ChunkCoord pos)
     {
-        var waiting = new TaskCompletionSource<ISerializable?>();
+        var waiting = new TaskCompletionSource<object?>();
         dataLoadQueue.Add((new DataKey{Tid=dataTable,Pos=pos}, waiting));
         return await waiting.Task;
     }
@@ -239,6 +239,7 @@ public class SQLInterface : IDisposable
         {
             if (playerSaveQueue.TryRemove(kvp.Key, out Player? p))
             {
+                if (p.NoSerialize()) continue;
                 savePlayerCommand.Parameters["@name"].Value = p.Name;
                 using (MemoryStream ms = new())
                 using (BinaryWriter bw = new(ms))
@@ -259,7 +260,7 @@ public class SQLInterface : IDisposable
         {
             if (dataSaveQueue.TryRemove(kvp.Key, out ISerializable? obj))
             {
-                if (obj.NoSerialize)
+                if (obj.NoSerialize())
                 {
                     //these chunks aren't ready to be saved yet as they're still generating
                     returnToSave.Add((kvp.Key,obj));
@@ -285,7 +286,7 @@ public class SQLInterface : IDisposable
         //chunk data
         while (dataLoadQueue.TryTake(out var item))
         {
-            (DataKey k, TaskCompletionSource<ISerializable?> objTcs) = item;
+            (DataKey k, TaskCompletionSource<object?> objTcs) = item;
             try
             {
                 objTcs.SetResult(loadDataFromDB(k));
@@ -311,7 +312,7 @@ public class SQLInterface : IDisposable
             }
         }
     }
-    private ISerializable? loadDataFromDB(DataKey key)
+    private object? loadDataFromDB(DataKey key)
     {
         loadDataCommand.Parameters["@x"].Value = key.Pos.X;
         loadDataCommand.Parameters["@y"].Value = key.Pos.Y;

@@ -33,7 +33,7 @@ public partial class PhysicsObject : Node3D, ISerializable
     public bool Registered;
 
     public bool Collides = true;
-    public string ObjectType = "physics_object";
+    [Export] public string ObjectType = "";
 
     protected Vector3 currentForce; //zeroed each physics update
     protected int collisionDirections; //updated each physics update, bitmask of Directions of current collision with world
@@ -204,6 +204,7 @@ public partial class PhysicsObject : Node3D, ISerializable
         GlobalPosition = postPosition;
     }
 
+    public bool NoSerialize() => string.IsNullOrEmpty(ObjectType);
     public virtual void Serialize(BinaryWriter bw)
     {
         bw.Write(ObjectType);
@@ -225,5 +226,14 @@ public partial class PhysicsObject : Node3D, ISerializable
         }
         GD.PushError("couldn't instantiate object type " + type);
         return null;
+    }
+    public static PhysicsObject?[] DeserializeArray(World world, BinaryReader br)
+    {
+        PhysicsObject?[] arr = new PhysicsObject[br.ReadInt32()];
+        for (int i = 0; i < arr.Length; i++)
+        {
+            arr[i] = Deserialize<PhysicsObject>(world, br);
+        }
+        return arr;
     }
 }

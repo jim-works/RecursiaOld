@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3 uid="uid://dyc42ayat11tg"]
+[gd_scene load_steps=37 format=3 uid="uid://dyc42ayat11tg"]
 
 [ext_resource type="Script" path="res://src/world/Mesher.cs" id="1"]
 [ext_resource type="Texture2D" uid="uid://678tt83wlmqe" path="res://textures/tileset.png" id="2_gf4u7"]
@@ -22,9 +22,12 @@
 [ext_resource type="Script" path="res://src/ui/FollowMouse.gd" id="18"]
 [ext_resource type="Script" path="res://src/ui/RecipeListUI.cs" id="19"]
 [ext_resource type="PackedScene" path="res://objects/CraftingRecipeUI.tscn" id="20"]
+[ext_resource type="PackedScene" uid="uid://dmhs78phwv078" path="res://objects/enemies/Marp.tscn" id="20_7356c"]
 [ext_resource type="Texture2D" uid="uid://cm5wkgqfxe6nt" path="res://textures/tracking_bullet.png" id="21"]
 [ext_resource type="Theme" uid="uid://cmjgio7pj8b06" path="res://themes/gametheme.tres" id="21_k7nsf"]
+[ext_resource type="PackedScene" uid="uid://cy26yr1s0mn6t" path="res://objects/enemies/Chain.tscn" id="21_xo1up"]
 [ext_resource type="Texture2D" uid="uid://du7h2h005hxt8" path="res://textures/explosive_bullet.png" id="22"]
+[ext_resource type="PackedScene" uid="uid://llfdmq65svp2" path="res://objects/enemies/PatrickQuack.tscn" id="22_416mu"]
 [ext_resource type="Texture2D" uid="uid://c1lnml1sb02dy" path="res://textures/shotgun.png" id="23"]
 [ext_resource type="Script" path="res://src/ui/CoordinateTextUI.cs" id="25"]
 [ext_resource type="AudioStream" uid="uid://ca22jlvlqy58i" path="res://sounds/marprod.wav" id="26"]
@@ -62,8 +65,8 @@ CursedIdolSound = ExtResource("28")
 
 [node name="EntityLoader" type="Node" parent="."]
 script = ExtResource("16_v6ely")
-ObjectScenes = Array[PackedScene]([ExtResource("17_18wex")])
-ObjectTypeNames = PackedStringArray("player")
+ObjectScenes = Array[PackedScene]([ExtResource("17_18wex"), ExtResource("20_7356c"), ExtResource("21_xo1up"), ExtResource("22_416mu")])
+ObjectTypeNames = PackedStringArray("player", "marp", "chain", "patrick_quack")
 
 [node name="Settings" type="Node" parent="."]
 script = ExtResource("8")

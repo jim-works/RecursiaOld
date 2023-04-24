@@ -52,45 +52,45 @@ RFootBottom = NodePath("metarig/Skeleton3D/RFootBottom")
 InitialTeamName = "enemy"
 InitialHealth = 20.0
 InvincibilitySeconds = 0.1
-ContactDamage = 0.0
 Size = Vector3(4, 3, 4)
+ObjectType = "marp"
 
 [node name="metarig" parent="." index="0"]
 transform = Transform3D(5, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0)
 
 [node name="Skeleton3D" parent="metarig" index="0"]
-bones/0/position = Vector3(0, 1.01074, -0.000100541)
+bones/0/position = Vector3(0, 1.01153, -7.93158e-05)
 bones/2/rotation = Quaternion(0.0144944, 1.19197e-07, 1.72787e-09, -0.999895)
-bones/4/rotation = Quaternion(-0.518007, 0.375406, -0.474978, 0.604264)
-bones/5/rotation = Quaternion(0.000769518, 0.19434, -0.00380052, 0.980927)
-bones/6/rotation = Quaternion(-0.00192008, -0.022848, 0.00449698, 0.999727)
-bones/8/rotation = Quaternion(-0.608247, -0.478615, 0.369728, 0.514067)
-bones/9/rotation = Quaternion(0.00146584, -0.194916, 0.00201204, 0.980817)
-bones/10/rotation = Quaternion(-0.00373784, 0.0226973, -0.00222203, 0.999733)
-bones/15/rotation = Quaternion(0.998716, 0.00188601, 0.00203685, 0.0505779)
+bones/4/rotation = Quaternion(-0.582993, 0.464314, -0.388259, 0.542021)
+bones/5/rotation = Quaternion(0.00111764, 0.195238, -0.0022147, 0.980753)
+bones/6/rotation = Quaternion(-0.00357031, -0.0227042, 0.00306828, 0.999731)
+bones/8/rotation = Quaternion(-0.533843, -0.408696, 0.44378, 0.592485)
+bones/9/rotation = Quaternion(0.00142945, -0.194457, 0.00292813, 0.980906)
+bones/10/rotation = Quaternion(-0.00319695, 0.0227774, -0.00356257, 0.999729)
+bones/15/rotation = Quaternion(0.999911, 0.0046862, -0.000351661, 0.0124976)
 bones/15/scale = Vector3(1.00005, 1.00003, 1.00028)
-bones/16/rotation = Quaternion(0.35748, 0.0029182, -0.0112138, 0.933849)
+bones/16/rotation = Quaternion(0.0218192, 0.000342634, -0.00342706, 0.999756)
 bones/16/scale = Vector3(1, 0.999999, 1)
-bones/17/rotation = Quaternion(0.323253, 0.00239379, 0.0195133, 0.946108)
+bones/17/rotation = Quaternion(0.0108785, 0.000198656, 0.00630907, 0.999921)
 bones/17/scale = Vector3(1, 0.999998, 0.999997)
-bones/18/rotation = Quaternion(0.999881, -0.00409366, 0.0013915, 0.0147838)
+bones/18/rotation = Quaternion(0.997715, -0.00289306, -0.00118909, 0.0674884)
 bones/18/scale = Vector3(1.00005, 1.00003, 1.00027)
-bones/19/rotation = Quaternion(0.0286539, 5.05685e-05, 0.00397289, 0.999582)
+bones/19/rotation = Quaternion(0.383359, -0.00264873, 0.0115072, 0.923524)
 bones/19/scale = Vector3(1, 0.99997, 0.999971)
-bones/20/rotation = Quaternion(-0.0037334, 2.12783e-05, -0.00714857, 0.999968)
+bones/20/rotation = Quaternion(0.281362, -0.00227522, -0.0199565, 0.959391)
 bones/20/scale = Vector3(0.999999, 0.999961, 0.999961)
-bones/21/position = Vector3(0.208642, 0.150162, -0.262591)
-bones/22/position = Vector3(-0.208642, -3.23728e-06, 0.0149752)
-bones/23/position = Vector3(0.316259, 0.898684, 0.110539)
-bones/24/position = Vector3(-0.316259, 0.898684, -0.115196)
+bones/21/position = Vector3(0.208642, -3.23728e-06, 0.0137713)
+bones/22/position = Vector3(-0.208642, 0.14875, -0.254557)
+bones/23/position = Vector3(0.316259, 0.898684, -0.110417)
+bones/24/position = Vector3(-0.316259, 0.898684, 0.0988597)
 
 [node name="RFootBottom" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="17"]
-transform = Transform3D(1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, -3.23728e-06, 0.0149752)
+transform = Transform3D(1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.14875, -0.254557)
 bone_name = "foot.r.ik"
 bone_idx = 22
 
 [node name="LFootBottom" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="18"]
-transform = Transform3D(1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, 0.150162, -0.262591)
+transform = Transform3D(1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, 0.0137713)
 bone_name = "foot.L.ik"
 bone_idx = 21
 
