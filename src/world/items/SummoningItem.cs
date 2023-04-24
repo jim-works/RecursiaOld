@@ -4,7 +4,7 @@ namespace Recursia;
 public partial class SummoningItem : Item
 {
     [Export] public PackedScene? ToSummon;
-    [Export] public bool SetToUserTeam = false;
+    [Export] public bool SetToUserTeam;
     [Export] public bool ConsumeOnUse = true;
     [Export] public float Distance;
     //will check at most this many blocks up for an open space to summon

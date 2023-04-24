@@ -37,14 +37,23 @@ public struct ItemStack : ISerializable
     }
 
     public void Serialize(BinaryWriter bw) {
-        bw.Write(Item.TypeName);
-        Item.Serialize(bw);
-        bw.Write(Size);
+        if (IsEmpty)
+        {
+            bw.Write("");
+        }
+        else
+        {
+            bw.Write(Item.TypeName);
+            Item.Serialize(bw);
+            bw.Write(Size);
+        }
     }
     public void Deserialize(BinaryReader br)
     {
         string name = br.ReadString();
         if (string.IsNullOrEmpty(name)) {
+            Item = Item.Empty;
+            Size = 0;
             return;
         }
         int size = br.ReadInt32();

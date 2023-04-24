@@ -88,7 +88,7 @@ public partial class Player : Combatant
             } else if (key.Keycode == Key.T) {
                 Collides = !Collides;
             } else if (key.Keycode == Key.Y) {
-                TakeDamage(new Damage{Amount=1,Team=null});
+                Heal(100);
             }
         }
 

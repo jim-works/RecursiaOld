@@ -61,30 +61,30 @@ InitialHealth = 100.0
 InvincibilitySeconds = 0.0
 
 [node name="Skeleton3D" parent="metarig" index="0"]
-bones/0/position = Vector3(0, 1.02545, -8.17602e-05)
+bones/0/position = Vector3(0, 1.02229, -9.26846e-05)
 bones/2/rotation = Quaternion(0.0144944, 1.19197e-07, 1.72787e-09, -0.999895)
-bones/4/rotation = Quaternion(-0.507055, 0.361373, -0.487687, 0.611937)
-bones/5/rotation = Quaternion(0.00253829, 0.193537, -0.00349501, 0.981084)
-bones/6/rotation = Quaternion(-0.00382057, -0.0227958, 0.00381365, 0.999726)
-bones/8/rotation = Quaternion(-0.618459, -0.488044, 0.357597, 0.501444)
-bones/9/rotation = Quaternion(0.000542762, -0.19561, 0.00238043, 0.980679)
-bones/10/rotation = Quaternion(-0.00334981, 0.0227412, -0.0030203, 0.999731)
-bones/15/rotation = Quaternion(0.995813, 0.00566929, 0.000597347, -0.0912399)
+bones/4/rotation = Quaternion(-0.483708, 0.33202, -0.512008, 0.627405)
+bones/5/rotation = Quaternion(0.00304228, 0.193197, -0.00380168, 0.981148)
+bones/6/rotation = Quaternion(-0.00364136, -0.0228058, 0.00402196, 0.999725)
+bones/8/rotation = Quaternion(-0.638353, -0.506656, 0.332, 0.474954)
+bones/9/rotation = Quaternion(0.000708565, -0.195503, 0.00231473, 0.9807)
+bones/10/rotation = Quaternion(-0.00342027, 0.0227345, -0.00287189, 0.999732)
+bones/15/rotation = Quaternion(0.990518, 0.00551617, 0.000759034, -0.137269)
 bones/15/scale = Vector3(1.00005, 1.00003, 1.00028)
-bones/16/rotation = Quaternion(-0.000706992, 0.000654786, -0.000758209, 0.999999)
+bones/16/rotation = Quaternion(-0.000816833, 0.000747069, -0.000641554, 0.999999)
 bones/16/scale = Vector3(1, 0.999999, 1)
-bones/17/rotation = Quaternion(0.00257473, 0.000465669, 0.00103899, 0.999996)
+bones/17/rotation = Quaternion(0.00237438, 0.000571467, 0.000702646, 0.999997)
 bones/17/scale = Vector3(1, 0.999998, 0.999997)
-bones/18/rotation = Quaternion(0.95084, 0.000326477, -0.00204868, 0.309674)
+bones/18/rotation = Quaternion(0.966995, -0.000798114, -0.00122974, 0.254793)
 bones/18/scale = Vector3(1.00005, 1.00003, 1.00027)
-bones/19/rotation = Quaternion(0.418025, -0.00438597, 0.0226524, 0.908143)
+bones/19/rotation = Quaternion(0.251998, -0.00337938, 0.0222715, 0.967466)
 bones/19/scale = Vector3(1, 0.99997, 0.999971)
-bones/20/rotation = Quaternion(0.264852, -0.00372927, -0.0402584, 0.963441)
+bones/20/rotation = Quaternion(0.132501, -0.0027966, -0.0464263, 0.990091)
 bones/20/scale = Vector3(0.999999, 0.999961, 0.999961)
-bones/21/position = Vector3(0.208642, -3.23728e-06, -0.125244)
-bones/22/position = Vector3(-0.208642, 0.127611, 0.0420229)
-bones/23/position = Vector3(0.316259, 0.898684, 0.149904)
-bones/24/position = Vector3(-0.316259, 0.898684, -0.153331)
+bones/21/position = Vector3(0.208642, -3.23728e-06, -0.199189)
+bones/22/position = Vector3(-0.208642, 0.070323, 0.140967)
+bones/23/position = Vector3(0.316259, 0.898684, 0.223739)
+bones/24/position = Vector3(-0.316259, 0.898684, -0.224861)
 
 [node name="Head" parent="metarig/Skeleton3D" index="0"]
 surface_material_override/0 = ExtResource("8_mlgon")
@@ -138,7 +138,7 @@ surface_material_override/0 = ExtResource("8_mlgon")
 surface_material_override/0 = ExtResource("8_mlgon")
 
 [node name="RFootBottom" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="17"]
-transform = Transform3D(1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.127611, 0.0420229)
+transform = Transform3D(1, 0, -1.50996e-07, -1.50996e-07, 0, -1, 0, 1, 0, -0.208642, 0.070323, 0.140967)
 bone_name = "foot.r.ik"
 bone_idx = 22
 script = ExtResource("1")
@@ -149,7 +149,7 @@ ColliderOffset = Vector3(0, 0.1, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="LFootBottom" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="18"]
-transform = Transform3D(1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, -0.125244)
+transform = Transform3D(1, 0, 1.50996e-07, 1.50996e-07, 0, -1, 0, 1, 0, 0.208642, -3.23728e-06, -0.199189)
 bone_name = "foot.L.ik"
 bone_idx = 21
 script = ExtResource("1")
@@ -160,7 +160,7 @@ ColliderOffset = Vector3(0, 0.1, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="RHandHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="19"]
-transform = Transform3D(-0.993154, 0, 0.116812, 0.116812, 0, 0.993154, 0, 1, 0, -0.316259, 0.898684, -0.153331)
+transform = Transform3D(-0.993154, 0, 0.116812, 0.116812, 0, 0.993154, 0, 1, 0, -0.316259, 0.898684, -0.224861)
 bone_name = "hand.R.ik"
 bone_idx = 24
 script = ExtResource("1")
@@ -171,7 +171,7 @@ ColliderOffset = Vector3(0, 0.1, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="LHandHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="20"]
-transform = Transform3D(-0.993154, 0, -0.116812, -0.116812, 0, 0.993154, 0, 1, 0, 0.316259, 0.898684, 0.149904)
+transform = Transform3D(-0.993154, 0, -0.116812, -0.116812, 0, 0.993154, 0, 1, 0, 0.316259, 0.898684, 0.223739)
 bone_name = "hand.L.ik"
 bone_idx = 23
 script = ExtResource("1")
@@ -182,7 +182,7 @@ ColliderOffset = Vector3(0, 0.1, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="LElbowHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="21"]
-transform = Transform3D(-0.995656, 0.00913724, -0.0926504, -0.0306997, -0.971733, 0.234079, -0.0878925, 0.235907, 0.967793, 0.310845, 1.35664, 0.0392686)
+transform = Transform3D(-0.995556, 0.00862874, -0.0937714, -0.0388437, -0.944756, 0.325464, -0.0857827, 0.32766, 0.940893, 0.310848, 1.36067, 0.0642431)
 bone_name = "forearm.L"
 bone_idx = 5
 script = ExtResource("1")
@@ -192,7 +192,7 @@ Size = Vector3(15, 45, 15)
 Gravity = Vector3(0, 0, 0)
 
 [node name="RElbowHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="22"]
-transform = Transform3D(-0.961241, -0.0143639, 0.275336, -0.0539007, -0.969582, -0.238758, 0.27039, -0.244345, 0.931228, -0.308543, 1.35765, -0.0365306)
+transform = Transform3D(-0.962154, -0.0141623, 0.272136, -0.0774349, -0.943272, -0.322865, 0.261271, -0.331719, 0.906477, -0.308458, 1.36178, -0.0606434)
 bone_name = "forearm.R"
 bone_idx = 9
 script = ExtResource("1")
@@ -202,7 +202,7 @@ Size = Vector3(15, 45, 15)
 Gravity = Vector3(0, 0, 0)
 
 [node name="LThighHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="23"]
-transform = Transform3D(0.99998, 0.0114004, 0.000155201, 0.0112355, -0.987609, 0.156741, 0.00193969, -0.15669, -0.987919, 0.199823, 0.77436, -0.00238052)
+transform = Transform3D(0.999983, 0.0111364, -1.07292e-05, 0.010793, -0.968873, 0.247492, 0.00274507, -0.247415, -0.969174, 0.199823, 0.771209, -0.00239145)
 bone_name = "thigh.L"
 bone_idx = 15
 script = ExtResource("1")
@@ -213,7 +213,7 @@ ColliderOffset = Vector3(0, -0.1, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="RThighHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="24"]
-transform = Transform3D(1.00004, 0.00188975, -0.00369475, -0.000751869, -0.793012, -0.609399, -0.00408056, 0.609246, -0.7932, -0.199823, 0.77436, -0.00238049)
+transform = Transform3D(1.00004, -0.00091691, -0.00278578, -0.00221966, -0.857391, -0.514839, -0.00191595, 0.514716, -0.857601, -0.199823, 0.771209, -0.00239141)
 bone_name = "thigh.R"
 bone_idx = 18
 script = ExtResource("1")
@@ -224,7 +224,7 @@ ColliderOffset = Vector3(0, -0.1, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="LKneeHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="25"]
-transform = Transform3D(0.999961, 0.0129156, 0.00148193, 0.0125289, -0.987811, 0.15536, 0.00347013, -0.155289, -0.988136, 0.203448, 0.460295, -0.0522088)
+transform = Transform3D(0.999967, 0.0124183, 0.00150261, 0.0116678, -0.969261, 0.245925, 0.00450989, -0.245826, -0.969572, 0.203364, 0.463102, -0.0810708)
 bone_name = "shin.L"
 bone_idx = 16
 script = ExtResource("1")
@@ -234,7 +234,7 @@ Size = Vector3(15, 45, 15)
 Gravity = Vector3(0, 0, 0)
 
 [node name="RKneeHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="26"]
-transform = Transform3D(0.998945, -0.0463876, 0.0071341, -0.0468661, -0.977553, 0.205843, -0.00258471, -0.206197, -0.978663, -0.199222, 0.522178, 0.191363)
+transform = Transform3D(0.99894, -0.0469549, 0.00270129, -0.0468507, -0.998475, -0.0312584, 0.00415632, 0.030883, -0.999693, -0.200114, 0.498554, 0.161291)
 bone_name = "shin.R"
 bone_idx = 19
 script = ExtResource("1")
@@ -244,7 +244,7 @@ Size = Vector3(15, 45, 15)
 Gravity = Vector3(0, 0, 0)
 
 [node name="RShoulderHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="27"]
-transform = Transform3D(-0.993234, -0.0191971, -0.11453, 0.0465591, -0.969334, -0.241296, -0.106385, -0.244996, 0.96367, -0.303266, 1.62409, 0.030811)
+transform = Transform3D(-0.992878, -0.0188883, -0.117624, 0.0568334, -0.94285, -0.328334, -0.1047, -0.332681, 0.937209, -0.303266, 1.62094, 0.0308001)
 bone_name = "upper_arm.R"
 bone_idx = 8
 script = ExtResource("1")
@@ -254,7 +254,7 @@ Size = Vector3(10, 10, 10)
 Gravity = Vector3(0, 0, 0)
 
 [node name="LShoulderHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="28"]
-transform = Transform3D(-0.956155, 0.0155735, 0.292445, 0.0528699, -0.972999, 0.224674, 0.288047, 0.230285, 0.929515, 0.306565, 1.62409, -0.0240294)
+transform = Transform3D(-0.956682, 0.0155825, 0.290716, 0.0792773, -0.946889, 0.311637, 0.280132, 0.321185, 0.904636, 0.306565, 1.62094, -0.0240404)
 bone_name = "upper_arm.L"
 bone_idx = 4
 script = ExtResource("1")
@@ -264,7 +264,7 @@ Size = Vector3(10, 10, 10)
 Gravity = Vector3(0, 0, 0)
 
 [node name="HeadHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="29"]
-transform = Transform3D(1, 1.33227e-15, -5.68434e-14, -4.44089e-16, 1, 5.58794e-09, 7.10543e-14, -3.72529e-09, 1, -1.55431e-15, 1.83192, -0.00737266)
+transform = Transform3D(1, 1.33227e-15, -5.68434e-14, -4.44089e-16, 1, 5.58794e-09, 7.10543e-14, -3.72529e-09, 1, -1.55431e-15, 1.82877, -0.00738358)
 bone_name = "spine.006"
 bone_idx = 2
 script = ExtResource("1")
@@ -275,7 +275,7 @@ ColliderOffset = Vector3(0, 0.1, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="ShoulderHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="30"]
-transform = Transform3D(1, 0, 2.38419e-07, 6.91075e-09, 0.99958, -0.0289858, -2.38318e-07, 0.0289858, 0.99958, 0, 1.69295, -0.0114024)
+transform = Transform3D(1, 0, 2.38419e-07, 6.91075e-09, 0.99958, -0.0289858, -2.38318e-07, 0.0289858, 0.99958, 0, 1.6898, -0.0114134)
 bone_name = "spine.004"
 bone_idx = 1
 script = ExtResource("1")
@@ -286,7 +286,7 @@ ColliderOffset = Vector3(0, -0.05, 0)
 Gravity = Vector3(0, 0, 0)
 
 [node name="TorsoHitbox" type="BoneAttachment3D" parent="metarig/Skeleton3D" index="31"]
-transform = Transform3D(1, 0, 0, 0, 0.999678, 0.025389, 0, -0.025389, 0.999678, 0, 1.02545, -8.17602e-05)
+transform = Transform3D(1, 0, 0, 0, 0.999678, 0.025389, 0, -0.025389, 0.999678, 0, 1.02229, -9.26846e-05)
 bone_name = "spine"
 bone_idx = 0
 script = ExtResource("1")
