@@ -1,35 +1,49 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Recursia;
 public static class ItemTypes
 {
-    private static readonly Dictionary<string, Item> items = new();
-    public static bool TryGet(string itemName, [MaybeNullWhen(false)] out Item item) => items.TryGetValue(itemName, out item);
+    private static readonly Dictionary<string, Func<Item>> items = new();
+    private static readonly Dictionary<string, BlockFactoryItem> blockFactoryItemCache = new();
 
-    //looks up <blockName> then creates an item that places that block
-    public static bool TryGetBlockItem(string blockName, [MaybeNullWhen(false)] out BlockFactoryItem f, float reach = 10)
+    static ItemTypes()
     {
-        if (BlockTypes.TryGet(blockName, out Block? b))
-        {
-            f = new BlockFactoryItem($"blockFactoryItem:{blockName}", blockName, reach) {
-                DisplayName = blockName,
-                Texture2D = b.ItemTexture
-            };
+        CreateType("blockFactoryItem", () => new BlockFactoryItem("blockFactoryItem"));
+        CreateType("blockItem", () => new BlockItem("blockItem"));
+    }
+    public static bool TryGet(string itemName, [MaybeNullWhen(false)] out Item item) {
+        if (items.TryGetValue(itemName, out Func<Item>? i)) {
+            item = i();
             return true;
         }
-        f = null;
+        item = null;
         return false;
     }
-
-    //creates an item that will place <block>
-    //should only be used for picking up blocks with data you want to keep
-    //the string overload will automatically create a factory/use the cached block pointer as required
-    public static BlockItem GetBlockItem(Block b) => new($"blockItem:{b.Name}", b.Name, b)
+    public static BlockFactoryItem? GetBlockFactoryItem(string factoryName)
     {
-        Placing = b,
-        Texture2D = b.ItemTexture
-    };
+        if (blockFactoryItemCache.TryGetValue(factoryName, out BlockFactoryItem? fact)) return fact;
+        //first time this is being used, must create new factory
+        if (TryGet("blockFactoryItem", out Item? item))
+        {
+            BlockFactoryItem blockFact = (BlockFactoryItem)item;
+            blockFact.FactoryName = factoryName;
+            blockFactoryItemCache[factoryName] = blockFact;
+            return blockFact;
+        }
+        return null;
+    }
+    public static BlockItem? GetBlockItem(Block b)
+    {
+        if (TryGet("blockItem", out Item? item))
+        {
+            BlockItem blockItem = (BlockItem)item;
+            blockItem.Placing = b;
+            return blockItem;
+        }
+        return null;
+    }
 
     public static void CreateType(string name, Item item) {
         if (items.ContainsKey(name)) {
@@ -41,6 +55,13 @@ public static class ItemTypes
             Godot.GD.PushError($"requested to create item with type {name} does not match actual item's TypeName {item.TypeName}");
             return;
         }
+        items[name] = () => item;
+    }
+        public static void CreateType(string name, Func<Item> item) {
+        if (items.ContainsKey(name)) {
+            Godot.GD.PushWarning($"Item {name} already exists, replacing!");
+        }
+        Godot.GD.Print($"Created item type {name}");
         items[name] = item;
     }
 }

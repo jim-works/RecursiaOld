@@ -15,6 +15,23 @@ public class EntityCollection
     public EntityCollection(World world)
     {
         this.world = world;
+        world.Chunks.OnChunkUnload += onChunkUnload;
+    }
+
+    private void onChunkUnload(Chunk chunk, ChunkBuffer? _)
+    {
+        if (physicsObjects.TryGetValue(chunk.Position, out List<PhysicsObject>? objects))
+        {
+            //in unloaded chunk, so remove all from scene
+            foreach (var obj in objects)
+            {
+                obj.OnCrossChunkBoundary -= physicsObjectCrossChunkBoundary;
+                obj.OnExitTree -= RemoveObject;
+                obj.QueueFree();
+            }
+        }
+        physicsObjects.Remove(chunk.Position);
+        combatants.Remove(chunk.Position);
     }
 
     private void physicsObjectCrossChunkBoundary(PhysicsObject p, ChunkCoord oldChunk)
@@ -76,7 +93,6 @@ public class EntityCollection
     //if will handle registering if T : PhysicsObject/Combatant
     public T SpawnObject<T>(PackedScene prefab, Vector3 position, System.Action<T>? init=null) where T : Node3D
     {
-        GD.Print($"Spawning object at {position}");
         T obj = prefab.Instantiate<T>();
         var c = obj as PhysicsObject;
         if (c != null)
@@ -94,6 +110,8 @@ public class EntityCollection
     public void RemoveObject(PhysicsObject p)
     {
         removePhysicsObject(p, (ChunkCoord)p.GlobalPosition);
+        p.OnCrossChunkBoundary -= physicsObjectCrossChunkBoundary;
+        p.OnExitTree -= RemoveObject;
     }
 
     //will not register an object twice

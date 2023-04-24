@@ -27,13 +27,30 @@ public static class BlockLoader
         createBasic("water", standard, 0,2,transparent:true);
         createBasic("glass", standard, 3,2,transparent:true);
         createBasic("cherry_blossom_leaves", standard, 5,2);
-        createBasic("cherry_blossom_leaves2", standard, 5,1);
-        createFactory("loot", standard, new int[]{2,2,2,2,2,2}, new int[]{1,2,1,1,2,1}, (n,i,t) => {
-            return new LootBlock(n, i, t, System.Array.Empty<ItemStack>())
+        createBasic("cherry_blossom_leaves2", standard, 5, 1);
+    }
+    public static void LoadAfterItems()
+    {
+        TextureAtlas standard = new()
+        {
+            CellSize=8,
+            TexWidth=256,
+            TexHeight=256
+        };
+        if (ItemTypes.TryGet("marp_rod", out Item? lootItem))
+        {
+            createFactory("loot.patrick", standard, new int[] { 2, 2, 2, 2, 2, 2 }, new int[] { 1, 2, 1, 1, 2, 1 }, (n, i, t) =>
             {
-                Usable = true
-            };
-        });
+                return new LootBlock(n, i, t, new ItemStack[] { new ItemStack() { Item = lootItem, Size = 7 } })
+                {
+                    Usable = true
+                };
+            });
+        }
+        else
+        {
+            GD.PushError("couldn't create loot block");
+        }
     }
 
     private static void createBasic(string name, TextureAtlas atlas, int x, int y, float explosionResistance=0, bool transparent=false)
@@ -44,11 +61,11 @@ public static class BlockLoader
             Transparent=transparent,
         };
         BlockTypes.CreateType(name, () => b);
-        if (ItemTypes.TryGetBlockItem(name, out BlockFactoryItem? blockItem))
+        if (ItemTypes.GetBlockFactoryItem(name) is BlockFactoryItem blockFactoryItem)
         {
             b.DropTable = new DropTable
             {
-                drop = new ItemStack { Item = blockItem, Size = 1 }
+                drop = new ItemStack { Item = blockFactoryItem, Size = 1 }
             };
             return;
         }
@@ -62,11 +79,11 @@ public static class BlockLoader
             ExplosionResistance=explosionResistance,
         };
         BlockTypes.CreateType(name, () => b);
-        if (ItemTypes.TryGetBlockItem(name, out BlockFactoryItem? blockItem))
+        if (ItemTypes.GetBlockFactoryItem(name) is BlockFactoryItem blockFactoryItem)
         {
             b.DropTable = new DropTable
             {
-                drop = new ItemStack { Item = blockItem, Size = 1 }
+                drop = new ItemStack { Item = blockFactoryItem, Size = 1 }
             };
             return;
         }
@@ -81,7 +98,7 @@ public static class BlockLoader
         BlockTypes.CreateType(name, () => {
             T b = ctor(name,texInfo,itemTex);
             b.DropTable = new DropTable {
-                drop = new ItemStack{Item=ItemTypes.GetBlockItem(b), Size=1}
+                drop = new ItemStack{Item=ItemTypes.GetBlockItem(b)!, Size=1}
             };
             return b;
         });

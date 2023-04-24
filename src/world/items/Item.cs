@@ -7,19 +7,24 @@ using System.IO;
 namespace Recursia;
 public partial class Item : Resource, ISerializable
 {
-    public static readonly Item Empty = new("empty", "empty") {MaxStack = 0};
+    public static readonly Item Empty = new("empty") {MaxStack = 0};
     [Export] public string DisplayName;
     [Export] public int MaxStack = 999;
     [Export] public float Cooldown = 0;
     [Export] public Texture2D? Texture2D;
     [Export] public AudioStream? UseSound;
 
-    public string TypeName;
+    public string TypeName {get;}
 
-    public Item(string typeName, string displayname)
+    public Item(string typeName)
     {
         TypeName = typeName;
-        DisplayName = displayname;
+        DisplayName = typeName;
+    }
+    public Item(string typeName, string displayName)
+    {
+        TypeName = typeName;
+        DisplayName = displayName;
     }
 
     public virtual bool OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
@@ -28,8 +33,14 @@ public partial class Item : Resource, ISerializable
         return true;
     }
 
-    public virtual void Serialize(BinaryWriter bw) {}
-    public virtual void Deserialize(BinaryReader br){}
+    public virtual void Serialize(BinaryWriter bw)
+    {
+        bw.Write(DisplayName);
+    }
+    public virtual void Deserialize(BinaryReader br)
+    {
+        DisplayName = br.ReadString();
+    }
 
     //allows subclasses to override .Equals, keeping == and != consistent with that
     public static bool operator ==(Item? a, Item? b)

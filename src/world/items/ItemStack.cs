@@ -44,8 +44,8 @@ public struct ItemStack : ISerializable
         else
         {
             bw.Write(Item.TypeName);
-            Item.Serialize(bw);
             bw.Write(Size);
+            Item.Serialize(bw);
         }
     }
     public void Deserialize(BinaryReader br)
@@ -57,11 +57,20 @@ public struct ItemStack : ISerializable
             return;
         }
         int size = br.ReadInt32();
+        if (size <= 0)
+        {
+            Clear();
+            return;
+        }
         if (ItemTypes.TryGet(name, out Item? item))
         {
             item.Deserialize(br);
             Item = item;
             Size = size;
+        }
+        else
+        {
+            Godot.GD.PushWarning($"Unknown item: {name}");
         }
     }
 }

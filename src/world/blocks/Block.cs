@@ -27,7 +27,10 @@ public class Block : ISerializable
     public virtual void OnUnload(BlockCoord pos, Chunk c) {}
 
     //only need to override if block contains instance data
-    public virtual void Serialize(BinaryWriter bw) {}
+    public virtual void Serialize(BinaryWriter bw)
+    {
+        bw.Write(Name);
+    }
     public virtual void Deserialize(BinaryReader br) {}
 
     //allows subclasses to override .Equals, keeping == and != consistent with that

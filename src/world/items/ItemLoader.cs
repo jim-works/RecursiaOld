@@ -63,6 +63,7 @@ public partial class ItemLoader : Node
             UseSound = CursedIdolSound,
         });
 
+        BlockLoader.LoadAfterItems();
         RecipeLoader.Load();
     }
 }

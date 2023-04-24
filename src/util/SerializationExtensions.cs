@@ -25,7 +25,7 @@ public static class SerializationExtensions
         {
             //this case doesn't need to exist, but should be faster than the other
             bw.Write(Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE*Chunk.CHUNK_SIZE);
-            bw.Write(0);
+            SerializeBlock(bw,null);
         }
         else
         {
@@ -47,16 +47,7 @@ public static class SerializationExtensions
                             continue;
                         }
                         bw.Write(run);
-                        if (curr == null)
-                        {
-                            bw.Write(0);
-                        }
-                        else
-                        {
-                            bw.Write(1);
-                            bw.Write(curr.Name);
-                            curr.Serialize(bw);
-                        }
+                        SerializeBlock(bw, curr);
                         run = 1;
                         curr = b;
                     }
@@ -64,16 +55,7 @@ public static class SerializationExtensions
             }
 
             bw.Write(run);
-            if (curr == null)
-            {
-                bw.Write(0);
-            }
-            else
-            {
-                bw.Write(1);
-                bw.Write(curr.Name);
-                curr.Serialize(bw);
-            }
+            SerializeBlock(bw, curr);
         }
     }
 
@@ -92,24 +74,14 @@ public static class SerializationExtensions
                     if (run == 0)
                     {
                         run = br.ReadInt32();
-                        bool nullBlock = br.ReadInt32() == 0;
-                        if (nullBlock)
+                        try
                         {
-                            read = null;
+                            read = DeserializeBlock(br);
                         }
-                        else
+                        catch (Exception e)
                         {
-                            string blockName = br.ReadString();
-                            try
-                            {
-                                BlockTypes.TryGet(blockName, out read);
-                                read!.Deserialize(br);
-                            }
-                            catch (Exception e)
-                            {
-                                GD.PushError($"Error deserializing block {blockName} at {x} {y} {z}: {e}");
-                                read = null;
-                            }
+                            GD.PushError($"Error deserializing block {read?.Name ?? "null"} at {x} {y} {z}: {e}");
+                            read = null;
                         }
                     }
                     b[x, y, z] = read;
@@ -118,6 +90,31 @@ public static class SerializationExtensions
             }
         }
         return b;
+    }
+    public static Block? DeserializeBlock(BinaryReader br)
+    {
+        byte val = br.ReadByte();
+        if (val == 0) return null;
+        string blockName = br.ReadString();
+        if(BlockTypes.TryGet(blockName, out Block? b))
+        {
+            b.Deserialize(br);
+        }
+        else
+        {
+            GD.PushWarning($"Couldn't get block type: {blockName}");
+        }
+        return b;
+    }
+    public static void SerializeBlock(BinaryWriter bw, Block? b)
+    {
+        if (b == null)
+        {
+            bw.Write((byte)0);
+            return;
+        }
+        bw.Write((byte)1);
+        b.Serialize(bw);
     }
 
     public static void Serialize<T>(this T[] arr, BinaryWriter bw) where T : ISerializable

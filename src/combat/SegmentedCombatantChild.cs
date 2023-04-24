@@ -6,6 +6,8 @@ public partial class SegmentedCombatantChild : Combatant
     [Export] public NodePath? ParentPath;
     public Combatant? Parent;
 
+    public bool NoSerialize = true;
+
     public override void _EnterTree()
     {
         //get world pointer from Parent

@@ -21,10 +21,12 @@ public class LootBlock : Block
 
     public override void Serialize(BinaryWriter bw)
     {
+        base.Serialize(bw);
         Drops.Serialize(bw);
     }
     public override void Deserialize(BinaryReader br)
     {
+        base.Deserialize(br);
         Drops = SerializationExtensions.DeserializeArray<ItemStack>(br);
     }
 }

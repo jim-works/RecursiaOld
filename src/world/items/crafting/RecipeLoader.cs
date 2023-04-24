@@ -6,8 +6,8 @@ public static class RecipeLoader
     public static void Load()
     {
         //temporary, idc about null
-        ItemTypes.TryGetBlockItem("dirt", out var dirt);
-        ItemTypes.TryGetBlockItem("stone", out var stone);
+        var dirt = ItemTypes.GetBlockFactoryItem("dirt");
+        var stone = ItemTypes.GetBlockFactoryItem("stone");
         ItemTypes.TryGet("gun", out var gun);
         ItemTypes.TryGet("explosive_bullet", out var explosive_bullet);
         ItemTypes.TryGet("shotgun", out var shotgun);

@@ -1,15 +1,21 @@
+using System.IO;
 using Godot;
 
 namespace Recursia;
 public partial class BlockItem : Item
 {
-    public Block Placing;
+    public Block? Placing {
+        get => _placing;
+        set {
+            _placing = value;
+            DisplayName = value == null ? "Empty Block" : $"{value.Name} Block";
+            if (value != null) Texture2D = value.ItemTexture;
+        }
+    }
+    private Block? _placing;
     [Export] public float Reach = 10;
 
-    public BlockItem(string typeName, string displayname, Block placing) : base(typeName, displayname)
-    {
-        Placing = placing;
-    }
+    public BlockItem(string typeName) : base(typeName) {}
 
     public override bool OnUse(Combatant user, Vector3 position, Vector3 dir, ref ItemStack source)
     {
@@ -23,6 +29,16 @@ public partial class BlockItem : Item
         return false;
     }
 
+    public override void Serialize(BinaryWriter bw)
+    {
+        base.Serialize(bw);
+        SerializationExtensions.SerializeBlock(bw, Placing);
+    }
+    public override void Deserialize(BinaryReader br)
+    {
+        base.Deserialize(br);
+        Placing = SerializationExtensions.DeserializeBlock(br);
+    }
     public override bool Equals(object? obj)
     {
         return obj is BlockItem other && other.Placing == Placing && other.Reach == Reach;
@@ -31,7 +47,7 @@ public partial class BlockItem : Item
     public override int GetHashCode()
     {
         unchecked {
-            return Placing.GetHashCode()^Reach.GetHashCode();
+            return (Placing?.GetHashCode() ?? 0)^Reach.GetHashCode();
         }
     }
 }

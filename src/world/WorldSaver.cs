@@ -71,7 +71,7 @@ public partial class WorldSaver : Node
 
     public override void _ExitTree()
     {
-        //Save(world!);
+        Save(world!);
         sql!.Close();
     }
 

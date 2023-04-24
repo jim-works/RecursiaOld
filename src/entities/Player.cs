@@ -23,29 +23,18 @@ public partial class Player : Combatant
         //temporary, so idc about nullable
         if (Inventory == null)
         {
-            Inventory = new Inventory(InitialInventorySize);
-            ItemTypes.TryGet("gun", out Item? gun);
-            ItemTypes.TryGet("marp_rod", out Item? marp_rod);
-            ItemTypes.TryGet("explosive_bullet", out Item? explosive_bullet);
-            ItemTypes.TryGet("cursed_idol", out Item? cursed_idol);
-            Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
-            Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
-            Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
-            Inventory.CopyItem(new ItemStack { Item = explosive_bullet!, Size = 100 });
-            if (ItemTypes.TryGetBlockItem("loot", out BlockFactoryItem? lootBlockItem))
+             Inventory = new Inventory(InitialInventorySize);
+            //ItemTypes.TryGet("gun", out Item? gun);
+            // ItemTypes.TryGet("marp_rod", out Item? marp_rod);
+            // ItemTypes.TryGet("explosive_bullet", out Item? explosive_bullet);
+            // ItemTypes.TryGet("cursed_idol", out Item? cursed_idol);
+            // Inventory.CopyItem(new ItemStack { Item = gun!, Size = 1 });
+            // Inventory.CopyItem(new ItemStack { Item = marp_rod!, Size = 100 });
+            // Inventory.CopyItem(new ItemStack { Item = cursed_idol!, Size = 3 });
+            // Inventory.CopyItem(new ItemStack { Item = explosive_bullet!, Size = 100 });
+            if (ItemTypes.GetBlockFactoryItem("loot.patrick") is BlockFactoryItem lootBlockItem)
             {
-                lootBlockItem.InitPlaced = (Block block) =>
-                {
-                    if (block is LootBlock b)
-                    {
-                        b.Drops = new ItemStack[] { new ItemStack { Item = marp_rod!, Size = 1 } };
-                    }
-                    else
-                    {
-                        GD.PushError("Initplaced passed a block which is not a loot block!");
-                    }
-                };
-                Inventory.CopyItem(new ItemStack { Item = lootBlockItem, Size = 1 });
+                Inventory.CopyItem(new ItemStack { Item = lootBlockItem, Size = 3 });
             }
         }
         World?.Loader.AddChunkLoader(this);
