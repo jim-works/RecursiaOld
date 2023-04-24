@@ -14,7 +14,7 @@ public class TreeStructureProvider : WorldStructureProvider
     private readonly Block? leaves;
     private readonly FastNoiseLite leafNoise = new();
 
-    public TreeStructureProvider() : base(new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
+    public TreeStructureProvider(uint seed) : base(seed, new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
         new WorldStructure("Tree")
         {
             Mutex = false,

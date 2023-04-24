@@ -19,8 +19,8 @@ public class WorldGenerator
     private readonly List<WorldStructureProvider> structureProviders = new();
     private readonly List<Chunk> toSend = new();
 
-    public int Seed { get; } = 1127;
-    private int currSeed;
+    public uint Seed { get; } = 1127;
+    private uint currSeed;
     private readonly World world;
 
     public WorldGenerator(World world)
@@ -36,13 +36,13 @@ public class WorldGenerator
         shapingLayers.Add(new ShapingLayer(getNextSeed));
         shapingLayers.Add(new DetailLayer());
         //chunkGenLayers.Add(initLayer(new OreLayer() {Ore=BlockTypes.Get("copper_ore"),RollsPerChunk=2,VeinProb=0.5f,StartDepth=0,MaxProbDepth=-10,VeinSize=10}));
-        structureProviders.Add(new CherryBlossomStructureProvider());
-        structureProviders.Add(new TreeStructureProvider());
-        structureProviders.Add(new SkyTreeStructureProvider());
+        structureProviders.Add(new CherryBlossomStructureProvider(getNextSeed()));
+        structureProviders.Add(new TreeStructureProvider(getNextSeed()));
+        structureProviders.Add(new SkyTreeStructureProvider(getNextSeed()));
         //structureProviders.Add(new BoxStructureProvider());
     }
 
-    private int getNextSeed()
+    private uint getNextSeed()
     {
         unchecked
         {
@@ -121,14 +121,18 @@ public class WorldGenerator
     public void GenerateStructures(Chunk chunk)
     {
         chunk.GenerationState = ChunkGenerationState.PLACING_STRUCTURES;
+        uint iteration = 0;
         foreach (var provider in structureProviders)
         {
             for (int i = 0; i < provider.RollsPerChunk; i++)
             {
-                int dx = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
-                int dy = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
-                int dz = (int)(Godot.GD.Randf() * Chunk.CHUNK_SIZE);
-                BlockCoord origin = new(System.Math.Min(dx, Chunk.CHUNK_SIZE - 1), System.Math.Min(dy, Chunk.CHUNK_SIZE - 1), System.Math.Min(dz, Chunk.CHUNK_SIZE - 1));
+                iteration++;
+                uint dx = Rng.Sample(Seed+iteration, chunk.Position) % Chunk.CHUNK_SIZE;
+                iteration++;
+                uint dy = Rng.Sample(Seed+iteration, chunk.Position) % Chunk.CHUNK_SIZE;
+                iteration++;
+                uint dz = Rng.Sample(Seed+iteration, chunk.Position) % Chunk.CHUNK_SIZE;
+                BlockCoord origin = new((int)dx,(int)dy,(int)dz);
                 if (!provider.SuitableLocation(chunk, origin)) continue;
                 WorldStructure? result = provider.PlaceStructure(world.Chunks, chunk.LocalToWorld(origin));
                 if (result != null && provider.Record)

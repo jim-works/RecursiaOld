@@ -9,8 +9,8 @@ public class ShapingLayer : IChunkGenLayer
     private const float freq = 0.1f, freqMult = 3f, scaleMult = 0.5f;
     private const int octaves = 5;
     private readonly SplineNoise densityNoise;
-    private readonly Spline continentHeightSpline = new(new Vector2[]{new Vector2(-50,-0.5f), new Vector2(25,0), new Vector2(50,0.5f), new Vector2(150,1)});
-    private readonly Spline oceanHeightSpline = new(new Vector2[]{new Vector2(-75,-0.4f), new Vector2(-25,0.7f), new Vector2(25,0.7f), new Vector2(100,1)});
+    private readonly Spline continentHeightSpline = new(new Vector2[]{new(-50,-0.5f), new(25,0), new(50,0.2f), new(250,0.7f)});
+    private readonly Spline oceanHeightSpline = new(new Vector2[]{new(-75,-0.4f), new(0,0.2f), new(25,0.2f), new(250,0.7f)});
     private readonly Spline coastBlendingSpline = new(new Vector2[]{new Vector2(-0.5f,0), new Vector2(1,1)});
 
     //reduces density for (flattens) above ground terrain. low frequency
@@ -19,7 +19,7 @@ public class ShapingLayer : IChunkGenLayer
     private readonly SplineNoise scaleNoise;
 
     //noise that can create wacky effects by multiplying the density by a high value rarely
-    private const float wackyFreq = 0.7f, wackyFreqMult = 1.5f, wackyScaleMult = 0.7f;
+    private const float wackyFreq = 0.5f, wackyFreqMult = 1.5f, wackyScaleMult = 0.8f;
     private const int wackyOctaves = 3;
     private readonly SplineNoise wackyNoise;
 
@@ -29,7 +29,7 @@ public class ShapingLayer : IChunkGenLayer
     private const int heightOctaves = 2;
     private readonly SplineNoise heightNoise;
 
-    public ShapingLayer(System.Func<int> seedFactory)
+    public ShapingLayer(System.Func<uint> seedFactory)
     {
         BlockTypes.TryGet("grass", out grass);
         BlockTypes.TryGet("stone", out stone);
@@ -44,7 +44,7 @@ public class ShapingLayer : IChunkGenLayer
 
         LayeredNoise wackyLayers = new(seedFactory());
         wackyLayers.AddSumLayers(wackyFreq, wackyFreqMult, wackyScaleMult, wackyOctaves);
-        wackyNoise = new SplineNoise(wackyLayers, new Spline(new Vector2[]{new Vector2(-1,1), new Vector2(wackyLayers.Quantile(0.9f), 1), new Vector2(1f, 3)}));
+        wackyNoise = new SplineNoise(wackyLayers, new Spline(new Vector2[]{new Vector2(-1,1), new Vector2(wackyLayers.Quantile(0.7f), 1), new Vector2(1f, 3)}));
 
         LayeredNoise heightLayers = new(seedFactory());
         heightLayers.AddSumLayers(heightFreq, heightFreqMult, heightScaleMult, heightOctaves);

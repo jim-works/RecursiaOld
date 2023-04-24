@@ -1,5 +1,5 @@
 //saves annoyance
-//#define NO_SAVING
+#define NO_SAVING
 
 using Godot;
 using System.IO;
@@ -82,7 +82,7 @@ public partial class WorldSaver : Node
     public async Task<T?> Load<T>(ChunkCoord coord, int tableId)
     {
 #if NO_SAVING
-        return null;
+        return default;
 #else
         try
         {

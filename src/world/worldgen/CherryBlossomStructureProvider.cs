@@ -15,7 +15,7 @@ public class CherryBlossomStructureProvider : WorldStructureProvider
     private readonly Block? leaves2;
     private readonly FastNoiseLite leafNoise = new();
 
-    public CherryBlossomStructureProvider() : base(new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
+    public CherryBlossomStructureProvider(uint seed) : base(seed, new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
         new WorldStructure("CherryBlossomTree")
         {
             Mutex = false,
@@ -45,7 +45,8 @@ public class CherryBlossomStructureProvider : WorldStructureProvider
                     for (int z = -LEAF_SIZE; z <= LEAF_SIZE; z++)
                     {
                         float sample = BASE_DIST + (Mathf.Abs(x) + Mathf.Abs(y) + Mathf.Abs(z)) * (1 + 0.5f * leafNoise.GetNoise(FREQ * (position.X + x), FREQ * (position.Y + y), FREQ * (position.Z + z))); //0..3*LEAF_SIZE
-                        if (sample < CUTOFF) set(new BlockCoord(x, y + TRUNK_HEIGHT, z) + position, GD.Randf() > 0.5f ? leaves : leaves2);
+                        BlockCoord leafPos = new BlockCoord(x, y + TRUNK_HEIGHT, z) + position;
+                        if (sample < CUTOFF) set(leafPos, Rng.CoinFlip(1,2,Seed,leafPos) ? leaves : leaves2);
                     }
                 }
             }

@@ -9,7 +9,7 @@ public class BoxStructureProvider : WorldStructureProvider
     private readonly Block? grass;
     private readonly FastNoiseLite leafNoise = new();
 
-    public BoxStructureProvider() : base(new BlockCoord(SIZE, SIZE, SIZE),
+    public BoxStructureProvider() : base(0, new BlockCoord(SIZE, SIZE, SIZE),
         new WorldStructure("Box")
         {
             Mutex = false,

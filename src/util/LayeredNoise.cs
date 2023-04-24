@@ -16,9 +16,9 @@ public class LayeredNoise
     public int Seed { get; }
     private float variance;
 
-    public LayeredNoise(int seed = 1337)
+    public LayeredNoise(uint seed = 1337)
     {
-        Seed = seed;
+        Seed = (int)seed;
     }
 
     public float Scale => sumNoiseMagnitude;

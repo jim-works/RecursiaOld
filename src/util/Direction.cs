@@ -18,10 +18,11 @@ public static class DirectionUtils
     public static bool MaskHas(int mask, Direction d) => ((mask>>(int)d) & 1) ==1;
     //gets each of the 4 perpendicular directions depending on the value of i (0..3)
     //if i is outside this range, it gets wrapped back in.
-    public static Direction GetPerpendicular(this Direction d, int i)
+    public static Direction GetPerpendicular(this Direction d, int i) => d.GetPerpendicular((uint)System.Math.Abs(i));
+    public static Direction GetPerpendicular(this Direction d, uint i)
     {
-        i = System.Math.Abs(i)%4;
-        int x = (1+i+(int)d)%6;
+        i %= 4;
+        uint x = (1+i+(uint)d)%6;
         return i >= 2 ? (Direction)((x+1)%6) : (Direction)x;
     }
     //get corresponding vector for direction

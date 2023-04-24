@@ -22,7 +22,7 @@ public class SkyTreeStructureProvider : WorldStructureProvider
     private readonly Block? leaves;
     private readonly FastNoiseLite leafNoise = new();
 
-    public SkyTreeStructureProvider() : base(new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
+    public SkyTreeStructureProvider(uint seed) : base(seed, new BlockCoord(LEAF_SIZE * 2 + 1, TRUNK_HEIGHT + LEAF_SIZE, LEAF_SIZE * 2 + 1),
         new WorldStructure("SkyTree")
         {
             Mutex = false,
@@ -84,8 +84,9 @@ public class SkyTreeStructureProvider : WorldStructureProvider
             {
                 branchCount++;
                 //"randomly" generate a branch perpendicular to the trunk
-                Direction branchDir = dir.GetPerpendicular((int)GD.Randi());
-                genBranch(set, branchDir, start+i*delta+thickness*branchDir.ToBlockCoord(), depth+1, trunkLengthMult*0.4f,trunkThicknessMult*0.5f,leafMult*0.35f);
+                BlockCoord middle = start+i*delta;
+                Direction branchDir = dir.GetPerpendicular(Rng.Sample(Seed,middle));
+                genBranch(set, branchDir, middle+thickness*branchDir.ToBlockCoord(), depth+1, trunkLengthMult*0.4f,trunkThicknessMult*0.5f,leafMult*0.35f);
             }
             for (int x = -thickness; x <= thickness; x++)
             {
