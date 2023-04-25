@@ -14,8 +14,6 @@ public partial class Player : Combatant
     [Export] public int JumpCount = 1;
 
     public Inventory MouseInventory = new(1);
-
-    private int SelectedSlot;
     private int jumpsLeft;
 
     public override void _Ready()
@@ -55,15 +53,10 @@ public partial class Player : Combatant
     {
         if (@event is InputEventKey key && key.Pressed)
         {
-            if (key.Keycode == Key.Key1)
+            int keycode = (int)key.Keycode;
+            if ((int)Key.Key1 <= keycode && keycode <= (int)Key.Key5)
             {
-                SelectedSlot = 0;
-                GD.Print("Selected slot 0!");
-            }
-            else if (key.Keycode == Key.Key2)
-            {
-                SelectedSlot = 1;
-                GD.Print("Selected slot 1!");
+                Inventory!.SelectedSlot = keycode-(int)Key.Key1;
             }
             else if (key.Keycode == Key.P)
             {
@@ -78,6 +71,18 @@ public partial class Player : Combatant
                 Collides = !Collides;
             } else if (key.Keycode == Key.Y) {
                 Heal(100);
+            }
+        }
+        else if (@event is InputEventMouseButton mouse && mouse.Pressed)
+        {
+            if (mouse.ButtonIndex == MouseButton.WheelDown)
+            {
+                Inventory!.SelectedSlot = (Inventory!.SelectedSlot+1)%InventoryUI.HotbarSlots;
+            }
+            else if (mouse.ButtonIndex == MouseButton.WheelUp)
+            {
+                //-1 in modular arithmetic, stay positive
+                Inventory!.SelectedSlot = (Inventory!.SelectedSlot+InventoryUI.HotbarSlots-1)%InventoryUI.HotbarSlots;
             }
         }
 
@@ -132,7 +137,7 @@ public partial class Player : Combatant
         }
         else
         {
-            UseItem(SelectedSlot, GlobalPosition + CameraOffset, dir);
+            UseItem(Inventory!.SelectedSlot, GlobalPosition + CameraOffset, dir);
         }
     }
 

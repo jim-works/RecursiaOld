@@ -1,5 +1,5 @@
 //saves annoyance
-//#define NO_SAVING
+#define NO_SAVING
 
 using Godot;
 using System.IO;

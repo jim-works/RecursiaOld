@@ -6,6 +6,8 @@ public class Inventory : ISerializable
 {
     public ItemStack[] Items;
     public int Size {get => Items.Length;}
+    public int SelectedSlot {get => _selectedSlot; set {_selectedSlot = value; TriggerUpdate();}}
+    private int _selectedSlot;
     public event System.Action<Inventory>? OnUpdate;
 
     public Inventory(int slots)

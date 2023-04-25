@@ -12,8 +12,10 @@ script = ExtResource("2")
 
 [node name="ItemTex" type="TextureRect" parent="."]
 layout_mode = 0
-offset_right = 64.0
-offset_bottom = 64.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 48.0
+offset_bottom = 48.0
 mouse_filter = 2
 expand_mode = 1
 

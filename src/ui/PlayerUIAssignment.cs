@@ -5,6 +5,7 @@ public partial class PlayerUIAssignment : Node
 {
     [Export] public NodePath? HealthBar;
     [Export] public NodePath? Inventory;
+    [Export] public NodePath? HotBar;
     [Export] public NodePath? MouseInventory;
     [Export] public NodePath? RecipeList;
     [Export] public NodePath? CoordinateText;
@@ -20,6 +21,7 @@ public partial class PlayerUIAssignment : Node
     {
         GetNode<HealthBar>(HealthBar).Tracking = player;
         GetNode<InventoryUI>(Inventory).TrackInventory(player.Inventory!);
+        GetNode<InventoryUI>(HotBar).TrackInventory(player.Inventory!);
         GetNode<InventoryUI>(MouseInventory).TrackInventory(player.MouseInventory);
         GetNode<RecipeListUI>(RecipeList).DisplayList(RecpieList.Search(""));
         GetNode<CoordinateTextUI>(CoordinateText).Tracking = player;

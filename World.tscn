@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=3 uid="uid://dyc42ayat11tg"]
+[gd_scene load_steps=38 format=3 uid="uid://dyc42ayat11tg"]
 
 [ext_resource type="Script" path="res://src/world/Mesher.cs" id="1"]
 [ext_resource type="Texture2D" uid="uid://678tt83wlmqe" path="res://textures/tileset.png" id="2_gf4u7"]
@@ -35,6 +35,7 @@
 [ext_resource type="AudioStream" uid="uid://d0govxdavin7y" path="res://sounds/summon.wav" id="28"]
 [ext_resource type="Script" path="res://src/ui/BossUI.cs" id="28_utktg"]
 [ext_resource type="AudioStream" uid="uid://bnfk403lewvry" path="res://sounds/pistol.wav" id="29"]
+[ext_resource type="Texture2D" uid="uid://c8bblokrmm237" path="res://textures/selection.png" id="29_e7xye"]
 [ext_resource type="Script" path="res://DebugInfoLabel.cs" id="32_wwron"]
 
 [node name="World" type="Node3D"]
@@ -93,6 +94,7 @@ theme = ExtResource("21_k7nsf")
 script = ExtResource("13")
 HealthBar = NodePath("HealthBar")
 Inventory = NodePath("InventoryUI")
+HotBar = NodePath("HotbarUI")
 MouseInventory = NodePath("FollowMouse/MouseInventoryUI")
 RecipeList = NodePath("ScrollContainer/RecipeList")
 CoordinateText = NodePath("DebugArea/CoordinateLabel")
@@ -115,6 +117,29 @@ offset_left = -200.0
 offset_top = -200.0
 offset_right = 200.0
 offset_bottom = 200.0
+
+[node name="HotbarUI" parent="UI" instance=ExtResource("15")]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -166.0
+offset_top = -66.0
+offset_right = 166.0
+offset_bottom = 0.0
+color = Color(0.337255, 0.337255, 0.337255, 0)
+SelectionRect = NodePath("SelectionUI")
+MaxSlotDisplay = 5
+
+[node name="SelectionUI" type="TextureRect" parent="UI/HotbarUI"]
+z_index = 1
+layout_mode = 0
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+texture = ExtResource("29_e7xye")
 
 [node name="FollowMouse" type="Control" parent="UI"]
 anchors_preset = 0

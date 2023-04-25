@@ -4,16 +4,22 @@ using System.Collections.Generic;
 namespace Recursia;
 public partial class InventoryUI : Control
 {
+    public const int HotbarSlots = 5;
     [Export] public PackedScene? ItemSlotUI;
+    [Export] public NodePath? SelectionRect;
     [Export] public int Padding = 2;
     [Export] public int SlotSizePx = 64;
+    [Export] public int MinSlotDisplay;
+    [Export] public int MaxSlotDisplay = -1;
     private Inventory? tracking;
     private readonly List<ItemSlotUI> slots = new();
     private Player player = null!; //we want exceptions if somehow this is null and the player clicked on something
+    private Control? selectionRect;
 
     public override void _Ready()
     {
         if (ItemSlotUI == null) GD.PushError($"Null ItemSlotUI on InventoryUI {Name}");
+        if (SelectionRect != null) selectionRect = GetNode<Control>(SelectionRect);
     }
 
     public void TrackInventory(Inventory inv)
@@ -51,9 +57,12 @@ public partial class InventoryUI : Control
         slots.Clear();
         int slotsPerRow = Mathf.Max((int)Size.X/(SlotSizePx+Padding),1);
         int row = -1;
-        for (int i = 0; i < inv.Size; i++)
+        int range = MaxSlotDisplay < 0 ? inv.Size : Mathf.Min(MaxSlotDisplay,inv.Size) - MinSlotDisplay;
+        int slotnum = 0;
+        for (int i = MinSlotDisplay; i < range; i++)
         {
-            int column = i % slotsPerRow;
+            int column = slotnum % slotsPerRow;
+            slotnum++;
             if (column == 0) row++;
             ItemSlotUI slot = ItemSlotUI!.Instantiate<ItemSlotUI>();
             AddChild(slot);
@@ -67,10 +76,18 @@ public partial class InventoryUI : Control
 
     private void onInventoryUpdate(Inventory inv)
     {
-        for(int i = 0; i < slots.Count; i++)
+        int max = MaxSlotDisplay < 0 ? slots.Count : Mathf.Min(MaxSlotDisplay,slots.Count);
+        bool set = false;
+        for(int i = MinSlotDisplay; i < max; i++)
         {
             slots[i].DisplayItem(inv.GetItem(i));
+            if (i == inv.SelectedSlot && selectionRect != null) {
+                selectionRect.Position = slots[i].Position;
+                selectionRect.Visible = true;
+                set = true;
+            }
         }
+        if (!set && selectionRect != null) selectionRect.Visible = false;
     }
 
     private void slotClicked(MouseButton button, int slot, Inventory inv)
