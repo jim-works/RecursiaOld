@@ -1,5 +1,6 @@
 //#define NO_UNLOADING
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Godot;
@@ -12,6 +13,7 @@ public class WorldLoader
     private readonly int loadDistance = 10;
     private readonly HashSet<ChunkCoord> loadedChunks = new();
     private readonly List<ChunkCoord> toUnload = new();
+    private ConcurrentBag<(TaskCompletionSource, List<ChunkCoord>)> mainThreadQueue = new();
 
     private bool running;
 
@@ -26,7 +28,11 @@ public class WorldLoader
         {
             if (running) return;
         }
-        Task.Run(()=> doLoading());
+        Task.Run(async ()=> await doLoading());
+    }
+    public void Process()
+    {
+        doMainThreadUnloading();
     }
     public void AddChunkLoader(Node3D loader)
     {
@@ -37,8 +43,26 @@ public class WorldLoader
     {
         chunkLoaders.Remove(loader);
     }
+    private void doMainThreadUnloading()
+    {
+        while (mainThreadQueue.TryTake(out var r))
+        {
+            (TaskCompletionSource tcs, List<ChunkCoord> toUnload) = r;
+            foreach (ChunkCoord c in toUnload)
+            {
+                world.Entities.Unload(c);
+            }
+            tcs.SetResult();
+        }
+    }
+    private async Task unloadOnMainThread(List<ChunkCoord> toUnload)
+    {
+        TaskCompletionSource tcs = new();
+        mainThreadQueue.Add((tcs,toUnload));
+        await tcs.Task;
+    }
 
-    private void doLoading()
+    private async Task doLoading()
     {
         lock(loadedChunks)
         {
@@ -46,8 +70,14 @@ public class WorldLoader
         }
         loadedChunks.Clear();
         toUnload.Clear();
+        List<Node3D> loadersToRemove = new();
         foreach (Node3D loader in chunkLoaders)
         {
+            if (!GodotObject.IsInstanceValid(loader) || !loader.IsInsideTree())
+            {
+                loadersToRemove.Add(loader);
+                continue;
+            }
             ChunkCoord center = (ChunkCoord)loader.GlobalPosition;
             for (int x = -loadDistance; x <= loadDistance; x++)
             {
@@ -61,6 +91,10 @@ public class WorldLoader
                 }
             }
         }
+        foreach (var loader in loadersToRemove)
+        {
+            chunkLoaders.Remove(loader);
+        }
 #if NO_UNLOADING
 #else
         foreach (var kvp in world.Chunks.GetChunkEnumerator())
@@ -70,9 +104,9 @@ public class WorldLoader
                 toUnload.Add(kvp.Key);
             }
         }
+        await unloadOnMainThread(toUnload);
         foreach (var c in toUnload)
         {
-            world.Entities.Unload(c);
             world.Chunks.TryUnload(c);
         }
 #endif

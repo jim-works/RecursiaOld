@@ -1,5 +1,5 @@
 //saves annoyance
-#define NO_SAVING
+//#define NO_SAVING
 
 using Godot;
 using System.IO;
@@ -26,7 +26,7 @@ public partial class WorldSaver : Node
 
     private SQLInterface? sql;
     private readonly ConcurrentBag<(Chunk, Action<Chunk>)> callbackQueue = new();
-
+    private readonly ConcurrentBag<(ChunkCoord, List<PhysicsObject>)> physicsObjectSaveQueue = new();
     public override void _Ready()
     {
         world = GetParent<World>();
@@ -46,7 +46,7 @@ public partial class WorldSaver : Node
             Save(c);
             if (b != null) Save(b);
         };
-        world.Entities.OnChunkUnload += Save;
+        world.Entities.OnChunkUnload += QueueSave;
         sql.BeginPolling();
     }
 
@@ -58,8 +58,8 @@ public partial class WorldSaver : Node
         {
             saveTimer = 0;
             GD.Print("Saving...");
-            Task.Run(() => {
-                Save(world!);
+            Task.Run(async () => {
+                await Save(world!);
                 GD.Print("Saved the world.");
             });
         }
@@ -75,7 +75,7 @@ public partial class WorldSaver : Node
 
     public override void _ExitTree()
     {
-        Save(world!);
+        Save(world!).Wait();
         sql!.Close();
     }
 
@@ -112,7 +112,7 @@ public partial class WorldSaver : Node
 #endif
     }
 
-    public void Save(World world)
+    public async Task Save(World world)
     {
 #if NO_SAVING
         return;
@@ -129,7 +129,16 @@ public partial class WorldSaver : Node
         {
             Save(p.Value);
         }
-        //sql!.SavePlayers(world.Entities.Players);
+        List<Task> saveTasks = new();
+        foreach (var p in world.Entities.PhysicsObjects)
+        {
+            saveTasks.Add(Save(p.Key,p.Value,false));
+        }
+        while (physicsObjectSaveQueue.TryTake(out var r))
+        {
+            saveTasks.Add(Save(r.Item1,r.Item2,true));
+        }
+        await Task.WhenAll(saveTasks);
 #endif
     }
     public void Save(Chunk c)
@@ -161,8 +170,36 @@ public partial class WorldSaver : Node
         sql!.Save(p);
 #endif
     }
-    public void Save(ChunkCoord coord, List<PhysicsObject> objs)
+    public void QueueSave(ChunkCoord c, List<PhysicsObject> p)
     {
-        sql!.Save((int)DataTableIDs.PhysicsObjects, coord, new SerializableList<PhysicsObject>{List=objs.Where(obj => obj is not Player && !obj.NoSerialize()).ToList()});
+        List<PhysicsObject> copy;
+        lock (p) copy = new(p);
+        physicsObjectSaveQueue.Add((c,copy));
+    }
+    public async Task Save(ChunkCoord c, List<PhysicsObject> p, bool free)
+    {
+        SerializableList<PhysicsObject> list;
+        PhysicsObject[]? toFree = null;
+        lock(p)
+        {
+            list = new SerializableList<PhysicsObject>{List=p.Where(obj => obj is not Player && !obj.NoSerialize()).ToList()};
+            if (free) toFree = p.Where(obj => obj is not Player && obj.NoSerialize()).ToArray();
+        }
+        Task save = sql!.SaveAsync((int)DataTableIDs.PhysicsObjects, c, list);
+        await save;
+        if (free)
+        {
+            foreach (var po in list.List)
+            {
+                po.CallDeferred("queue_free");
+            }
+            if (toFree != null)
+            {
+                foreach (var po in toFree)
+                {
+                    po.CallDeferred("queue_free");
+                }
+            }
+        }
     }
 }

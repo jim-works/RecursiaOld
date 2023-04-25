@@ -104,7 +104,7 @@ public partial class PatrickQuack : BipedalCombatant
                 return;
             }
             Projectile proj = World.Entities.SpawnObject<Projectile>(Projectile, summonPoint.GlobalPosition);
-            proj.Launch((closest.GlobalPosition-summonPoint.GlobalPosition).Normalized()*ProjectileVelocity, Team);
+            proj.Launch(summonPoint.GlobalPosition, (closest.GlobalPosition-summonPoint.GlobalPosition).Normalized()*ProjectileVelocity, Team);
             shootTimer = 0;
         }
         shootTimer += dt;

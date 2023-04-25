@@ -62,6 +62,7 @@ public partial class World : Node
                 Loader.UpdateChunkLoading();
             }
         }
+        Loader.Process();
         base._Process(delta);
     }
 

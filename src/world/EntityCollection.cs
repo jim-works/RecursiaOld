@@ -1,16 +1,18 @@
 using Godot;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Recursia;
 public class EntityCollection
 {
     private readonly World world;
-    private readonly Dictionary<ChunkCoord, List<PhysicsObject>> physicsObjects = new();
-    private readonly Dictionary<ChunkCoord, List<Combatant>> combatants = new ();
-    private readonly Dictionary<string, Player> players = new();
+    private readonly ConcurrentDictionary<ChunkCoord, List<PhysicsObject>> physicsObjects = new();
+    private readonly ConcurrentDictionary<ChunkCoord, List<Combatant>> combatants = new ();
+    private readonly ConcurrentDictionary<string, Player> players = new();
 
     public IEnumerable<KeyValuePair<string,Player>> Players => players;
+    public IEnumerable<KeyValuePair<ChunkCoord,List<PhysicsObject>>> PhysicsObjects => physicsObjects;
     public event System.Action<ChunkCoord, List<PhysicsObject>>? OnChunkUnload;
 
     public EntityCollection(World world)
@@ -18,21 +20,21 @@ public class EntityCollection
         this.world = world;
     }
 
+    //Call on main thread
     public void Unload(ChunkCoord pos)
     {
-        if (physicsObjects.TryGetValue(pos, out List<PhysicsObject>? objects))
+        combatants.TryRemove(pos, out var _);
+        if (physicsObjects.TryRemove(pos, out List<PhysicsObject>? objects))
         {
-            OnChunkUnload?.Invoke(pos, objects);
             //in unloaded chunk, so remove all from scene
             foreach (var obj in objects)
             {
                 obj.OnCrossChunkBoundary -= physicsObjectCrossChunkBoundary;
-                //obj.OnExitTree -= RemoveObject;
-                //obj.QueueFree();
+                obj.OnExitTree -= RemoveObject;
+                obj.GetParent().RemoveChild(obj);
             }
+            OnChunkUnload?.Invoke(pos, objects);
         }
-        physicsObjects.Remove(pos);
-        combatants.Remove(pos);
     }
 
     private void physicsObjectCrossChunkBoundary(PhysicsObject p, ChunkCoord oldChunk)
@@ -44,8 +46,8 @@ public class EntityCollection
     {
         if (physicsObjects.TryGetValue(from, out List<PhysicsObject>? physics))
         {
-            physics.Remove(p);
-            if (physics.Count == 0) physicsObjects.Remove(from);
+            lock(physics) physics.Remove(p);
+            if (physics.Count == 0) physicsObjects.TryRemove(from, out var _);
         }
         if (world.Chunks.TryGetChunk(from, out Chunk? chunk))
         {
@@ -53,17 +55,17 @@ public class EntityCollection
         }
         if (p is Combatant c && combatants.TryGetValue(from, out List<Combatant>? comb))
         {
-            comb.Remove(c);
-            if (combatants.Count == 0) combatants.Remove(from);
+            lock (comb) comb.Remove(c);
+            if (combatants.IsEmpty) combatants.TryRemove(from, out var _);
         }
         if (p is Player player)
         {
-            players.Remove(player.Name);
+            players.TryRemove(player.Name, out var _);
         }
     }
     private void addPhysicsObject(PhysicsObject p)
     {
-        ChunkCoord to = (ChunkCoord)p.GlobalPosition;
+        ChunkCoord to = p.IsInsideTree() ? (ChunkCoord)p.GlobalPosition : (ChunkCoord)p.InitialPosition;
         if (world.Chunks.TryGetChunk(to, out Chunk? chunk))
         {
             chunk.PhysicsObjects.Add(p);
@@ -86,7 +88,10 @@ public class EntityCollection
             {
                 combatants[to] = new List<Combatant> { c };
             }
-            if (p is Player player) players.Add(player.Name, player);
+            if (p is Player player && !players.TryAdd(player.Name, player))
+            {
+                GD.PushError($"Duplicate player {p.Name}");
+            }
         }
     }
 
@@ -103,7 +108,7 @@ public class EntityCollection
             c.World = world;
         }
         init?.Invoke(obj);
-        world.AddChild(obj);
+        world.CallDeferred("add_child", obj);
         if (c != null) RegisterObject(c);
         return obj;
     }
@@ -134,14 +139,18 @@ public class EntityCollection
         //TODO: only check chunks in range
         foreach (var l in combatants.Values)
         {
+            lock (l)
+            {
             foreach (var c in l)
             {
+                if (!c.IsInsideTree()) continue;
                 float sqrDist = (pos - c.GlobalPosition).LengthSquared();
                 if (sqrDist < minSqrDist && sqrDist < maxDist * maxDist && c.Team != team)
                 {
                     minSqrDist = sqrDist;
                     enemy = c;
                 }
+            }
             }
         }
         return enemy != null;
@@ -151,9 +160,13 @@ public class EntityCollection
         //TODO: only check chunks in range
         foreach (var l in combatants.Values)
         {
+            lock (l)
+            {
             foreach (var c in l)
             {
+                if (!c.IsInsideTree()) continue;
                 if (c.Team != team && (c.GlobalPosition - pos).LengthSquared() < range * range) yield return c;
+            }
             }
         }
     }
@@ -162,9 +175,13 @@ public class EntityCollection
         //TODO: only check chunks in range
         foreach (var kvp in physicsObjects)
         {
+            lock (kvp.Value)
+            {
             foreach (var obj in kvp.Value)
             {
+                if (!obj.IsInsideTree()) continue;
                 if ((obj.GlobalPosition - pos).LengthSquared() < range * range) yield return obj;
+            }
             }
         }
     }
@@ -173,10 +190,14 @@ public class EntityCollection
         //TODO: only check chunks in range
         foreach (var l in combatants.Values)
         {
+            lock (l)
+            {
             foreach (var c in l)
             {
+                if (!c.IsInsideTree()) continue;
                 if (c.Team == team) continue;
                 if (c.GetBox().IntersectsBox(box)) return c;
+            }
             }
         }
         return null;

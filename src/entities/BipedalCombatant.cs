@@ -29,6 +29,7 @@ public partial class BipedalCombatant : Combatant
 
     public override void _PhysicsProcess(double delta)
     {
+        if (!IsInsideTree()) return;
         if (SetSpeedToWalk) {
             animationTree!.Set($"parameters/{WalkBlendNode}/TimeScale/scale", new Vector3(Velocity.X,0,Velocity.Z).Length()/StrideLength);
         }

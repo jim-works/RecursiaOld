@@ -11,13 +11,13 @@ public partial class Projectile : PhysicsObject
     protected Vector3 launchVelocity;
     protected float launchSpeed;
 
-    public void Launch(Vector3 velocity, Team? team)
+    public void Launch(Vector3 startPos, Vector3 velocity, Team? team)
     {
         this.team = team;
         Velocity = velocity;
         launchVelocity = velocity;
         launchSpeed = velocity.Length();
-        LookAt(GlobalPosition + velocity, Vector3.Up);
+        LookAtFromPosition(startPos, startPos + velocity);
     }
 
     public override void _PhysicsProcess(double delta)

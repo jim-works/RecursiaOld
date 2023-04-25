@@ -4,12 +4,9 @@ using System.Collections.Generic;
 namespace Recursia;
 public partial class InventoryUI : Control
 {
-    [Export]
-    public PackedScene? ItemSlotUI;
-    [Export]
-    public int Padding = 2;
-    [Export]
-    public int SlotSizePx = 64;
+    [Export] public PackedScene? ItemSlotUI;
+    [Export] public int Padding = 2;
+    [Export] public int SlotSizePx = 64;
     private Inventory? tracking;
     private readonly List<ItemSlotUI> slots = new();
     private Player player = null!; //we want exceptions if somehow this is null and the player clicked on something

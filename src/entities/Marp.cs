@@ -52,16 +52,21 @@ public partial class Marp : BipedalCombatant
     private void doWalk()
     {
         //isinstancevalid checks null
-        if (IsInstanceValid(carrying))
+        if (IsInstanceValid(carrying) && carrying!.IsInsideTree())
         {
             Vector3 carryDest = new(0,0,WalkSpeed);
             //isinstancevalid checks null
-            if (IsInstanceValid(CarryTarget)) carryDest = (CarryTarget!.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
+            if (IsInstanceValid(CarryTarget) && CarryTarget!.IsInsideTree()) carryDest = (CarryTarget!.GlobalPosition-GlobalPosition).Normalized()*WalkSpeed;
+            else CarryTarget = null;
             Velocity = new Vector3(carryDest.X, Velocity.Y, carryDest.Z);
             carrying!.GlobalPosition = GlobalPosition+new Vector3(0,2,0);
             carrying.Velocity = Vector3.Zero;
             if (CarryTime <= stateSwitchTimer) carrying = null;
             return;
+        }
+        else
+        {
+            carrying = null;
         }
 
         if (!World!.Entities.ClosestEnemy(GlobalPosition, Team, AggroRange, out Combatant? closest)) return;

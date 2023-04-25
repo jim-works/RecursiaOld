@@ -15,6 +15,7 @@ public partial class ChainLink : SegmentedCombatantChild
             return;
         }
         //tension force towards/away from parent
+        if (!Parent.IsInsideTree()) return;
         Vector3 d = Parent.GlobalPosition-GlobalPosition;
         AddConstantForce(d.Normalized()*Tension*(d.Length()-NaturalDist));
 

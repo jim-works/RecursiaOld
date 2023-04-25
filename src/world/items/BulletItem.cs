@@ -16,6 +16,6 @@ public partial class BulletItem : AmmoItem
         }
         Projectile proj = user.World!.Entities.SpawnObject<Projectile>(ProjectileScene, origin);
         proj.Damage = Damage+gun?.Damage ?? Damage;
-        proj.Launch(velocity, user.Team);
+        proj.Launch(origin, velocity, user.Team);
     }
 }

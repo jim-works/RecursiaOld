@@ -53,13 +53,13 @@ public class SQLInterface : IDisposable
     private readonly SQLiteCommand savePlayerCommand;
     private readonly SQLiteCommand loadPlayerCommand;
     private readonly ConcurrentBag<(DataKey, TaskCompletionSource<object?>)> dataLoadQueue = new();
-    private readonly ConcurrentDictionary<DataKey, ISerializable> dataSaveQueue = new();
+    private readonly ConcurrentDictionary<DataKey, (ISerializable, TaskCompletionSource?)> dataSaveQueue = new();
     private readonly ConcurrentBag<(string, TaskCompletionSource<Player?>)> playerLoadQueue = new();
     private readonly ConcurrentDictionary<string, Player> playerSaveQueue = new();
     private readonly Dictionary<string, int> dataNameMap = new();
     private readonly Dictionary<int, Func<BinaryReader,object?>> dataDeserializers = new();
     private readonly Func<BinaryReader, string, Player> playerDeserializer;
-    private readonly List<(DataKey,ISerializable)> returnToSave = new();
+    private readonly List<(DataKey,(ISerializable,TaskCompletionSource?))> returnToSave = new();
 
     public SQLInterface(string dbpath, Func<BinaryReader, string, Player> playerDeserializer)
     {
@@ -136,14 +136,17 @@ public class SQLInterface : IDisposable
     public void BeginPolling()
     {
         //run task to save/load on a single thread to avoid sqlite shenanigans
-        //TODO: can close program in middle of this and dispose connection
+        //saving then loading provides benefits for things like moving back/forward between chunks very quickly
         Task.Run(() =>
         {
             while (true)
             {
                 Task.Delay(Settings.SaveLoadIntervalMs);
-                emptySaveQueue();
-                emptyLoadQueue();
+                lock (conn)
+                {
+                    emptySaveQueue();
+                    emptyLoadQueue();
+                }
             }
         });
     }
@@ -197,6 +200,11 @@ public class SQLInterface : IDisposable
 
     public void Close()
     {
+        lock (conn)
+        {
+            emptySaveQueue();
+            emptyLoadQueue();
+        }
         saveDataCommand.Dispose();
         loadDataCommand.Dispose();
         savePlayerCommand.Dispose();
@@ -206,7 +214,13 @@ public class SQLInterface : IDisposable
     }
     public void Save(int dataTable, ChunkCoord pos, ISerializable obj)
     {
-        dataSaveQueue[new DataKey{Tid=dataTable,Pos=pos}] = obj;
+        dataSaveQueue[new DataKey{Tid=dataTable,Pos=pos}] = (obj,null);
+    }
+    public async Task SaveAsync(int dataTable, ChunkCoord pos, ISerializable obj)
+    {
+        TaskCompletionSource saveTcs = new();
+        dataSaveQueue[new DataKey{Tid=dataTable,Pos=pos}] = (obj, saveTcs);
+        await saveTcs.Task;
     }
     public void Save(Player p)
     {
@@ -258,12 +272,13 @@ public class SQLInterface : IDisposable
     {
         foreach (var kvp in dataSaveQueue.ToArray())
         {
-            if (dataSaveQueue.TryRemove(kvp.Key, out ISerializable? obj))
+            if (dataSaveQueue.TryRemove(kvp.Key, out var v))
             {
+                (ISerializable obj,TaskCompletionSource? tcs) = v;
                 if (obj.NoSerialize())
                 {
                     //these chunks aren't ready to be saved yet as they're still generating
-                    returnToSave.Add((kvp.Key,obj));
+                    returnToSave.Add((kvp.Key,(obj,tcs)));
                     continue;
                 }
                 saveDataCommand.Parameters["@x"].Value = kvp.Key.Pos.X;
@@ -278,6 +293,7 @@ public class SQLInterface : IDisposable
                     saveDataCommand.Parameters["@data"].Value = ms.ToArray();
                 }
                 saveDataCommand.ExecuteNonQuery();
+                tcs?.SetResult();
             }
         }
     }
